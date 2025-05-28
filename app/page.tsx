@@ -39,7 +39,7 @@ export default function ComplaintForm() {
     images.forEach((img) => formData.append("images", img));
 
     try {
-      await axios.post("https://your-api/complaints/create", formData);
+      await axios.post(`${process.env.NEXT_API_COMPLAINTS}/complaints`, formData);
       alert("ส่งเรื่องเรียบร้อยแล้ว! ขอบคุณที่แจ้งครับ 🙏");
       setDescription("");
       setImages([]);
