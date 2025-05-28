@@ -9,26 +9,22 @@ export default function ComplaintForm() {
   const [location, setLocation] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // useEffect(() => {
-  //   // Load LIFF SDK
-  //   import("@line/liff").then((liff) => {
-  //     liff.default.init({ liffId: "YOUR_LIFF_ID" }).then(() => {
-  //       if (!liff.default.isLoggedIn()) liff.default.login();
-  //       liff.default.getProfile().then(setLineProfile);
-  //     });
-  //   });
-
-  //   // Try get geolocation
-  //   if (navigator.geolocation) {
-  //     navigator.geolocation.getCurrentPosition((pos) => {
-  //       const { latitude, longitude } = pos.coords;
-  //       setLocation(`${latitude},${longitude}`);
-  //     });
-  //   }
-  // }, []);
-
   useEffect(() => {
-    setLineProfile({ userId: "MOCK-USER-ID" });
+    // Load LIFF SDK
+    import("@line/liff").then((liff) => {
+      liff.default.init({ liffId: process.env.NEXT_PUBLIC_LIFF_ID! }).then(() => {
+        if (!liff.default.isLoggedIn()) liff.default.login();
+        liff.default.getProfile().then(setLineProfile);
+      });
+    });
+
+    // Try get geolocation
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const { latitude, longitude } = pos.coords;
+        setLocation(`${latitude},${longitude}`);
+      });
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
