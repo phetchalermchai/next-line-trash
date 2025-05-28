@@ -39,7 +39,9 @@ export default function ComplaintForm() {
     images.forEach((img) => formData.append("images", img));
 
     try {
-      await axios.post(`https://main-application-production-92c0.up.railway.app/complaints`, formData);
+      const complaintRes = await axios.post(`https://main-application-production-92c0.up.railway.app/complaints`, formData);
+      const complaintId = complaintRes.data.id;
+      await axios.post(`${process.env.NEXT_API_COMPLAINTS}/complaints/${complaintId}/notify`);
       alert("ส่งเรื่องเรียบร้อยแล้ว! ขอบคุณที่แจ้งครับ 🙏");
       setDescription("");
       setImages([]);
