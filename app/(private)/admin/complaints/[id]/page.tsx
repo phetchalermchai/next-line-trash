@@ -51,12 +51,26 @@ export default function AdminComplaintPage() {
   return (
     <div className="p-4 max-w-3xl mx-auto space-y-4">
       <h1 className="text-2xl font-bold">🔧 รายละเอียดเรื่องร้องเรียน (Admin)</h1>
-      <div><strong>ID:</strong> {complaint.id}</div>
-      <div><strong>ผู้แจ้ง:</strong> {complaint.lineDisplayName || "ไม่ระบุ"}</div>
-      <div><strong>เบอร์:</strong> {complaint.phone || "ไม่ระบุ"}</div>
-      <div><strong>รายละเอียด:</strong> {complaint.description}</div>
-      <div><strong>พิกัด:</strong> {complaint.location || "ไม่ระบุ"}</div>
-      <div><strong>สถานะ:</strong> {complaint.status === 'DONE' ? '✅ ดำเนินการแล้ว' : '⏳ รอดำเนินการ'}</div>
+      <p><strong>ID:</strong> {complaint.id}</p>
+      <p><strong>ผู้แจ้ง:</strong> {complaint.lineDisplayName || "ไม่ระบุ"}</p>
+      <p><strong>เบอร์:</strong> {complaint.phone || "ไม่ระบุ"}</p>
+      <p><strong>รายละเอียด:</strong> {complaint.description}</p>
+      <p>
+        <strong>พิกัด:</strong>{" "}
+        {complaint.location ? (
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${complaint.location}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline"
+          >
+            📍 เปิดใน Google Maps
+          </a>
+        ) : (
+          "ไม่ระบุ"
+        )}
+      </p>
+      <p><strong>สถานะ:</strong> {complaint.status === 'DONE' ? '✅ ดำเนินการแล้ว' : '⏳ รอดำเนินการ'}</p>
       <div>
         <strong>รูปก่อน:</strong>
         <div className="grid grid-cols-2 gap-2 mt-2">

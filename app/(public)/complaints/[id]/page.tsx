@@ -34,37 +34,29 @@ export default function ComplaintDetailPage() {
 
   return (
     <div className="p-4 max-w-2xl mx-auto space-y-4">
-      <h1 className="text-2xl font-bold">รายละเอียดเรื่องร้องเรียน</h1>
-      <div>
-        <strong>หมายเลขอ้างอิง:</strong> {complaint.id}
-      </div>
-      <div>
-        <strong>ผู้แจ้ง:</strong> {complaint.lineDisplayName || "ไม่ระบุ"}
-      </div>
-      <div>
-        <strong>เบอร์ติดต่อ:</strong> {complaint.phone || "ไม่ระบุ"}
-      </div>
-      <div>
-        <strong>รายละเอียด:</strong> {complaint.description}
-      </div>
-      <div>
+      <h1 className="text-2xl font-bold">📄 รายละเอียดเรื่องร้องเรียน</h1>
+      <p><strong>หมายเลขอ้างอิง:</strong> {complaint.id}</p>
+      <p><strong>ผู้แจ้ง:</strong> {complaint.lineDisplayName || "ไม่ระบุ"}</p>
+      <p><strong>เบอร์ติดต่อ:</strong> {complaint.phone || "ไม่ระบุ"}</p>
+      <p><strong>รายละเอียด:</strong> {complaint.description}</p>
+      <p>
         <strong>พิกัด:</strong>{" "}
         {complaint.location ? (
           <a
-            href={`https://www.google.com/maps?q=${complaint.location}`}
+            href={`https://www.google.com/maps/search/?api=1&query=${complaint.location}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 underline"
           >
-            ดูบนแผนที่
+            📍 เปิดใน Google Maps
           </a>
         ) : (
           "ไม่ระบุ"
         )}
-      </div>
-      <div>
+      </p>
+      <p>
         <strong>สถานะ:</strong> {complaint.status === "DONE" ? "✅ ดำเนินการเสร็จแล้ว" : "⏳ รอดำเนินการ"}
-      </div>
+      </p>
 
       <div>
         <strong>รูปภาพก่อนดำเนินการ:</strong>
