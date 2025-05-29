@@ -36,7 +36,10 @@ export default function ComplaintForm() {
     formData.append("lineUserId", lineProfile.userId);
     formData.append("description", description);
     if (location) formData.append("location", location);
-    images.forEach((img) => formData.append("images", img));
+    images.forEach((img, i) => {
+      console.log(`🧾 Image[${i}]: ${img.name}`);
+      formData.append("images", img);
+    });
 
     try {
       const complaintRes = await axios.post(`https://main-application-production-92c0.up.railway.app/complaints`, formData);
@@ -46,6 +49,7 @@ export default function ComplaintForm() {
       setDescription("");
       setImages([]);
     } catch (error) {
+      console.log(error);
       alert("เกิดข้อผิดพลาดในการส่งเรื่อง");
     } finally {
       setSubmitting(false);
