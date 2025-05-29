@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import axios from "axios";
 
 interface Complaint {
@@ -17,7 +17,6 @@ interface Complaint {
 
 export default function ComplaintDetailPage() {
   const { id } = useParams();
-  const router = useRouter();
   const [complaint, setComplaint] = useState<Complaint | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -76,15 +75,6 @@ export default function ComplaintDetailPage() {
           </div>
         </div>
       )}
-
-      <div>
-        <a
-          href={`/admin/complaints/${complaint.id}/report`}
-          className="btn btn-secondary mt-4"
-        >
-          🛠 แจ้งผลการดำเนินการ
-        </a>
-      </div>
     </div>
   );
 }

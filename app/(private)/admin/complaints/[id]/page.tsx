@@ -87,6 +87,14 @@ export default function AdminComplaintPage() {
           </div>
         </div>
       )}
+      <div>
+        <a
+          href={`/admin/complaints/${complaint.id}/report`}
+          className="btn btn-secondary mt-4"
+        >
+          🛠 แจ้งผลการดำเนินงาน
+        </a>
+      </div>
     </div>
   );
 }
