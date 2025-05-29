@@ -1,3 +1,4 @@
+"use client"
 import SummaryCard from "@/components/dashboard/SummaryCard";
 import MonthlyTrendChart from "@/components/dashboard/MonthlyTrendChart";
 import StatusPieChart from "@/components/dashboard/StatusPieChart";
