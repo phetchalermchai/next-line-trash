@@ -1,16 +1,28 @@
 "use client"
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react'
+import api from '@/lib/axios';
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
+interface MonthlyTrend {
+  month: number;
+  count: number;
+}
+
 export default function MonthlyTrendChart() {
-  const [data, setData] = useState<{ month: number; count: number }[]>([])
+  const [data, setData] = useState<MonthlyTrend[]>([])
 
   useEffect(() => {
-    const currentYear = new Date().getFullYear()
-    fetch(`${process.env.NEXT_PUBLIC_API_COMPLAINTS}/dashboard/monthly-trend?year=${currentYear}`)
-      .then(res => res.json())
-      .then(setData)
+    const fetchData = async () => {
+      try {
+        const year = new Date().getFullYear();
+        const res = await api.get(`/dashboard/monthly-trend?year=${year}`);
+        setData(res.data);
+      } catch (err) {
+        console.error("Error fetching MonthlyTrendChart:", err);
+      }
+    };
+    fetchData();
   }, [])
 
   const options = {

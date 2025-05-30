@@ -5,6 +5,7 @@ import StatusPieChart from "@/components/dashboard/StatusPieChart";
 import RecentComplaintList from "@/components/dashboard/RecentComplaintList";
 import MonthlyStatusChart from "@/components/dashboard/MonthlyStatusChart";
 import { useEffect, useState } from 'react'
+import api from "@/lib/axios";
 
 interface SummaryData {
   total: number;
@@ -17,9 +18,16 @@ export default function AdminDashboardPage() {
   const [data, setData] = useState<SummaryData | null>(null)
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_COMPLAINTS}/dashboard/summary`)
-      .then(res => res.json())
-      .then(setData)
+    const fetchData = async () => {
+      try {
+        const res = await api.get("/dashboard/summary");
+        setData(res.data);
+      } catch (error) {
+        console.error("Error fetching summary data:", error);
+      }
+    };
+
+    fetchData();
   }, [])
 
   if (!data) return <p>Loading...</p>
