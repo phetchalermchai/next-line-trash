@@ -1,6 +1,6 @@
-"use client"
+"use client";
 import dynamic from 'next/dynamic';
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -10,8 +10,7 @@ interface StatusPie {
 }
 
 export default function StatusPieChart() {
-    const [data, setData] = useState<StatusPie[]>([])
-    const chartRef = useRef<any>(null);
+    const [data, setData] = useState<StatusPie[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -23,18 +22,11 @@ export default function StatusPieChart() {
             }
         };
         fetchData();
-    }, [])
-
-    useEffect(() => {
-        const timeout = setTimeout(() => {
-            chartRef.current?.chart?.resize(); // สั่งให้ chart คำนวณขนาดใหม่
-        }, 300);
-        return () => clearTimeout(timeout);
-    }, [data]);
+    }, []);
 
     const options = {
         chart: {
-            type: "donut" as "donut",
+            type: "donut" as const,
         },
         labels: data.map((d) => {
             if (d.status === "PENDING") return "รอดำเนินการ";
@@ -42,19 +34,27 @@ export default function StatusPieChart() {
             return d.status;
         }),
         legend: {
-            position: "bottom" as "bottom",
+            position: "bottom" as const,
         },
         colors: ["#facc15", "#4ade80"],
         dataLabels: {
             enabled: true,
         },
-    }
+    };
 
     const series = data.map((d) => typeof d.count === 'number' ? d.count : 0);
 
     return (
         <div className="min-h-[300px] w-full">
-            <Chart options={options} series={series} type="donut" height={300} />
+            {data.length > 0 && (
+                <Chart
+                    key={JSON.stringify(data)} // ✅ Force re-render เมื่อข้อมูลเปลี่ยน
+                    options={options}
+                    series={series}
+                    type="donut"
+                    height={300}
+                />
+            )}
         </div>
-    )
+    );
 }
