@@ -1,6 +1,6 @@
 "use client"
 import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import api from '@/lib/axios';
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -11,6 +11,7 @@ interface StatusPie {
 
 export default function StatusPieChart() {
     const [data, setData] = useState<StatusPie[]>([])
+    const chartRef = useRef<any>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -23,6 +24,13 @@ export default function StatusPieChart() {
         };
         fetchData();
     }, [])
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            chartRef.current?.chart?.resize(); // สั่งให้ chart คำนวณขนาดใหม่
+        }, 300);
+        return () => clearTimeout(timeout);
+    }, [data]);
 
     const options = {
         chart: {
