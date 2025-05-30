@@ -45,7 +45,7 @@ export default function StatusPieChart() {
     const series = data.map((d) => typeof d.count === 'number' ? d.count : 0);
 
     return (
-        <div>
+        <div className="min-h-[300px] w-full">
             <Chart options={options} series={series} type="donut" height={300} />
         </div>
     )

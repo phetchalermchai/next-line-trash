@@ -52,7 +52,7 @@ export default function AdminDashboardPage() {
 
       {/* Section 3: สถานะ + รายการล่าสุด */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-zinc-900 p-4 rounded-lg shadow min-h-[300px] w-full">
+        <div className="bg-white dark:bg-zinc-900 p-4 rounded-lg shadow">
           <h2 className="text-lg font-semibold mb-2">สัดส่วนสถานะเรื่องร้องเรียน</h2>
           <StatusPieChart />
         </div>
