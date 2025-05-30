@@ -1,4 +1,4 @@
-import ComplaintForm from "@/app/components/ComplaintForm"
+import ComplaintForm from "@/components/complaintForm/ComplaintForm"
 
 const page = () => {
   return (

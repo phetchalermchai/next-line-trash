@@ -4,18 +4,36 @@ import MonthlyTrendChart from "@/components/dashboard/MonthlyTrendChart";
 import StatusPieChart from "@/components/dashboard/StatusPieChart";
 import RecentComplaintList from "@/components/dashboard/RecentComplaintList";
 import MonthlyStatusChart from "@/components/dashboard/MonthlyStatusChart";
+import { useEffect, useState } from 'react'
+
+interface SummaryData {
+  total: number;
+  done: number;
+  pending: number;
+  latestUpdatedAt: string | null;
+}
 
 export default function AdminDashboardPage() {
+  const [data, setData] = useState<SummaryData | null>(null)
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_COMPLAINTS}/dashboard/summary`)
+      .then(res => res.json())
+      .then(setData)
+  }, [])
+
+  if (!data) return <p>Loading...</p>
+
   return (
     <div className="p-4 space-y-6">
       <h1 className="text-2xl font-bold text-zinc-800 dark:text-white">แดชบอร์ดเรื่องร้องเรียน</h1>
 
       {/* Section 1: Summary Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryCard icon="🧾" label="ทั้งหมด" value={24} />
-        <SummaryCard icon="🟡" label="รอดำเนินการ" value={5} />
-        <SummaryCard icon="🟢" label="ดำเนินการแล้ว" value={19} />
-        <SummaryCard icon="📅" label="อัปเดตล่าสุด" value="28 พ.ค. 2568" />
+        <SummaryCard icon="🧾" label="ทั้งหมด" value={data.total} />
+        <SummaryCard icon="🟡" label="รอดำเนินการ" value={data.pending} />
+        <SummaryCard icon="🟢" label="ดำเนินการแล้ว" value={data.done} />
+        <SummaryCard icon="📅" label="อัปเดตล่าสุด" value={data.latestUpdatedAt || '-'} />
       </section>
 
       {/* Section 2: แนวโน้มต่อเดือน */}

@@ -39,7 +39,7 @@ export default function AdminComplaintPage() {
   useEffect(() => {
     if (!id || !sessionChecked) return;
     axios
-      .get(`https://main-application-production-92c0.up.railway.app/complaints/${id}`)
+      .get(`${process.env.NEXT_PUBLIC_API_COMPLAINTS}/complaints/${id}`)
       .then((res) => setComplaint(res.data))
       .catch(() => alert("ไม่พบข้อมูลเรื่องร้องเรียนนี้"))
       .finally(() => setLoading(false));

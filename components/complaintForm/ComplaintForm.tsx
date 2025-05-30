@@ -45,9 +45,9 @@ export default function ComplaintForm() {
     images.forEach((img) => formData.append("images", img));
 
     try {
-      const res = await axios.post(`https://main-application-production-92c0.up.railway.app/complaints`, formData);
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_COMPLAINTS}/complaints`, formData);
       const complaintId = res.data.id;
-      await axios.put(`https://main-application-production-92c0.up.railway.app/webhook/line/${complaintId}/notify`);
+      await axios.put(`${process.env.NEXT_PUBLIC_API_COMPLAINTS}/webhook/line/${complaintId}/notify`);
       alert("ส่งเรื่องเรียบร้อยแล้ว! ขอบคุณที่แจ้งครับ 🙏");
       setDescription("");
       setPhone("");

@@ -1,8 +1,31 @@
 "use client";
 import dynamic from 'next/dynamic';
+import { useEffect, useState } from 'react'
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 const MonthlyStatusChart = () => {
+    const [data, setData] = useState<
+        { month: number; status: 'PENDING' | 'DONE'; count: number }[]
+    >([])
+
+    useEffect(() => {
+        const year = new Date().getFullYear()
+        console.log(year);
+        
+        fetch(`${process.env.NEXT_PUBLIC_API_COMPLAINTS}/dashboard/monthly-status?year=${year}`)
+            .then(res => res.json())
+            .then(setData)
+    }, [])
+
+    const grouped = {
+        DONE: Array(12).fill(0),
+        PENDING: Array(12).fill(0),
+    }
+
+    data.forEach(({ month, status, count }) => {
+        grouped[status][month - 1] = count
+    })
+
     const options: ApexCharts.ApexOptions = {
         chart: {
             type: "bar",
@@ -27,7 +50,7 @@ const MonthlyStatusChart = () => {
         fill: {
             opacity: 1
         },
-        colors: ["#facc15", "#22c55e"], // 🟡 Yellow for pending, 🟢 Green for resolved
+        colors: ["#facc15", "#22c55e"],
         dataLabels: {
             enabled: false
         },
@@ -41,11 +64,11 @@ const MonthlyStatusChart = () => {
     const series = [
         {
             name: "รอดำเนินการ",
-            data: [2, 3, 1, 4, 2, 0, 1, 2, 3, 1, 0, 0]
+            data: grouped.PENDING
         },
         {
             name: "ดำเนินการแล้ว",
-            data: [5, 7, 8, 6, 9, 4, 3, 5, 6, 4, 3, 2]
+            data: grouped.DONE
         }
     ];
 

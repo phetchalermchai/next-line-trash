@@ -1,15 +1,19 @@
 "use client"
 import dynamic from 'next/dynamic';
+import { useEffect, useState } from 'react'
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-const data = {
-  series: [
-    {
-      name: "เรื่องร้องเรียน",
-      data: [2, 4, 7, 5, 3, 6, 8, 4, 3, 1, 0, 0], // Mock data รายเดือน
-    },
-  ],
-  options: {
+export default function MonthlyTrendChart() {
+  const [data, setData] = useState<{ month: number; count: number }[]>([])
+
+  useEffect(() => {
+    const currentYear = new Date().getFullYear()
+    fetch(`${process.env.NEXT_PUBLIC_API_COMPLAINTS}/dashboard/monthly-trend?year=${currentYear}`)
+      .then(res => res.json())
+      .then(setData)
+  }, [])
+
+  const options = {
     chart: {
       type: "area" as "area",
       toolbar: { show: false },
@@ -35,14 +39,18 @@ const data = {
     },
     yaxis: {
       labels: { formatter: (val: number) => `${val}` },
-    },
-  },
-}
+    }
+  }
 
-export default function MonthlyTrendChart() {
+  const series = [
+    {
+      name: "เรื่องร้องเรียน",
+      data: data.map(d => d.count),
+    },
+  ]
   return (
     <div>
-      <Chart options={data.options} series={data.series} type="area" height={300} />
+      <Chart options={options} series={series} type="area" height={300} />
     </div>
   )
 }

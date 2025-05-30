@@ -23,7 +23,7 @@ export default function AdminReportPage() {
       if (image) formData.append("images", image);
 
       await axios.post(
-        `https://main-application-production-92c0.up.railway.app/webhook/line/complaints/${id}/image-after`,
+        `${process.env.NEXT_PUBLIC_API_COMPLAINTS}/webhook/line/complaints/${id}/image-after`,
         formData
       );
 
