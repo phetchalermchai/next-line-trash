@@ -29,6 +29,7 @@ const handler = NextAuth({
           credentials?.username === process.env.ADMIN_USERNAME &&
           credentials?.password === process.env.ADMIN_PASSWORD
         ) {
+          // return พร้อม role
           return { id: "admin", name: "Admin User", role: "admin" };
         }
         return null;
@@ -41,22 +42,22 @@ const handler = NextAuth({
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async jwt({ token, user }) {
+      // เพิ่ม role ลง token
       if (user) {
-        token.role = user.role ?? "admin";
+        token.role = (user as any).role;
       }
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.role = token.role as string | undefined;
-      }
-      session.token = token; // เอาไว้ใช้แนบไปกับ API call
+      // ดึง role กลับมาใน session
+      session.user.role = typeof token.role === "string" ? token.role : undefined;
+      session.token = token; // <--- เพิ่มตรงนี้เพื่อให้ใช้ token ที่ raw
       return session;
     },
   },
+  secret: process.env.NEXTAUTH_SECRET,
 });
 
 export { handler as GET, handler as POST };
