@@ -2,7 +2,7 @@ import axios from 'axios'
 import { getSession } from 'next-auth/react'
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_COMPLAINTS,
+  baseURL: "http://localhost:8080",
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
@@ -10,11 +10,13 @@ const api = axios.create({
 })
 
 api.interceptors.request.use(async (config) => {
-  const session = await getSession()
-  const token = session?.token 
+  const session = await getSession();
+  const token = session?.token;
+  
   if (token && config.headers) {
     config.headers['Authorization'] = `Bearer ${token}`;
   }
+
   return config;
 }, (error) => {
   return Promise.reject(error);

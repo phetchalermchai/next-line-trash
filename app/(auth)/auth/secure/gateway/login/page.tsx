@@ -1,12 +1,20 @@
 "use client";
-import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
+
+  const { status } = useSession();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/admin/dashboard");
+    }
+  }, [status, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +30,8 @@ export default function AdminLoginPage() {
       alert("เข้าสู่ระบบล้มเหลว");
     }
   };
+
+  if (status === "loading") return <p>Loading...</p>;
 
   return (
     <div className="p-4 max-w-sm mx-auto space-y-4">

@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { SignJWT } from 'jose';
 
 declare module "next-auth" {
   interface User {
@@ -53,7 +54,16 @@ const handler = NextAuth({
     async session({ session, token }) {
       // ดึง role กลับมาใน session
       session.user.role = typeof token.role === "string" ? token.role : undefined;
-      session.token = token; // <--- เพิ่มตรงนี้เพื่อให้ใช้ token ที่ raw
+      const secret = process.env.NEXTAUTH_SECRET!;
+      const encodedSecret = new TextEncoder().encode(secret);
+
+      const jwt = await new SignJWT(token as any)
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('1h')
+        .sign(encodedSecret);
+
+      session.token = jwt;
       return session;
     },
   },
