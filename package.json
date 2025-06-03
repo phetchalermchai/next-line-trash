@@ -42,7 +42,7 @@
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.3.8",
     "react-easy-crop": "^5.4.2",
-    "react-leaflet": "^5.0.0",
+    "react-leaflet": "^4.2.1",
     "sonner": "^2.0.5",
     "tailwind-merge": "^3.3.0",
     "xlsx": "^0.18.5"
