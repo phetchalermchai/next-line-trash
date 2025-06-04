@@ -22,6 +22,7 @@ export default function MiniMapPreview({ location }: Props) {
     return (
         <div className="relative z-0 h-[160px] w-full overflow-hidden rounded border">
             <MapContainer
+                key={`${lat},${lng}`}
                 center={[lat, lng]}
                 zoom={16}
                 scrollWheelZoom={false}

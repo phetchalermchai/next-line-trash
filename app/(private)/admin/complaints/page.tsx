@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,17 @@ import {
     TableCell,
     TableBody,
 } from "@/components/ui/table";
+import {
+    AlertDialog,
+    AlertDialogTrigger,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogFooter,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogCancel,
+    AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -166,10 +178,10 @@ export default function ComplaintSearchPage() {
     const handleDelete = async (id: string) => {
         const itemToDelete = complaints.find((c) => c.id === id);
         if (!itemToDelete) return;
-        if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบเรื่องร้องเรียนนี้?")) return;
         try {
             await api.delete(`/complaints/${id}`);
             toast.success("ลบสำเร็จ", {
+                description: "รูปภาพจะไม่สามารถเรียกคืนได้",
                 action: {
                     label: "เลิกทำ",
                     onClick: async () => {
@@ -192,7 +204,6 @@ export default function ComplaintSearchPage() {
 
     const handleDeleteSelected = async () => {
         if (!selectedIds.length) return;
-        if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบรายการที่เลือกทั้งหมด?")) return;
         const deletedItems = complaints.filter((c) => selectedIds.includes(c.id));
         try {
             await api.post(`/complaints/bulk`, {
@@ -200,6 +211,7 @@ export default function ComplaintSearchPage() {
             });
 
             toast.success(`ลบ ${selectedIds.length} รายการเรียบร้อยแล้ว`, {
+                description: "รูปภาพจะไม่สามารถเรียกคืนได้",
                 action: {
                     label: "เลิกทำ",
                     onClick: async () => {
@@ -263,7 +275,8 @@ export default function ComplaintSearchPage() {
         XLSX.utils.book_append_sheet(workbook, worksheet, "Complaints");
         const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
         const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-        saveAs(data, "complaints.xlsx");
+        const date = new Date().toISOString().slice(0, 10);
+        saveAs(data, `complaints-${date}.xlsx`);
     };
 
     const exportPDF = async () => {
@@ -309,7 +322,8 @@ export default function ComplaintSearchPage() {
                 fontSize: 10,
             },
         });
-        doc.save("complaints.pdf");
+        const date = new Date().toISOString().slice(0, 10);
+        doc.save(`complaints-${date}.pdf`);
     };
 
     return (
@@ -317,11 +331,27 @@ export default function ComplaintSearchPage() {
             <h1 className="text-2xl font-semibold border-b pb-2 flex justify-between items-center">
                 ค้นหาร้องเรียนย้อนหลัง
                 <div className="flex gap-2">
-                    <Button onClick={exportExcel} variant="outline"><FileDown className="w-4 h-4 mr-2" /> Excel</Button>
-                    <Button onClick={exportPDF} variant="outline"><FileText className="w-4 h-4 mr-2" /> PDF</Button>
-                    <Button onClick={handleDeleteSelected} variant="destructive" disabled={selectedIds.length === 0}>
-                        <Trash2 className="w-4 h-4 mr-2" />ลบรายการที่เลือก
-                    </Button>
+                    <Button onClick={exportExcel} variant="outline"><FileDown className="w-4 h-4 mr-2 cursor-pointer" /> ดาวน์โหลด Excel</Button>
+                    <Button onClick={exportPDF} variant="outline"><FileText className="w-4 h-4 mr-2 cursor-pointer" /> ส่งออก PDF</Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" disabled={selectedIds.length === 0} className="cursor-pointer">
+                                <Trash2 className="w-4 h-4 mr-2" /> ลบรายการที่เลือก
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการที่เลือกนี้?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    การลบนี้จะลบข้อมูลรายการที่เลือกทั้งหมด และไม่สามารถเรียกคืนได้ (ยกเว้นกด "เลิกทำ")
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDeleteSelected}>ลบรายการที่เลือก</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             </h1>
             <div className="sticky top-0 z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-muted p-4 rounded-lg shadow-sm">
@@ -363,7 +393,7 @@ export default function ComplaintSearchPage() {
                             setPage(1);
                             fetchData("");
                         }}
-                        className="w-full"
+                        className="w-full cursor-pointer"
                     >
                         ล้าง
                     </Button>
@@ -393,13 +423,31 @@ export default function ComplaintSearchPage() {
                                                     <Bell className="w-4 h-4 text-blue-500" />
                                                 </Button>
                                                 <Button size="icon" variant="ghost" asChild>
-                                                    <a href={`/admin/complaints/${c.id}/edit`}>
+                                                    <Link href={`/admin/complaints/${c.id}/edit`}>
                                                         <Pencil className="w-4 h-4 text-yellow-500" />
-                                                    </a>
+                                                    </Link>
                                                 </Button>
-                                                <Button size="icon" variant="ghost" onClick={() => handleDelete(c.id)}>
-                                                    <Trash2 className="w-4 h-4 text-red-500" />
-                                                </Button>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button size="icon" variant="ghost" className="cursor-pointer">
+                                                            <Trash2 className="w-4 h-4 text-red-500" />
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                การลบนี้จะลบข้อมูลทั้งหมด และไม่สามารถเรียกคืนได้ (ยกเว้นกด "เลิกทำ")
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => handleDelete(c.id)}>
+                                                                ลบรายการ
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             </div>
                                         )}
                                     </div>
@@ -458,13 +506,31 @@ export default function ComplaintSearchPage() {
                                                     <Bell className="w-4 h-4 text-blue-500" />
                                                 </Button>
                                                 <Button size="icon" variant="ghost" asChild>
-                                                    <a href={`/admin/complaints/${c.id}/edit`}>
+                                                    <Link href={`/admin/complaints/${c.id}/edit`}>
                                                         <Pencil className="w-4 h-4 text-yellow-500" />
-                                                    </a>
+                                                    </Link>
                                                 </Button>
-                                                <Button size="icon" variant="ghost" onClick={() => handleDelete(c.id)}>
-                                                    <Trash2 className="w-4 h-4 text-red-500" />
-                                                </Button>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button size="icon" variant="ghost" className="cursor-pointer">
+                                                            <Trash2 className="w-4 h-4 text-red-500" />
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                การลบนี้จะลบข้อมูลทั้งหมด และไม่สามารถเรียกคืนได้ (ยกเว้นกด "เลิกทำ")
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => handleDelete(c.id)}>
+                                                                ลบรายการ
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             </TableCell>
                                         </TableRow>
                                     );

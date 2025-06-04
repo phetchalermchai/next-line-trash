@@ -5,20 +5,24 @@ import { useDropzone } from "react-dropzone";
 import { UploadCloud, X } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
 
 interface DropzoneUploaderProps {
     field: string;
     label: string;
     files: File[];
+    previewUrls?: string[];
     setFiles: (files: File[]) => void;
     onCrop?: (file: File, done: (cropped: File) => void) => void;
     onPreview?: (urls: string[], index: number) => void;
+    setPreviewUrls?: (urls: string[]) => void;
 }
 
-export default function DropzoneUploader({ field, label, files, setFiles, onCrop, onPreview }: DropzoneUploaderProps) {
+export default function DropzoneUploader({ field, label, files, previewUrls, setFiles, onCrop, onPreview, setPreviewUrls }: DropzoneUploaderProps) {
+    const totalImages = (previewUrls?.length || 0) + files.length;
     const onDrop = useCallback(
         (acceptedFiles: File[]) => {
-            if (files.length + acceptedFiles.length > 5) {
+            if (totalImages + acceptedFiles.length > 5) {
                 toast.error("สามารถอัปโหลดได้สูงสุด 5 รูป");
                 return;
             }
@@ -38,7 +42,7 @@ export default function DropzoneUploader({ field, label, files, setFiles, onCrop
                 }
             }
         },
-        [files, setFiles, onCrop]
+        [files, setFiles, onCrop, totalImages]
     );
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -54,47 +58,63 @@ export default function DropzoneUploader({ field, label, files, setFiles, onCrop
         setFiles(updated);
     };
 
-    const imageUrls = files.map((f) => URL.createObjectURL(f));
+    const handleRemovePreviewUrl = (index: number) => {
+        if (!previewUrls || !setPreviewUrls) return;
+        const updated = [...previewUrls];
+        updated.splice(index, 1);
+        setPreviewUrls(updated);
+    };
+
+    const fileUrls = files.map((f) => URL.createObjectURL(f));
+    const allPreviewUrls = [...(previewUrls || []), ...fileUrls];
 
     return (
         <div className="space-y-2">
-            <label className="text-sm font-medium">{label}</label>
-            <div
-                {...getRootProps()}
-                className={`flex items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer transition bg-muted/10 text-muted-foreground text-sm gap-2 ${isDragActive ? "bg-muted/30 border-blue-500" : "hover:bg-muted/20"
-                    }`}
-            >
-                <UploadCloud className="w-5 h-5" />
-                <span>คลิกหรือลากรูปเพื่อเพิ่ม (สูงสุด 5 รูป)</span>
-                <input {...getInputProps()} />
+            <div className="grid w-full items-center gap-2">
+                <Label htmlFor={`input-${field}`}>{label}</Label>
+                <div
+                    {...getRootProps()}
+                    className={`flex items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer transition bg-muted/10 text-muted-foreground text-sm gap-2 ${isDragActive ? "bg-muted/30 border-blue-500" : "hover:bg-muted/20"
+                        }`}
+                >
+                    <UploadCloud className="w-5 h-5" />
+                    <span>คลิกหรือลากรูปเพื่อเพิ่ม (สูงสุด 5 รูป)</span>
+                    <input {...getInputProps({ id: `input-${field}` })} />
+                </div>
             </div>
 
             <p className="text-sm text-muted-foreground">
-                {files.length} ไฟล์ / สูงสุด 5 รูป, ไม่เกิน 3MB ต่อไฟล์
+                {totalImages} ไฟล์ / สูงสุด 5 รูป, ไม่เกิน 3MB ต่อไฟล์
             </p>
 
-            {files.length > 0 && (
+            {allPreviewUrls.length > 0 && (
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-2">
-                    {files.map((file, idx) => {
-                        const url = URL.createObjectURL(file);
+                    {allPreviewUrls.map((url, idx) => {
+                        const isFromFile = idx >= (previewUrls?.length || 0);
+                        const fileIdx = idx - (previewUrls?.length || 0);
+
                         return (
                             <div
-                                key={idx}
+                                key={url}
                                 className="relative group border rounded overflow-hidden aspect-square cursor-pointer"
-                                onClick={() => onPreview?.(imageUrls, idx)}
+                                onClick={() => onPreview?.(allPreviewUrls, idx)}
                             >
                                 <Image
                                     src={url}
                                     alt={`preview-${idx}`}
                                     fill
                                     className="object-cover"
-                                    onClick={() => onPreview?.(files.map((f) => URL.createObjectURL(f)), idx)}
                                 />
+
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        handleRemove(idx);
-                                        URL.revokeObjectURL(url);
+                                        if (isFromFile) {
+                                            handleRemove(fileIdx);
+                                            URL.revokeObjectURL(url);
+                                        } else {
+                                            handleRemovePreviewUrl(idx);
+                                        }
                                     }}
                                     className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 text-xs"
                                     title="ลบ"

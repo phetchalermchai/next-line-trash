@@ -68,19 +68,16 @@ export default function MapPicker({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" className="cursor-pointer">
                     <MapPin className="w-4 h-4 mr-1" />
                     ปักหมุด
                 </Button>
             </DialogTrigger>
             <DialogPortal>
-                <DialogContent
-                    className="max-w-4xl w-full overflow-hidden p-0 z-50"
-                    aria-describedby="map-picker-description"
-                >
+                <DialogContent className="max-w-4xl w-full overflow-hidden p-0 z-50">
                     <DialogHeader className="p-4">
                         <DialogTitle>เลือกตำแหน่ง</DialogTitle>
-                        <DialogDescription id="map-picker-description">
+                        <DialogDescription>
                             ลากหมุดเพื่อเลือกพิกัดที่ต้องการ แล้วกดบันทึก
                         </DialogDescription>
                     </DialogHeader>

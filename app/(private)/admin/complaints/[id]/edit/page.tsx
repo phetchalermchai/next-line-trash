@@ -4,6 +4,7 @@ import { useState, useEffect, ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
@@ -37,6 +38,8 @@ export default function ComplaintEditPage() {
     const [cropImage, setCropImage] = useState<File | null>(null);
     const [onCropDone, setOnCropDone] = useState<((f: File) => void) | null>(null);
     const [previewImages, setPreviewImages] = useState<string[]>([]);
+    const [imageBeforeUrls, setImageBeforeUrls] = useState<string[]>([]);
+    const [imageAfterUrls, setImageAfterUrls] = useState<string[]>([]);
     const [previewIndex, setPreviewIndex] = useState<number>(0);
     const [showGallery, setShowGallery] = useState(false);
 
@@ -45,6 +48,12 @@ export default function ComplaintEditPage() {
             try {
                 const res = await api.get(`/complaints/${id}`);
                 setFormData(res.data);
+                setImageBeforeUrls(
+                    res.data.imageBefore ? res.data.imageBefore.split(',').map((s: string) => s.trim()).filter(Boolean) : []
+                );
+                setImageAfterUrls(
+                    res.data.imageAfter ? res.data.imageAfter.split(',').map((s: string) => s.trim()).filter(Boolean) : []
+                );
             } catch {
                 toast.error("โหลดข้อมูลล้มเหลว");
             } finally {
@@ -59,12 +68,44 @@ export default function ComplaintEditPage() {
     };
 
     const handleSave = async () => {
+        if (!formData.phone?.trim()) {
+            toast.error("กรุณากรอกเบอร์โทร");
+            return;
+        }
+
+        if (!formData.description?.trim()) {
+            toast.error("กรุณากรอกรายละเอียด");
+            return;
+        }
+
+        if (!formData.status) {
+            toast.error("กรุณาเลือกสถานะ");
+            return;
+        }
         try {
             const form = new FormData();
-            Object.entries(formData).forEach(([k, v]) => form.append(k, v));
-            imageFiles.imageBefore.forEach((f) => form.append("imageBeforeFiles", f));
-            imageFiles.imageAfter.forEach((f) => form.append("imageAfterFiles", f));
 
+            // รวมรูปจาก previewUrls ที่เหลืออยู่กลับไปเป็น string
+            const dataToSubmit = {
+                ...formData,
+                imageBefore: imageBeforeUrls.join(','),
+                imageAfter: imageAfterUrls.join(','),
+            };
+
+            // เพิ่มข้อมูลทั้งหมดใน formData ลงใน FormData object
+            Object.entries(dataToSubmit).forEach(([key, value]) => {
+                form.append(key, value);
+            });
+
+            // เพิ่มไฟล์ที่อัปโหลดใหม่ลงใน FormData
+            imageFiles.imageBefore.forEach((file) =>
+                form.append("imageBeforeFiles", file)
+            );
+            imageFiles.imageAfter.forEach((file) =>
+                form.append("imageAfterFiles", file)
+            );
+
+            // ส่ง PUT request
             await api.put(`/complaints/${id}`, form, {
                 headers: { "Content-Type": "multipart/form-data" },
                 onUploadProgress: (e) => {
@@ -94,22 +135,36 @@ export default function ComplaintEditPage() {
         <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
             <h1 className="text-2xl font-bold">แก้ไขรายการร้องเรียน</h1>
 
-            <Input name="phone" value={formData.phone} onChange={handleChange} placeholder="เบอร์โทร" />
-            <Textarea name="description" value={formData.description || ""} onChange={handleChange} rows={3} placeholder="รายละเอียด" />
-            <Textarea name="message" value={formData.message || ""} onChange={handleChange} rows={2} placeholder="สรุปผล" />
+            <div className="grid w-full items-center gap-3">
+                <Label htmlFor="phone">เบอร์โทร</Label>
+                <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="เบอร์โทร" />
+            </div>
+            <div className="grid w-full items-center gap-3">
+                <Label htmlFor="description">รายละเอียด</Label>
+                <Textarea id="description" name="description" value={formData.description || ""} onChange={handleChange} rows={3} placeholder="รายละเอียด" />
+            </div>
+            <div className="grid w-full items-center gap-3">
+                <Label htmlFor="message">สรุปผล</Label>
+                <Textarea id="message" name="message" value={formData.message || ""} onChange={handleChange} rows={2} placeholder="สรุปผล" />
+            </div>
 
-            <Select value={formData.status} onValueChange={(val) => setFormData((prev) => ({ ...prev, status: val }))}>
-                <SelectTrigger><SelectValue placeholder="เลือกสถานะ" /></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="PENDING">รอดำเนินการ</SelectItem>
-                    <SelectItem value="DONE">เสร็จสิ้น</SelectItem>
-                </SelectContent>
-            </Select>
+            <div className="grid w-full items-center gap-3">
+                <Label htmlFor="status">สถานะ</Label>
+                <Select value={formData.status} onValueChange={(val) => setFormData((prev) => ({ ...prev, status: val }))}>
+                    <SelectTrigger id="status"><SelectValue placeholder="เลือกสถานะ" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="PENDING">รอดำเนินการ</SelectItem>
+                        <SelectItem value="DONE">เสร็จสิ้น</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
 
             <DropzoneUploader
                 field="imageBefore"
                 label="ภาพก่อน"
                 files={imageFiles.imageBefore}
+                previewUrls={imageBeforeUrls}
+                setPreviewUrls={setImageBeforeUrls}
                 setFiles={(files) => setImageFiles((prev) => ({ ...prev, imageBefore: files }))}
                 onCrop={(file, done) => {
                     setCropImage(file);
@@ -125,6 +180,8 @@ export default function ComplaintEditPage() {
                 field="imageAfter"
                 label="ภาพหลัง"
                 files={imageFiles.imageAfter}
+                previewUrls={imageAfterUrls}
+                setPreviewUrls={setImageAfterUrls}
                 setFiles={(files) => setImageFiles((prev) => ({ ...prev, imageAfter: files }))}
                 onCrop={(file, done) => {
                     setCropImage(file);
@@ -146,10 +203,10 @@ export default function ComplaintEditPage() {
             )}
 
             <div className="space-y-2">
-                <label className="text-sm font-medium">ระบุตำแหน่งจาก GPS</label>
+                <Label htmlFor="location">ระบุตำแหน่งจาก GPS</Label>
                 <div className="flex flex-col sm:flex-row gap-2">
-                    <Input name="location" value={formData.location || ""} onChange={handleChange} className="flex-1" />
-                    <Button type="button" onClick={() => {
+                    <Input id="location" name="location" value={formData.location || ""} onChange={handleChange} className="flex-1" />
+                    <Button type="button" className="cursor-pointer" onClick={() => {
                         if (!navigator.geolocation) return;
                         navigator.geolocation.getCurrentPosition((pos) => {
                             const { latitude, longitude } = pos.coords;
@@ -177,8 +234,11 @@ export default function ComplaintEditPage() {
                 </div>
             )}
 
-            <div className="flex justify-end">
-                <Button onClick={handleSave} className="px-6">บันทึก</Button>
+            <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => router.back()} className="px-6 cursor-pointer">
+                    ย้อนกลับ
+                </Button>
+                <Button onClick={handleSave} className="px-6 cursor-pointer">บันทึก</Button>
             </div>
 
             {cropImage && onCropDone && (
