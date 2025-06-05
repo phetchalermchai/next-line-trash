@@ -105,7 +105,6 @@ export default function ComplaintSearchPage() {
     const [totalPages, setTotalPages] = useState(1);
     const [loadingNotifyId, setLoadingNotifyId] = useState<string | null>(null);
     const [confirmDialogId, setConfirmDialogId] = useState<string | null>(null);
-    const [notifiedAtMap, setNotifiedAtMap] = useState<Record<string, Date>>({});
 
     const fetchData = async (overrideSearch?: string) => {
         const params = new URLSearchParams();
@@ -245,7 +244,7 @@ export default function ComplaintSearchPage() {
         const now = new Date();
         const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
 
-        const lastNotified = notifiedAtMap[complaint.id];
+        const lastNotified = complaint.notifiedAt ? new Date(complaint.notifiedAt) : null;
         const notifiedDiff = lastNotified
             ? (now.getTime() - lastNotified.getTime()) / (1000 * 60 * 60 * 24)
             : Infinity;
@@ -266,8 +265,8 @@ export default function ComplaintSearchPage() {
         setLoadingNotifyId(complaint.id);
         try {
             await api.put(`/webhook/line/${complaint.id}/notify-group`);
-            setNotifiedAtMap((prev) => ({ ...prev, [complaint.id]: new Date() }));
             toast.success("แจ้งเตือนไปยังกลุ่มไลน์แล้ว");
+            await fetchData();
         } catch (err) {
             console.error("แจ้งเตือนไม่สำเร็จ", err);
             toast.error("ไม่สามารถแจ้งเตือนได้");
@@ -275,8 +274,6 @@ export default function ComplaintSearchPage() {
             setLoadingNotifyId(null);
         }
     };
-
-
 
     const exportExcel = async () => {
         const allComplaints = filterSelected(await fetchAllData());
@@ -364,7 +361,7 @@ export default function ComplaintSearchPage() {
         const created = new Date(complaint.createdAt);
         const now = new Date();
         const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
-        const lastNotified = notifiedAtMap[complaint.id];
+        const lastNotified = complaint.notifiedAt ? new Date(complaint.notifiedAt) : null;
         const notifiedDiff = lastNotified
             ? (now.getTime() - lastNotified.getTime()) / (1000 * 60 * 60 * 24)
             : Infinity;
