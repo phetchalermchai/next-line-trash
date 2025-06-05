@@ -375,268 +375,269 @@ export default function ComplaintSearchPage() {
         else if (notifiedDiff < 1) tooltipMessage = "แจ้งเตือนไปแล้ววันนี้";
 
         return (
-            <TooltipProvider>
+            <>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={() => handleNotifyLine(complaint)}
-                                    disabled={disabled || loadingNotifyId === complaint.id}
-                                >
-                                    <Bell className="w-4 h-4 text-blue-500" />
-                                </Button>
-                            </AlertDialogTrigger>
-                            {confirmDialogId === complaint.id && (
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>ยืนยันการแจ้งเตือน</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            คุณแน่ใจหรือไม่ว่าต้องการแจ้งเตือนไปยังกลุ่มไลน์?
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel onClick={() => setConfirmDialogId(null)}>ยกเลิก</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => confirmNotifyLine(complaint)}>
-                                            ยืนยัน
-                                        </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            )}
-                        </AlertDialog>
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleNotifyLine(complaint)}
+                            disabled={disabled || loadingNotifyId === complaint.id}
+                        >
+                            <Bell className="w-4 h-4 text-blue-500" />
+                        </Button>
                     </TooltipTrigger>
                     <TooltipContent>{tooltipMessage}</TooltipContent>
                 </Tooltip>
-            </TooltipProvider>
-        );
-    };
 
-    return (
-        <div className="p-6 bg-background text-foreground rounded-xl shadow-md space-y-6">
-            <h1 className="text-2xl font-semibold border-b pb-2 flex justify-between items-center">
-                ค้นหาร้องเรียนย้อนหลัง
-                <div className="flex gap-2">
-                    <Button onClick={exportExcel} variant="outline"><FileDown className="w-4 h-4 mr-2 cursor-pointer" /> ดาวน์โหลด Excel</Button>
-                    <Button onClick={exportPDF} variant="outline"><FileText className="w-4 h-4 mr-2 cursor-pointer" /> ส่งออก PDF</Button>
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="destructive" disabled={selectedIds.length === 0} className="cursor-pointer">
-                                <Trash2 className="w-4 h-4 mr-2" /> ลบรายการที่เลือก
-                            </Button>
-                        </AlertDialogTrigger>
+                {confirmDialogId === complaint.id && (
+                    <AlertDialog open onOpenChange={(open) => !open && setConfirmDialogId(null)}>
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                                <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการที่เลือกนี้?</AlertDialogTitle>
+                                <AlertDialogTitle>ยืนยันการแจ้งเตือน</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    การลบนี้จะลบข้อมูลรายการที่เลือกทั้งหมด และไม่สามารถเรียกคืนได้ (ยกเว้นกด "เลิกทำ")
+                                    คุณแน่ใจหรือไม่ว่าต้องการแจ้งเตือนไปยังกลุ่มไลน์?
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                                 <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDeleteSelected}>ลบรายการที่เลือก</AlertDialogAction>
+                                <AlertDialogAction onClick={() => confirmNotifyLine(complaint)}>
+                                    ยืนยัน
+                                </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
-                </div>
-            </h1>
-            <div className="sticky top-0 z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-muted p-4 rounded-lg shadow-sm">
-                <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-muted-foreground">คำค้นหา</label>
-                    <Input
-                        placeholder="ค้นหาคำสำคัญ..."
-                        value={search}
-                        onChange={handleSearchChange}
-                    />
+                )}
+            </>
+        );
+    };
+
+    return (
+        <TooltipProvider>
+            <div className="p-6 bg-background text-foreground rounded-xl shadow-md space-y-6">
+                <h1 className="text-2xl font-semibold border-b pb-2 flex justify-between items-center">
+                    ค้นหาร้องเรียนย้อนหลัง
+                    <div className="flex gap-2">
+                        <Button onClick={exportExcel} variant="outline"><FileDown className="w-4 h-4 mr-2 cursor-pointer" /> ดาวน์โหลด Excel</Button>
+                        <Button onClick={exportPDF} variant="outline"><FileText className="w-4 h-4 mr-2 cursor-pointer" /> ส่งออก PDF</Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive" disabled={selectedIds.length === 0} className="cursor-pointer">
+                                    <Trash2 className="w-4 h-4 mr-2" /> ลบรายการที่เลือก
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการที่เลือกนี้?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        การลบนี้จะลบข้อมูลรายการที่เลือกทั้งหมด และไม่สามารถเรียกคืนได้ (ยกเว้นกด "เลิกทำ")
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDeleteSelected}>ลบรายการที่เลือก</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
+                </h1>
+                <div className="sticky top-0 z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-muted p-4 rounded-lg shadow-sm">
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-muted-foreground">คำค้นหา</label>
+                        <Input
+                            placeholder="ค้นหาคำสำคัญ..."
+                            value={search}
+                            onChange={handleSearchChange}
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-muted-foreground">สถานะ</label>
+                        <Select onValueChange={(val) => { setStatus(val); setPage(1); }} value={status}>
+                            <SelectTrigger>
+                                {status === "ALL" ? "ทั้งหมด" : statusMap[status as keyof typeof statusMap]?.label || status}
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ALL">ทั้งหมด</SelectItem>
+                                <SelectItem value="PENDING">PENDING</SelectItem>
+                                <SelectItem value="DONE">DONE</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-muted-foreground">ช่วงวันที่</label>
+                        <DatePickerWithRange value={dateRange} onChange={(range) => { setDateRange(range); setPage(1); }} />
+                    </div>
+
+                    <div className="flex items-end gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setSearch("");
+                                setStatus("ALL");
+                                setDateRange(undefined);
+                                setPage(1);
+                                fetchData("");
+                            }}
+                            className="w-full cursor-pointer"
+                        >
+                            ล้าง
+                        </Button>
+                    </div>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-muted-foreground">สถานะ</label>
-                    <Select onValueChange={(val) => { setStatus(val); setPage(1); }} value={status}>
-                        <SelectTrigger>
-                            {status === "ALL" ? "ทั้งหมด" : statusMap[status as keyof typeof statusMap]?.label || status}
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="ALL">ทั้งหมด</SelectItem>
-                            <SelectItem value="PENDING">PENDING</SelectItem>
-                            <SelectItem value="DONE">DONE</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-muted-foreground">ช่วงวันที่</label>
-                    <DatePickerWithRange value={dateRange} onChange={(range) => { setDateRange(range); setPage(1); }} />
-                </div>
-
-                <div className="flex items-end gap-2">
-                    <Button
-                        variant="outline"
-                        onClick={() => {
-                            setSearch("");
-                            setStatus("ALL");
-                            setDateRange(undefined);
-                            setPage(1);
-                            fetchData("");
-                        }}
-                        className="w-full cursor-pointer"
-                    >
-                        ล้าง
-                    </Button>
-                </div>
-            </div>
-
-            <div className="border rounded-lg overflow-x-auto bg-card">
-                {complaints.length === 0 ? (
-                    <div className="text-center py-10 text-muted-foreground">ไม่พบข้อมูลที่คุณค้นหา</div>
-                ) : (
-                    <>
-                        <div className="grid gap-4 md:hidden">
-                            {complaints.map((c) => {
-                                const status = statusMap[c.status];
-                                return (
-                                    <div key={c.id} className="border p-4 rounded-md shadow-sm space-y-2">
-                                        <div className="text-sm text-muted-foreground">{format(new Date(c.createdAt), "dd/MM/yyyy")}</div>
-                                        <div className="font-medium">{c.description}</div>
-                                        <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${status.color}`}>
-                                            {status.icon}
-                                            {status.label}
-                                        </div>
-                                        <div className="text-sm text-muted-foreground">ผู้แจ้ง: {c.lineDisplayName || "-"}</div>
-                                        {isAdmin && (
-                                            <div className="flex justify-end gap-2">
-                                                {renderNotifyButton(c)}
-                                                <Button size="icon" variant="ghost" asChild>
-                                                    <Link href={`/admin/complaints/${c.id}/edit`}>
-                                                        <Pencil className="w-4 h-4 text-yellow-500" />
-                                                    </Link>
-                                                </Button>
-                                                <AlertDialog>
-                                                    <AlertDialogTrigger asChild>
-                                                        <Button size="icon" variant="ghost" className="cursor-pointer">
-                                                            <Trash2 className="w-4 h-4 text-red-500" />
-                                                        </Button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                                การลบนี้จะลบข้อมูลทั้งหมด และไม่สามารถเรียกคืนได้ (ยกเว้นกด "เลิกทำ")
-                                                            </AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                                                            <AlertDialogAction onClick={() => handleDelete(c.id)}>
-                                                                ลบรายการ
-                                                            </AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        <Table className="hidden md:table">
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>
-                                        <Checkbox
-                                            onCheckedChange={(checked) => {
-                                                setSelectedIds(checked ? complaints.map(c => c.id) : []);
-                                            }}
-                                            checked={selectedIds.length === complaints.length && complaints.length > 0}
-                                            aria-label="Select all"
-                                        />
-                                    </TableHead>
-                                    <TableHead>ชื่อผู้ร้องเรียน</TableHead>
-                                    <TableHead>รายละเอียด</TableHead>
-                                    <TableHead>สถานะ</TableHead>
-                                    <TableHead>วันที่บันทึก</TableHead>
-                                    <TableHead className="text-right">การจัดการ</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                <div className="border rounded-lg overflow-x-auto bg-card">
+                    {complaints.length === 0 ? (
+                        <div className="text-center py-10 text-muted-foreground">ไม่พบข้อมูลที่คุณค้นหา</div>
+                    ) : (
+                        <>
+                            <div className="grid gap-4 md:hidden">
                                 {complaints.map((c) => {
                                     const status = statusMap[c.status];
                                     return (
-                                        <TableRow key={c.id}>
-                                            <TableCell>
-                                                <Checkbox
-                                                    checked={selectedIds.includes(c.id)}
-                                                    onCheckedChange={(checked) => {
-                                                        setSelectedIds(prev =>
-                                                            checked
-                                                                ? [...prev, c.id]
-                                                                : prev.filter(id => id !== c.id)
-                                                        );
-                                                    }}
-                                                    aria-label={`Select complaint ${c.id}`}
-                                                />
-                                            </TableCell>
-                                            <TableCell>{c.lineDisplayName || "-"}</TableCell>
-                                            <TableCell>{c.description}</TableCell>
-                                            <TableCell>
-                                                <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium w-fit ${status.color}`}>
-                                                    {status.icon}
-                                                    {status.label}
+                                        <div key={c.id} className="border p-4 rounded-md shadow-sm space-y-2">
+                                            <div className="text-sm text-muted-foreground">{format(new Date(c.createdAt), "dd/MM/yyyy")}</div>
+                                            <div className="font-medium">{c.description}</div>
+                                            <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${status.color}`}>
+                                                {status.icon}
+                                                {status.label}
+                                            </div>
+                                            <div className="text-sm text-muted-foreground">ผู้แจ้ง: {c.lineDisplayName || "-"}</div>
+                                            {isAdmin && (
+                                                <div className="flex justify-end gap-2">
+                                                    {renderNotifyButton(c)}
+                                                    <Button size="icon" variant="ghost" asChild>
+                                                        <Link href={`/admin/complaints/${c.id}/edit`}>
+                                                            <Pencil className="w-4 h-4 text-yellow-500" />
+                                                        </Link>
+                                                    </Button>
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button size="icon" variant="ghost" className="cursor-pointer">
+                                                                <Trash2 className="w-4 h-4 text-red-500" />
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    การลบนี้จะลบข้อมูลทั้งหมด และไม่สามารถเรียกคืนได้ (ยกเว้นกด "เลิกทำ")
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={() => handleDelete(c.id)}>
+                                                                    ลบรายการ
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
                                                 </div>
-                                            </TableCell>
-                                            <TableCell>{format(new Date(c.createdAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())}</TableCell>
-                                            <TableCell className="flex justify-end gap-2">
-                                                {renderNotifyButton(c)}
-                                                <Button size="icon" variant="ghost" asChild>
-                                                    <Link href={`/admin/complaints/${c.id}/edit`}>
-                                                        <Pencil className="w-4 h-4 text-yellow-500" />
-                                                    </Link>
-                                                </Button>
-                                                <AlertDialog>
-                                                    <AlertDialogTrigger asChild>
-                                                        <Button size="icon" variant="ghost" className="cursor-pointer">
-                                                            <Trash2 className="w-4 h-4 text-red-500" />
-                                                        </Button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                                การลบนี้จะลบข้อมูลทั้งหมด และไม่สามารถเรียกคืนได้ (ยกเว้นกด "เลิกทำ")
-                                                            </AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                                                            <AlertDialogAction onClick={() => handleDelete(c.id)}>
-                                                                ลบรายการ
-                                                            </AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
-                                            </TableCell>
-                                        </TableRow>
+                                            )}
+                                        </div>
                                     );
                                 })}
-                            </TableBody>
-                        </Table>
-                    </>
-                )}
-            </div>
+                            </div>
 
-            <div className="flex justify-center pt-4">
-                <div className="inline-flex gap-2">
-                    <Button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-                        ก่อนหน้า
-                    </Button>
-                    <span className="px-2 py-1 text-sm font-medium">
-                        หน้า {page} / {totalPages}
-                    </span>
-                    <Button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
-                        ถัดไป
-                    </Button>
+                            <Table className="hidden md:table">
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>
+                                            <Checkbox
+                                                onCheckedChange={(checked) => {
+                                                    setSelectedIds(checked ? complaints.map(c => c.id) : []);
+                                                }}
+                                                checked={selectedIds.length === complaints.length && complaints.length > 0}
+                                                aria-label="Select all"
+                                            />
+                                        </TableHead>
+                                        <TableHead>ชื่อผู้ร้องเรียน</TableHead>
+                                        <TableHead>รายละเอียด</TableHead>
+                                        <TableHead>สถานะ</TableHead>
+                                        <TableHead>วันที่บันทึก</TableHead>
+                                        <TableHead className="text-right">การจัดการ</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {complaints.map((c) => {
+                                        const status = statusMap[c.status];
+                                        return (
+                                            <TableRow key={c.id}>
+                                                <TableCell>
+                                                    <Checkbox
+                                                        checked={selectedIds.includes(c.id)}
+                                                        onCheckedChange={(checked) => {
+                                                            setSelectedIds(prev =>
+                                                                checked
+                                                                    ? [...prev, c.id]
+                                                                    : prev.filter(id => id !== c.id)
+                                                            );
+                                                        }}
+                                                        aria-label={`Select complaint ${c.id}`}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>{c.lineDisplayName || "-"}</TableCell>
+                                                <TableCell>{c.description}</TableCell>
+                                                <TableCell>
+                                                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium w-fit ${status.color}`}>
+                                                        {status.icon}
+                                                        {status.label}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>{format(new Date(c.createdAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())}</TableCell>
+                                                <TableCell className="flex justify-end gap-2">
+                                                    {renderNotifyButton(c)}
+                                                    <Button size="icon" variant="ghost" asChild>
+                                                        <Link href={`/admin/complaints/${c.id}/edit`}>
+                                                            <Pencil className="w-4 h-4 text-yellow-500" />
+                                                        </Link>
+                                                    </Button>
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button size="icon" variant="ghost" className="cursor-pointer">
+                                                                <Trash2 className="w-4 h-4 text-red-500" />
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    การลบนี้จะลบข้อมูลทั้งหมด และไม่สามารถเรียกคืนได้ (ยกเว้นกด "เลิกทำ")
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={() => handleDelete(c.id)}>
+                                                                    ลบรายการ
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </>
+                    )}
+                </div>
+
+                <div className="flex justify-center pt-4">
+                    <div className="inline-flex gap-2">
+                        <Button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                            ก่อนหน้า
+                        </Button>
+                        <span className="px-2 py-1 text-sm font-medium">
+                            หน้า {page} / {totalPages}
+                        </span>
+                        <Button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                            ถัดไป
+                        </Button>
+                    </div>
                 </div>
             </div>
-        </div>
+        </TooltipProvider>
     );
 }
