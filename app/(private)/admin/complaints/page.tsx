@@ -31,6 +31,7 @@ import {
     AlertDialogCancel,
     AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -73,6 +74,7 @@ interface Complaint {
     location?: string;
     status: "PENDING" | "DONE";
     message?: string;
+    notifiedAt?: string | null;
     createdAt: string;
     updatedAt: string;
 }
@@ -101,6 +103,8 @@ export default function ComplaintSearchPage() {
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
     const [totalPages, setTotalPages] = useState(1);
+    const [loadingNotifyId, setLoadingNotifyId] = useState<string | null>(null);
+    const [confirmDialogId, setConfirmDialogId] = useState<string | null>(null);
 
     const fetchData = async (overrideSearch?: string) => {
         const params = new URLSearchParams();
@@ -235,12 +239,28 @@ export default function ComplaintSearchPage() {
         }
     };
 
-    const handleNotifyLine = async (id: string) => {
+    const handleNotifyLine = async (complaint: Complaint) => {
+        const created = new Date(complaint.createdAt);
+        const now = new Date();
+        const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
+        if (diffDays < 1) {
+            toast.error("สามารถแจ้งเตือนได้หลังจากบันทึกอย่างน้อย 1 วัน");
+            return;
+        }
+        setConfirmDialogId(complaint.id);
+    };
+
+    const confirmNotifyLine = async (complaint: Complaint) => {
+        setConfirmDialogId(null);
+        setLoadingNotifyId(complaint.id);
         try {
-            await api.post(`/webhook/line/notifyGroup`, { complaintId: id });
-            alert("แจ้งเตือนไปยังกลุ่มไลน์แล้ว");
+            await api.put(`/webhook/line/${complaint.id}/notify-group`);
+            toast.success("แจ้งเตือนไปยังกลุ่มไลน์แล้ว");
         } catch (err) {
             console.error("แจ้งเตือนไม่สำเร็จ", err);
+            toast.error("ไม่สามารถแจ้งเตือนได้");
+        } finally {
+            setLoadingNotifyId(null);
         }
     };
 
@@ -419,9 +439,46 @@ export default function ComplaintSearchPage() {
                                         <div className="text-sm text-muted-foreground">ผู้แจ้ง: {c.lineDisplayName || "-"}</div>
                                         {isAdmin && (
                                             <div className="flex justify-end gap-2">
-                                                <Button size="icon" variant="ghost" onClick={() => handleNotifyLine(c.id)}>
+                                                {/* <Button size="icon" variant="ghost" onClick={() => handleNotifyLine(c)} title="แจ้งเตือนซ้ำไปยังกลุ่มไลน์">
                                                     <Bell className="w-4 h-4 text-blue-500" />
-                                                </Button>
+                                                </Button> */}
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button
+                                                                        size="icon"
+                                                                        variant="ghost"
+                                                                        onClick={() => handleNotifyLine(c)}
+                                                                        disabled={loadingNotifyId === c.id}
+                                                                    >
+                                                                        <Bell className="w-4 h-4 text-blue-500" />
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                                {confirmDialogId === c.id && (
+                                                                    <AlertDialogContent>
+                                                                        <AlertDialogHeader>
+                                                                            <AlertDialogTitle>ยืนยันการแจ้งเตือน</AlertDialogTitle>
+                                                                            <AlertDialogDescription>
+                                                                                คุณแน่ใจหรือไม่ว่าต้องการแจ้งเตือนซ้ำไปยังกลุ่มไลน์?
+                                                                            </AlertDialogDescription>
+                                                                        </AlertDialogHeader>
+                                                                        <AlertDialogFooter>
+                                                                            <AlertDialogCancel onClick={() => setConfirmDialogId(null)}>ยกเลิก</AlertDialogCancel>
+                                                                            <AlertDialogAction onClick={() => confirmNotifyLine(c)}>
+                                                                                ยืนยัน
+                                                                            </AlertDialogAction>
+                                                                        </AlertDialogFooter>
+                                                                    </AlertDialogContent>
+                                                                )}
+                                                            </AlertDialog>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            แจ้งเตือนไปยังกลุ่มไลน์ (แจ้งซ้ำ)
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
                                                 <Button size="icon" variant="ghost" asChild>
                                                     <Link href={`/admin/complaints/${c.id}/edit`}>
                                                         <Pencil className="w-4 h-4 text-yellow-500" />
@@ -502,9 +559,46 @@ export default function ComplaintSearchPage() {
                                             </TableCell>
                                             <TableCell>{format(new Date(c.createdAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())}</TableCell>
                                             <TableCell className="flex justify-end gap-2">
-                                                <Button size="icon" variant="ghost" onClick={() => handleNotifyLine(c.id)}>
+                                                {/* <Button size="icon" variant="ghost" onClick={() => handleNotifyLine(c)} title="แจ้งเตือนซ้ำไปยังกลุ่มไลน์">
                                                     <Bell className="w-4 h-4 text-blue-500" />
-                                                </Button>
+                                                </Button> */}
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button
+                                                                        size="icon"
+                                                                        variant="ghost"
+                                                                        onClick={() => handleNotifyLine(c)}
+                                                                        disabled={loadingNotifyId === c.id}
+                                                                    >
+                                                                        <Bell className="w-4 h-4 text-blue-500" />
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                                {confirmDialogId === c.id && (
+                                                                    <AlertDialogContent>
+                                                                        <AlertDialogHeader>
+                                                                            <AlertDialogTitle>ยืนยันการแจ้งเตือน</AlertDialogTitle>
+                                                                            <AlertDialogDescription>
+                                                                                คุณแน่ใจหรือไม่ว่าต้องการแจ้งเตือนซ้ำไปยังกลุ่มไลน์?
+                                                                            </AlertDialogDescription>
+                                                                        </AlertDialogHeader>
+                                                                        <AlertDialogFooter>
+                                                                            <AlertDialogCancel onClick={() => setConfirmDialogId(null)}>ยกเลิก</AlertDialogCancel>
+                                                                            <AlertDialogAction onClick={() => confirmNotifyLine(c)}>
+                                                                                ยืนยัน
+                                                                            </AlertDialogAction>
+                                                                        </AlertDialogFooter>
+                                                                    </AlertDialogContent>
+                                                                )}
+                                                            </AlertDialog>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            แจ้งเตือนไปยังกลุ่มไลน์ (แจ้งซ้ำ)
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
                                                 <Button size="icon" variant="ghost" asChild>
                                                     <Link href={`/admin/complaints/${c.id}/edit`}>
                                                         <Pencil className="w-4 h-4 text-yellow-500" />
