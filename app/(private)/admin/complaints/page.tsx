@@ -375,14 +375,16 @@ export default function ComplaintSearchPage() {
             <>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleNotifyLine(complaint)}
-                            disabled={disabled || loadingNotifyId === complaint.id}
-                        >
-                            <Bell className="w-4 h-4 text-blue-500" />
-                        </Button>
+                        <div>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => handleNotifyLine(complaint)}
+                                disabled={disabled || loadingNotifyId === complaint.id}
+                            >
+                                <Bell className="w-4 h-4 text-blue-500" />
+                            </Button>
+                        </div>
                     </TooltipTrigger>
                     <TooltipContent>{tooltipMessage}</TooltipContent>
                 </Tooltip>
