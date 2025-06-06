@@ -37,13 +37,14 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import api from "@/lib/axios";
-import { CheckCircle, Hourglass, Trash2, Pencil, Bell, FileDown, FileText } from "lucide-react";
+import { CheckCircle, Hourglass, Trash2, Pencil, Bell, FileDown, FileText, ClipboardCheck } from "lucide-react";
 import debounce from "lodash.debounce";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { font as sarabunFont } from "@/utils/fonts/Sarabun-normal";
+import { getExportFilename } from "@/utils/getExportFilename";
 
 // Extend jsPDFAPI to include __sarabunFontLoaded
 declare module "jspdf" {
@@ -105,6 +106,8 @@ export default function ComplaintSearchPage() {
     const [totalPages, setTotalPages] = useState(1);
     const [loadingNotifyId, setLoadingNotifyId] = useState<string | null>(null);
     const [confirmDialogId, setConfirmDialogId] = useState<string | null>(null);
+    const [loadingExportPDF, setLoadingExportPDF] = useState(false);
+    const [loadingExportExcel, setLoadingExportExcel] = useState(false);
 
     const fetchData = async (overrideSearch?: string) => {
         const params = new URLSearchParams();
@@ -276,85 +279,94 @@ export default function ComplaintSearchPage() {
     };
 
     const exportExcel = async () => {
-        const allComplaints = filterSelected(await fetchAllData());
-        const header = [
-            ["รายงานข้อมูลเรื่องร้องเรียน"],
-            [
-                `สถานะ: ${status === "ALL" ? "ทั้งหมด" : statusMap[status as keyof typeof statusMap]?.label}`,
-            ],
-            [
-                dateRange?.from && dateRange?.to
+        setLoadingExportExcel(true);
+        try {
+            const allComplaints = filterSelected(await fetchAllData());
+            const header = [
+                ["รายงานข้อมูลเรื่องร้องเรียน"],
+                [`สถานะ: ${status === "ALL" ? "ทั้งหมด" : statusMap[status as keyof typeof statusMap]?.label}`],
+                [dateRange?.from && dateRange?.to
                     ? `ช่วงวันที่: ${format(dateRange.from, "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())} - ${format(dateRange.to, "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())}`
-                    : ""
-            ],
-            []
-        ];
-        const mapped = allComplaints.map(c => ({
-            "ชื่อผู้ร้องเรียน": c.lineDisplayName || "",
-            "เบอร์โทร": c.phone || "",
-            "รายละเอียด": c.description,
-            "พิกัด": c.location || "",
-            "สถานะ": c.status,
-            "สรุปผล": c.message || "",
-            "วันที่บันทึก": format(new Date(c.createdAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString()),
-            "วันที่อัพเดท": format(new Date(c.updatedAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())
-        }));
-        const worksheet = XLSX.utils.json_to_sheet([]);
-        XLSX.utils.sheet_add_aoa(worksheet, header, { origin: 0 });
-        XLSX.utils.sheet_add_json(worksheet, mapped, { origin: -1 });
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Complaints");
-        const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-        const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-        const date = new Date().toISOString().slice(0, 10);
-        saveAs(data, `complaints-${date}.xlsx`);
+                    : ""],
+                []
+            ];
+            const mapped = allComplaints.map(c => ({
+                "ชื่อผู้ร้องเรียน": c.lineDisplayName || "",
+                "เบอร์โทร": c.phone || "",
+                "รายละเอียด": c.description,
+                "พิกัด": c.location || "",
+                "สถานะ": c.status,
+                "สรุปผล": c.message || "",
+                "วันที่บันทึก": format(new Date(c.createdAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString()),
+                "วันที่อัพเดท": format(new Date(c.updatedAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())
+            }));
+            const worksheet = XLSX.utils.json_to_sheet([]);
+            XLSX.utils.sheet_add_aoa(worksheet, header, { origin: 0 });
+            XLSX.utils.sheet_add_json(worksheet, mapped, { origin: -1 });
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Complaints");
+            const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+            const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+            saveAs(data, getExportFilename("excel", status, dateRange));
+            toast.success("ส่งออก Excel สำเร็จ");
+        } catch (error) {
+            toast.error("ส่งออก Excel ไม่สำเร็จ");
+        } finally {
+            setLoadingExportExcel(false);
+        }
     };
 
     const exportPDF = async () => {
-        const allComplaints = filterSelected(await fetchAllData());
-        const doc = new jsPDF({ orientation: "landscape" });
-        doc.setFont("Sarabun");
-        doc.setFontSize(10);
-        doc.text("รายงานข้อมูลเรื่องร้องเรียน", 14, 10);
-        doc.setFontSize(10);
-        doc.text(`สถานะ: ${status === "ALL" ? "ทั้งหมด" : statusMap[status as keyof typeof statusMap]?.label}`, 14, 16);
-        if (dateRange?.from && dateRange?.to) {
-            doc.text(`ช่วงวันที่: ${format(dateRange.from, "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())} - ${format(dateRange.to, "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())}`, 14, 22);
+        setLoadingExportPDF(true);
+        try {
+            const allComplaints = filterSelected(await fetchAllData());
+            const doc = new jsPDF({ orientation: "landscape" });
+            doc.setFont("Sarabun");
+            doc.setFontSize(10);
+            doc.text("รายงานข้อมูลเรื่องร้องเรียน", 14, 10);
+            doc.text(`สถานะ: ${status === "ALL" ? "ทั้งหมด" : statusMap[status as keyof typeof statusMap]?.label}`, 14, 16);
+            if (dateRange?.from && dateRange?.to) {
+                doc.text(`ช่วงวันที่: ${format(dateRange.from, "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())} - ${format(dateRange.to, "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())}`, 14, 22);
+            }
+            autoTable(doc, {
+                startY: 28,
+                head: [[
+                    "ชื่อผู้ร้องเรียน", "เบอร์โทร", "รายละเอียด",
+                    "พิกัด", "สถานะ", "สรุปผล", "วันที่บันทึก", "วันที่อัพเดท"
+                ]],
+                body: allComplaints.map(c => [
+                    c.lineDisplayName || "",
+                    c.phone || "",
+                    c.description,
+                    c.location || "",
+                    c.status,
+                    c.message || "",
+                    format(new Date(c.createdAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString()),
+                    format(new Date(c.updatedAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())
+                ]),
+                styles: {
+                    font: "Sarabun",
+                    fontStyle: "normal",
+                    fontSize: 10,
+                },
+                headStyles: {
+                    font: "Sarabun",
+                    fontStyle: "normal",
+                    fontSize: 10,
+                },
+                bodyStyles: {
+                    font: "Sarabun",
+                    fontStyle: "normal",
+                    fontSize: 10,
+                },
+            });
+            doc.save(getExportFilename("pdf", status, dateRange));
+            toast.success("ส่งออก PDF สำเร็จ");
+        } catch (error) {
+            toast.error("ส่งออก PDF ไม่สำเร็จ");
+        } finally {
+            setLoadingExportPDF(false);
         }
-        autoTable(doc, {
-            startY: 28,
-            head: [[
-                "ชื่อผู้ร้องเรียน", "เบอร์โทร", "รายละเอียด",
-                "พิกัด", "สถานะ", "สรุปผล", "วันที่บันทึก", "วันที่อัพเดท"
-            ]],
-            body: allComplaints.map(c => [
-                c.lineDisplayName || "",
-                c.phone || "",
-                c.description,
-                c.location || "",
-                c.status,
-                c.message || "",
-                format(new Date(c.createdAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString()),
-                format(new Date(c.updatedAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())
-            ]),
-            styles: {
-                font: "Sarabun",
-                fontStyle: "normal",
-                fontSize: 10,
-            },
-            headStyles: {
-                font: "Sarabun",
-                fontStyle: "normal",
-                fontSize: 10,
-            },
-            bodyStyles: {
-                font: "Sarabun",
-                fontStyle: "normal",
-                fontSize: 10,
-            },
-        });
-        const date = new Date().toISOString().slice(0, 10);
-        doc.save(`complaints-${date}.pdf`);
     };
 
     const renderNotifyButton = (complaint: Complaint) => {
@@ -362,12 +374,14 @@ export default function ComplaintSearchPage() {
         const now = new Date();
         const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
         const lastNotified = complaint.notifiedAt ? new Date(complaint.notifiedAt) : null;
+        const isDone = complaint.status === "DONE";
         const notifiedDiff = lastNotified
             ? (now.getTime() - lastNotified.getTime()) / (1000 * 60 * 60 * 24)
             : Infinity;
-        const disabled = diffDays < 1 || notifiedDiff < 1;
+        const disabled = isDone || diffDays < 1 || notifiedDiff < 1;
 
         let tooltipMessage = "แจ้งเตือนไปยังกลุ่มไลน์";
+        if (isDone) tooltipMessage = "เรื่องนี้ดำเนินการเสร็จแล้ว";
         if (diffDays < 1) tooltipMessage = "แจ้งเตือนได้หลัง 1 วัน";
         else if (notifiedDiff < 1) tooltipMessage = "แจ้งเตือนไปแล้ววันนี้";
 
@@ -411,14 +425,56 @@ export default function ComplaintSearchPage() {
         );
     };
 
+    const renderReportButton = (complaint: Complaint) => {
+        const isDone = complaint.status === "DONE";
+
+        return (
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <span>
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            asChild
+                            disabled={isDone}
+                        >
+                            <Link href={`/admin/complaints/${complaint.id}/report`}>
+                                <ClipboardCheck className="w-4 h-4 text-green-600" />
+                            </Link>
+                        </Button>
+                    </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                    {isDone ? "ไม่สามารถรายงานผลได้ เนื่องจากเรื่องร้องเรียนเสร็จสิ้นแล้ว" : "รายงานผล"}
+                </TooltipContent>
+            </Tooltip>
+        );
+    };
+
     return (
         <TooltipProvider>
             <div className="p-6 bg-background text-foreground rounded-xl shadow-md space-y-6">
                 <h1 className="text-2xl font-semibold border-b pb-2 flex justify-between items-center">
                     ค้นหาร้องเรียนย้อนหลัง
                     <div className="flex gap-2">
-                        <Button onClick={exportExcel} variant="outline"><FileDown className="w-4 h-4 mr-2 cursor-pointer" /> ดาวน์โหลด Excel</Button>
-                        <Button onClick={exportPDF} variant="outline"><FileText className="w-4 h-4 mr-2 cursor-pointer" /> ส่งออก PDF</Button>
+                        <Button onClick={exportExcel} variant="outline" disabled={loadingExportExcel}>
+                            {loadingExportExcel ? (
+                                <span className="animate-pulse">กำลังส่งออก...</span>
+                            ) : (
+                                <>
+                                    <FileDown className="w-4 h-4 mr-2" /> ดาวน์โหลด Excel
+                                </>
+                            )}
+                        </Button>
+                        <Button onClick={exportPDF} variant="outline" disabled={loadingExportPDF}>
+                            {loadingExportPDF ? (
+                                <span className="animate-pulse">กำลังส่งออก...</span>
+                            ) : (
+                                <>
+                                    <FileText className="w-4 h-4 mr-2" /> ส่งออก PDF
+                                </>
+                            )}
+                        </Button>
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
                                 <Button variant="destructive" disabled={selectedIds.length === 0} className="cursor-pointer">
@@ -506,6 +562,7 @@ export default function ComplaintSearchPage() {
                                             {isAdmin && (
                                                 <div className="flex justify-end gap-2">
                                                     {renderNotifyButton(c)}
+                                                    {renderReportButton(c)}
                                                     <Button size="icon" variant="ghost" asChild>
                                                         <Link href={`/admin/complaints/${c.id}/edit`}>
                                                             <Pencil className="w-4 h-4 text-yellow-500" />
@@ -587,6 +644,7 @@ export default function ComplaintSearchPage() {
                                                 <TableCell>{format(new Date(c.createdAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())}</TableCell>
                                                 <TableCell className="flex justify-end gap-2">
                                                     {renderNotifyButton(c)}
+                                                    {renderReportButton(c)}
                                                     <Button size="icon" variant="ghost" asChild>
                                                         <Link href={`/admin/complaints/${c.id}/edit`}>
                                                             <Pencil className="w-4 h-4 text-yellow-500" />
