@@ -49,10 +49,10 @@ export default function ImageCropperModal({ file, onDone, onClose }: Props) {
             <DialogContent className="max-w-5xl w-full h-[60vh] flex flex-col gap-4">
                 <DialogHeader>
                     <DialogTitle>ตัดรูปภาพ</DialogTitle>
-                    <DialogDescription>กรุณาปรับขนาดรูปภาพให้เหมาะสมก่อนอัปโหลด</DialogDescription>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        🔍 ขนาดแนะนำ: อย่างน้อย 800x600px เพื่อให้ภาพคมชัดบนทุกอุปกรณ์
-                    </p>
+                    <DialogDescription>
+                        กรุณาปรับขนาดรูปภาพให้เหมาะสมก่อนอัปโหลด <br />
+                        ขนาดแนะนำ: อย่างน้อย 800x600px เพื่อให้ภาพคมชัดบนทุกอุปกรณ์
+                    </DialogDescription>
                 </DialogHeader>
                 <div className="flex items-center gap-2">
                     <span className="text-sm">อัตราส่วน:</span>
@@ -80,8 +80,8 @@ export default function ImageCropperModal({ file, onDone, onClose }: Props) {
                 </div>
 
                 <div className="flex justify-end gap-2">
-                    <Button variant="secondary" onClick={onClose}>ยกเลิก</Button>
-                    <Button onClick={handleCrop}>บันทึกรูปที่ครอบ</Button>
+                    <Button className="cursor-pointer" variant="secondary" onClick={onClose}>ยกเลิก</Button>
+                    <Button className="cursor-pointer" onClick={handleCrop}>บันทึกรูปที่ครอบ</Button>
                 </div>
             </DialogContent>
         </Dialog>

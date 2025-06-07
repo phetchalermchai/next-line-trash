@@ -28,6 +28,7 @@ export default function ComplaintEditPage() {
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
         id: "",
+        lineDisplayName: "",
         phone: "",
         description: "",
         message: "",
@@ -140,26 +141,10 @@ export default function ComplaintEditPage() {
 
     return (
         <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
-            <h1 className="text-2xl font-bold">แก้ไขรายการร้องเรียน</h1>
-            <div className="mb-4 p-4 bg-gray-100 rounded-lg space-y-1">
-                <p className="text-sm text-muted-foreground">
-                    🆔 หมายเลขเรื่อง: <span className="font-semibold">#{formData.id.slice(-4)}</span>
-                </p>
-                <p className="text-sm text-muted-foreground">
-                    📅 วันที่แจ้ง: <span className="font-semibold">
-                        {formatThaiDate(new Date(formData.createdAt))}
-                    </span>
-                </p>
-                <p className="text-sm text-muted-foreground">
-                    📍 พิกัด:
-                    <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${formData.location}`}
-                        className="text-blue-600 underline ml-1"
-                        target="_blank"
-                    >
-                        เปิดใน Google Maps
-                    </a>
-                </p>
+            <h1 className="text-2xl font-bold">แก้ไขรายการร้องเรียน #{formData.id.slice(-4)}</h1>
+            <div className="bg-muted p-4 rounded-md text-sm space-y-1 border">
+                {formData.lineDisplayName && <p><strong>ผู้แจ้ง:</strong> {formData.lineDisplayName}</p>}
+                <p><strong>วันที่แจ้ง:</strong>{formatThaiDate(new Date(formData.createdAt))}</p>
             </div>
             <div className="grid w-full items-center gap-3">
                 <Label htmlFor="phone">เบอร์โทร</Label>
