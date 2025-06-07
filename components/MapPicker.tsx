@@ -14,6 +14,7 @@ import {
     DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 
 const DEFAULT_POSITION: [number, number] = [13.7563, 100.5018];
@@ -68,10 +69,15 @@ export default function MapPicker({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" className="cursor-pointer">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    ปักหมุด
-                </Button>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="outline" className="cursor-pointer">
+                            <MapPin className="w-4 h-4 mr-1" />
+                            ปักหมุด
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>เปิดแผนที่เพื่อเลือกตำแหน่ง</TooltipContent>
+                </Tooltip>
             </DialogTrigger>
             <DialogPortal>
                 <DialogContent className="max-w-4xl w-full overflow-hidden p-0 z-50">

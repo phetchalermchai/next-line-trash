@@ -11,10 +11,12 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { format } from "date-fns";
 import dynamic from "next/dynamic";
 import DropzoneUploader from "@/components/DropzoneUploader";
 import ImageCropperModal from "@/components/ImageCropperModal";
 import ImageGalleryModal from "@/components/ImageGalleryModal";
+import { create } from "domain";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });
@@ -25,6 +27,7 @@ export default function ComplaintEditPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
+        id: "",
         phone: "",
         description: "",
         message: "",
@@ -32,6 +35,7 @@ export default function ComplaintEditPage() {
         imageBefore: "",
         imageAfter: "",
         location: "",
+        createdAt: "",
     });
     const [imageFiles, setImageFiles] = useState<{ imageBefore: File[]; imageAfter: File[] }>({ imageBefore: [], imageAfter: [] });
     const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
@@ -123,6 +127,9 @@ export default function ComplaintEditPage() {
         }
     };
 
+    const formatThaiDate = (date: Date) =>
+        format(date, "dd/MM/") + (date.getFullYear() + 543);
+
     if (loading) {
         return (
             <div className="p-6 flex justify-center">
@@ -134,7 +141,26 @@ export default function ComplaintEditPage() {
     return (
         <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
             <h1 className="text-2xl font-bold">แก้ไขรายการร้องเรียน</h1>
-
+            <div className="mb-4 p-4 bg-gray-100 rounded-lg space-y-1">
+                <p className="text-sm text-muted-foreground">
+                    🆔 หมายเลขเรื่อง: <span className="font-semibold">#{formData.id.slice(-4)}</span>
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    📅 วันที่แจ้ง: <span className="font-semibold">
+                        {formatThaiDate(new Date(formData.createdAt))}
+                    </span>
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    📍 พิกัด:
+                    <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${formData.location}`}
+                        className="text-blue-600 underline ml-1"
+                        target="_blank"
+                    >
+                        เปิดใน Google Maps
+                    </a>
+                </p>
+            </div>
             <div className="grid w-full items-center gap-3">
                 <Label htmlFor="phone">เบอร์โทร</Label>
                 <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="เบอร์โทร" />

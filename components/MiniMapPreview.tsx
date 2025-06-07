@@ -17,7 +17,16 @@ const markerIcon = new L.Icon({
 });
 
 export default function MiniMapPreview({ location }: Props) {
-    const [lat, lng] = location.split(",").map(Number) as [number, number];
+    if (!location) return null;
+
+    const [latStr, lngStr] = location.split(",");
+    const lat = parseFloat(latStr);
+    const lng = parseFloat(lngStr);
+    const isValidLatLng = !isNaN(lat) && !isNaN(lng);
+
+    if (!isValidLatLng) {
+        return <p className="text-red-500">รูปแบบพิกัดไม่ถูกต้อง</p>;
+    }
 
     return (
         <div className="relative z-0 h-[160px] w-full overflow-hidden rounded border">

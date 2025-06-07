@@ -50,6 +50,9 @@ export default function ImageCropperModal({ file, onDone, onClose }: Props) {
                 <DialogHeader>
                     <DialogTitle>ตัดรูปภาพ</DialogTitle>
                     <DialogDescription>กรุณาปรับขนาดรูปภาพให้เหมาะสมก่อนอัปโหลด</DialogDescription>
+                    <p className="text-sm text-muted-foreground mt-1">
+                        🔍 ขนาดแนะนำ: อย่างน้อย 800x600px เพื่อให้ภาพคมชัดบนทุกอุปกรณ์
+                    </p>
                 </DialogHeader>
                 <div className="flex items-center gap-2">
                     <span className="text-sm">อัตราส่วน:</span>

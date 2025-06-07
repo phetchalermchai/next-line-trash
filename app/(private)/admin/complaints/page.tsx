@@ -432,20 +432,23 @@ export default function ComplaintSearchPage() {
             <Tooltip>
                 <TooltipTrigger asChild>
                     <span>
-                        <Button
-                            size="icon"
-                            variant="ghost"
-                            asChild
-                            disabled={isDone}
-                        >
-                            <Link href={`/admin/complaints/${complaint.id}/report`}>
+                        {isDone ? (
+                            <Button size="icon" variant="ghost" disabled>
                                 <ClipboardCheck className="w-4 h-4 text-green-600" />
+                            </Button>
+                        ) : (
+                            <Link href={`/admin/complaints/${complaint.id}/report`}>
+                                <Button size="icon" variant="ghost">
+                                    <ClipboardCheck className="w-4 h-4 text-green-600" />
+                                </Button>
                             </Link>
-                        </Button>
+                        )}
                     </span>
                 </TooltipTrigger>
                 <TooltipContent>
-                    {isDone ? "ไม่สามารถรายงานผลได้ เนื่องจากเรื่องร้องเรียนเสร็จสิ้นแล้ว" : "รายงานผล"}
+                    {isDone
+                        ? "ไม่สามารถรายงานผลได้ เนื่องจากเรื่องร้องเรียนเสร็จสิ้นแล้ว"
+                        : "รายงานผล"}
                 </TooltipContent>
             </Tooltip>
         );
