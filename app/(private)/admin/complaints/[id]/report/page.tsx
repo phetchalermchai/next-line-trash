@@ -104,7 +104,7 @@ export default function ComplaintReportPage() {
         <p><strong>รายละเอียดเรื่องร้องเรียน:</strong> {complaint.description}</p>
         {complaint.location && (
           <p>
-            <strong>สถานที่:</strong>{" "}
+            <strong>ตำแหน่งที่ตั้ง:</strong>{" "}
             <Tooltip>
               <TooltipTrigger asChild>
                 <a
@@ -127,6 +127,7 @@ export default function ComplaintReportPage() {
       <div>
         <label className="block text-sm font-medium mb-1">สรุปผล</label>
         <Textarea
+          placeholder="สรุปผล"
           rows={4}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
@@ -153,8 +154,8 @@ export default function ComplaintReportPage() {
         />
       </div>
 
-      <div className="pt-4">
-        <Button onClick={handleSubmit} disabled={loading} className="w-full sm:w-auto">
+      <div className="pt-4 flex justify-end gap-2">
+        <Button onClick={handleSubmit} disabled={loading} className="w-full sm:w-auto cursor-pointer">
           {loading ? "กำลังบันทึก..." : "บันทึกรายงานผล"}
         </Button>
       </div>

@@ -16,7 +16,6 @@ import dynamic from "next/dynamic";
 import DropzoneUploader from "@/components/DropzoneUploader";
 import ImageCropperModal from "@/components/ImageCropperModal";
 import ImageGalleryModal from "@/components/ImageGalleryModal";
-import { create } from "domain";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });
@@ -120,7 +119,7 @@ export default function ComplaintEditPage() {
                     }
                 },
             });
-
+           
             toast.success("บันทึกเรียบร้อย");
             router.push("/admin/complaints");
         } catch {
@@ -141,10 +140,10 @@ export default function ComplaintEditPage() {
 
     return (
         <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
-            <h1 className="text-2xl font-bold">แก้ไขรายการร้องเรียน #{formData.id.slice(-4)}</h1>
+            <h1 className="text-2xl font-bold">แก้ไขรายการร้องเรียน #{formData.id.slice(-4).toUpperCase()}</h1>
             <div className="bg-muted p-4 rounded-md text-sm space-y-1 border">
                 {formData.lineDisplayName && <p><strong>ผู้แจ้ง:</strong> {formData.lineDisplayName}</p>}
-                <p><strong>วันที่แจ้ง:</strong>{formatThaiDate(new Date(formData.createdAt))}</p>
+                <p><strong>วันที่แจ้ง:</strong> {formatThaiDate(new Date(formData.createdAt))}</p>
             </div>
             <div className="grid w-full items-center gap-3">
                 <Label htmlFor="phone">เบอร์โทร</Label>

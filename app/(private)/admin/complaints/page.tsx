@@ -5,39 +5,20 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-    Select,
-    SelectTrigger,
-    SelectContent,
-    SelectItem,
-} from "@/components/ui/select";
+import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
 import { DatePickerWithRange } from "@/components/complaint/DatePickerWithRange";
-import {
-    Table,
-    TableHeader,
-    TableRow,
-    TableHead,
-    TableCell,
-    TableBody,
-} from "@/components/ui/table";
-import {
-    AlertDialog,
-    AlertDialogTrigger,
-    AlertDialogContent,
-    AlertDialogHeader,
-    AlertDialogFooter,
-    AlertDialogTitle,
-    AlertDialogDescription,
-    AlertDialogCancel,
-    AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody } from "@/components/ui/table";
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import api from "@/lib/axios";
-import { CheckCircle, Hourglass, Trash2, Pencil, Bell, FileDown, FileText, ClipboardCheck } from "lucide-react";
+import { CheckCircle, Hourglass, Trash2, Pencil, Bell, Eye, FileDown, FileText, ClipboardCheck, MoreVertical, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, RefreshCcw } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import debounce from "lodash.debounce";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -98,16 +79,20 @@ export default function ComplaintSearchPage() {
     const isAdmin = session?.user?.role === "admin";
     const [search, setSearch] = useState("");
     const [status, setStatus] = useState("ALL");
-    const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
+        from: new Date(new Date().setDate(new Date().getDate() - 30)),
+        to: new Date(),
+    });
     const [complaints, setComplaints] = useState<Complaint[]>([]);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [page, setPage] = useState(1);
-    const [limit] = useState(10);
+    const [limit, setLimit] = useState(10);
     const [totalPages, setTotalPages] = useState(1);
     const [loadingNotifyId, setLoadingNotifyId] = useState<string | null>(null);
     const [confirmDialogId, setConfirmDialogId] = useState<string | null>(null);
     const [loadingExportPDF, setLoadingExportPDF] = useState(false);
     const [loadingExportExcel, setLoadingExportExcel] = useState(false);
+    const [openDialogId, setOpenDialogId] = useState<string | null>(null);
 
     const fetchData = async (overrideSearch?: string) => {
         const params = new URLSearchParams();
@@ -389,8 +374,9 @@ export default function ComplaintSearchPage() {
             <>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <div>
+                        <div className={!isDone ? "cursor-pointer" : "cursor-not-allowed"}>
                             <Button
+                                className={!isDone ? "cursor-pointer" : "cursor-not-allowed"}
                                 size="icon"
                                 variant="ghost"
                                 onClick={() => handleNotifyLine(complaint)}
@@ -431,14 +417,14 @@ export default function ComplaintSearchPage() {
         return (
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <span>
+                    <span className={!isDone ? "cursor-pointer" : "cursor-not-allowed"}>
                         {isDone ? (
                             <Button size="icon" variant="ghost" disabled>
                                 <ClipboardCheck className="w-4 h-4 text-green-600" />
                             </Button>
                         ) : (
-                            <Link href={`/admin/complaints/${complaint.id}/report`}>
-                                <Button size="icon" variant="ghost">
+                            <Link href={`/admin/complaints/${complaint.id}/report`} >
+                                <Button size="icon" variant="ghost" className="cursor-pointer">
                                     <ClipboardCheck className="w-4 h-4 text-green-600" />
                                 </Button>
                             </Link>
@@ -457,126 +443,174 @@ export default function ComplaintSearchPage() {
     return (
         <TooltipProvider>
             <div className="p-6 bg-background text-foreground rounded-xl shadow-md space-y-6">
-                <h1 className="text-2xl font-semibold border-b pb-2 flex justify-between items-center">
-                    ค้นหาร้องเรียนย้อนหลัง
-                    <div className="flex gap-2">
-                        <Button onClick={exportExcel} variant="outline" disabled={loadingExportExcel}>
-                            {loadingExportExcel ? (
-                                <span className="animate-pulse">กำลังส่งออก...</span>
-                            ) : (
-                                <>
-                                    <FileDown className="w-4 h-4 mr-2" /> ดาวน์โหลด Excel
-                                </>
-                            )}
-                        </Button>
-                        <Button onClick={exportPDF} variant="outline" disabled={loadingExportPDF}>
-                            {loadingExportPDF ? (
-                                <span className="animate-pulse">กำลังส่งออก...</span>
-                            ) : (
-                                <>
-                                    <FileText className="w-4 h-4 mr-2" /> ส่งออก PDF
-                                </>
-                            )}
-                        </Button>
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="destructive" disabled={selectedIds.length === 0} className="cursor-pointer">
-                                    <Trash2 className="w-4 h-4 mr-2" /> ลบรายการที่เลือก
+                <div className="flex flex-row justify-between items-center mb-4 gap-4">
+                    <h1 className="text-2xl font-semibold">ค้นหาร้องเรียนย้อนหลัง</h1>
+                    <div className="flex flex-wrap gap-2 justify-end">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                    <FileDown className="w-4 h-4" />
                                 </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการที่เลือกนี้?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        การลบนี้จะลบข้อมูลรายการที่เลือกทั้งหมด และไม่สามารถเรียกคืนได้ (ยกเว้นกด "เลิกทำ")
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleDeleteSelected}>ลบรายการที่เลือก</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </div>
-                </h1>
-                <div className="sticky top-0 z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-muted p-4 rounded-lg shadow-sm">
-                    <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium text-muted-foreground">คำค้นหา</label>
-                        <Input
-                            placeholder="ค้นหาคำสำคัญ..."
-                            value={search}
-                            onChange={handleSearchChange}
-                        />
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium text-muted-foreground">สถานะ</label>
-                        <Select onValueChange={(val) => { setStatus(val); setPage(1); }} value={status}>
-                            <SelectTrigger>
-                                {status === "ALL" ? "ทั้งหมด" : statusMap[status as keyof typeof statusMap]?.label || status}
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="ALL">ทั้งหมด</SelectItem>
-                                <SelectItem value="PENDING">PENDING</SelectItem>
-                                <SelectItem value="DONE">DONE</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium text-muted-foreground">ช่วงวันที่</label>
-                        <DatePickerWithRange value={dateRange} onChange={(range) => { setDateRange(range); setPage(1); }} />
-                    </div>
-
-                    <div className="flex items-end gap-2">
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                setSearch("");
-                                setStatus("ALL");
-                                setDateRange(undefined);
-                                setPage(1);
-                                fetchData("");
-                            }}
-                            className="w-full cursor-pointer"
-                        >
-                            ล้าง
-                        </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                    onClick={exportExcel}
+                                    disabled={loadingExportExcel}
+                                    className="cursor-pointer"
+                                >
+                                    <FileDown className="w-4 h-4 mr-2" />
+                                    {loadingExportExcel ? "กำลังส่งออก Excel..." : "ส่งออก Excel"}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={exportPDF}
+                                    disabled={loadingExportPDF}
+                                    className="cursor-pointer"
+                                >
+                                    <FileText className="w-4 h-4 mr-2" />
+                                    {loadingExportPDF ? "กำลังส่งออก PDF..." : "ส่งออก PDF"}
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
+                <div className="sticky top-0 z-50 bg-muted p-4 rounded-lg shadow-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="flex flex-col gap-1">
+                            <Label htmlFor="search">คำค้นหา</Label>
+                            <Input id="search" placeholder="ค้นหาคำสำคัญ..." value={search} onChange={handleSearchChange} />
+                        </div>
 
-                <div className="border rounded-lg overflow-x-auto bg-card">
-                    {complaints.length === 0 ? (
-                        <div className="text-center py-10 text-muted-foreground">ไม่พบข้อมูลที่คุณค้นหา</div>
-                    ) : (
-                        <>
-                            <div className="grid gap-4 md:hidden">
-                                {complaints.map((c) => {
-                                    const status = statusMap[c.status];
-                                    return (
-                                        <div key={c.id} className="border p-4 rounded-md shadow-sm space-y-2">
-                                            <div className="text-sm text-muted-foreground">{format(new Date(c.createdAt), "dd/MM/yyyy")}</div>
+                        <div className="flex flex-col gap-1">
+                            <Label htmlFor="status">สถานะ</Label>
+                            <Select onValueChange={(val) => { setStatus(val); setPage(1); }} value={status}>
+                                <SelectTrigger id="status">
+                                    {status === "ALL"
+                                        ? "ทั้งหมด"
+                                        : statusMap[status as keyof typeof statusMap]?.label || status}
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="ALL">ทั้งหมด</SelectItem>
+                                    <SelectItem value="PENDING">PENDING</SelectItem>
+                                    <SelectItem value="DONE">DONE</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                            <Label>ช่วงวันที่</Label>
+                            <DatePickerWithRange
+                                value={dateRange}
+                                onChange={(range) => {
+                                    setDateRange(range);
+                                    setPage(1);
+                                }}
+                            />
+                        </div>
+
+                        <div className="flex items-end">
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setSearch("");
+                                    setStatus("ALL");
+                                    setDateRange(undefined);
+                                    setPage(1);
+                                    fetchData("");
+                                }}
+                                className="w-full cursor-pointer"
+                            >
+                                <RefreshCcw className="w-4 h-4 mr-2" />
+                                ล้าง
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+                {complaints.length === 0 ? (
+                    <div className="text-center py-10 text-muted-foreground">ไม่พบข้อมูลที่คุณค้นหา</div>
+                ) : (
+                    <>
+                        <div className="grid gap-4 md:hidden">
+                            <div className="flex items-center justify-end gap-2">
+                                <Checkbox
+                                    onCheckedChange={(checked) => {
+                                        setSelectedIds(checked ? complaints.map(c => c.id) : []);
+                                    }}
+                                    checked={selectedIds.length === complaints.length && complaints.length > 0}
+                                    aria-label="เลือกทั้งหมด"
+                                />
+                                <span className="text-sm text-muted-foreground">เลือกทั้งหมด</span>
+                            </div>
+                            {complaints.map((c) => {
+                                const status = statusMap[c.status];
+                                return (
+                                    <Card key={c.id} className="shadow-sm space-y-2 relative">
+
+                                        <div className="absolute top-2 right-2 z-10">
+                                            <Checkbox
+                                                checked={selectedIds.includes(c.id)}
+                                                onCheckedChange={(checked) => {
+                                                    setSelectedIds(prev =>
+                                                        checked
+                                                            ? [...prev, c.id]
+                                                            : prev.filter(id => id !== c.id)
+                                                    );
+                                                }}
+                                                aria-label={`Select complaint ${c.id}`}
+                                            />
+                                        </div>
+
+                                        <CardContent className="space-y-2">
+                                            <div className="text-sm text-muted-foreground">
+                                                วันที่แจ้ง: {format(new Date(c.createdAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())}
+                                            </div>
+                                            <div className="text-sm text-muted-foreground">
+                                                อัปเดตล่าสุด: {format(new Date(c.updatedAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())}
+                                            </div>
                                             <div className="font-medium">{c.description}</div>
                                             <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${status.color}`}>
                                                 {status.icon}
                                                 {status.label}
                                             </div>
                                             <div className="text-sm text-muted-foreground">ผู้แจ้ง: {c.lineDisplayName || "-"}</div>
+
                                             {isAdmin && (
-                                                <div className="flex justify-end gap-2">
+                                                <div className="flex justify-end gap-2 pt-2">
                                                     {renderNotifyButton(c)}
                                                     {renderReportButton(c)}
-                                                    <Button size="icon" variant="ghost" asChild>
-                                                        <Link href={`/admin/complaints/${c.id}/edit`}>
-                                                            <Pencil className="w-4 h-4 text-yellow-500" />
-                                                        </Link>
-                                                    </Button>
-                                                    <AlertDialog>
-                                                        <AlertDialogTrigger asChild>
-                                                            <Button size="icon" variant="ghost" className="cursor-pointer">
-                                                                <Trash2 className="w-4 h-4 text-red-500" />
+
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button size="icon" variant="ghost" asChild>
+                                                                <Link href={`/complaints/${c.id}`}>
+                                                                    <Eye className="w-4 h-4 text-violet-500"/>
+                                                                </Link>
                                                             </Button>
-                                                        </AlertDialogTrigger>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>ดูรายละเอียด</TooltipContent>
+                                                    </Tooltip>
+
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button size="icon" variant="ghost" asChild>
+                                                                <Link href={`/admin/complaints/${c.id}/edit`}>
+                                                                    <Pencil className="w-4 h-4 text-yellow-500" />
+                                                                </Link>
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>แก้ไขเรื่องร้องเรียน</TooltipContent>
+                                                    </Tooltip>
+
+                                                    <AlertDialog>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button size="icon" variant="ghost" className="cursor-pointer">
+                                                                        <Trash2 className="w-4 h-4 text-red-500" />
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>ลบเรื่องร้องเรียน</TooltipContent>
+                                                        </Tooltip>
                                                         <AlertDialogContent>
                                                             <AlertDialogHeader>
                                                                 <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</AlertDialogTitle>
@@ -594,11 +628,12 @@ export default function ComplaintSearchPage() {
                                                     </AlertDialog>
                                                 </div>
                                             )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </div>
+                        <div className="rounded-md border">
                             <Table className="hidden md:table">
                                 <TableHeader>
                                     <TableRow>
@@ -615,6 +650,7 @@ export default function ComplaintSearchPage() {
                                         <TableHead>รายละเอียด</TableHead>
                                         <TableHead>สถานะ</TableHead>
                                         <TableHead>วันที่บันทึก</TableHead>
+                                        <TableHead>อัปเดตล่าสุด</TableHead>
                                         <TableHead className="text-right">การจัดการ</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -645,20 +681,36 @@ export default function ComplaintSearchPage() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>{format(new Date(c.createdAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())}</TableCell>
+                                                <TableCell>{format(new Date(c.updatedAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())}</TableCell>
                                                 <TableCell className="flex justify-end gap-2">
                                                     {renderNotifyButton(c)}
                                                     {renderReportButton(c)}
-                                                    <Button size="icon" variant="ghost" asChild>
-                                                        <Link href={`/admin/complaints/${c.id}/edit`}>
-                                                            <Pencil className="w-4 h-4 text-yellow-500" />
-                                                        </Link>
-                                                    </Button>
-                                                    <AlertDialog>
-                                                        <AlertDialogTrigger asChild>
-                                                            <Button size="icon" variant="ghost" className="cursor-pointer">
-                                                                <Trash2 className="w-4 h-4 text-red-500" />
-                                                            </Button>
-                                                        </AlertDialogTrigger>
+                                                    <DropdownMenu>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button size="icon" variant="ghost" className="cursor-pointer">
+                                                                        <MoreVertical className="w-4 h-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>เมนูเพิ่มเติม</TooltipContent>
+                                                        </Tooltip>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem asChild>
+                                                                <Link href={`/complaints/${c.id}`} className="w-full">รายละเอียด</Link>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem asChild>
+                                                                <Link href={`/admin/complaints/${c.id}/edit`} className="w-full cursor-pointer">แก้ไข</Link>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem variant="destructive" onClick={() => setOpenDialogId(c.id)} className="text-red-500 cursor-pointer">
+                                                                ลบ
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+
+                                                    <AlertDialog open={openDialogId === c.id} onOpenChange={(open) => !open && setOpenDialogId(null)}>
                                                         <AlertDialogContent>
                                                             <AlertDialogHeader>
                                                                 <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</AlertDialogTitle>
@@ -668,7 +720,10 @@ export default function ComplaintSearchPage() {
                                                             </AlertDialogHeader>
                                                             <AlertDialogFooter>
                                                                 <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                                                                <AlertDialogAction onClick={() => handleDelete(c.id)}>
+                                                                <AlertDialogAction onClick={() => {
+                                                                    handleDelete(c.id);
+                                                                    setOpenDialogId(null);
+                                                                }}>
                                                                     ลบรายการ
                                                                 </AlertDialogAction>
                                                             </AlertDialogFooter>
@@ -680,24 +735,98 @@ export default function ComplaintSearchPage() {
                                     })}
                                 </TableBody>
                             </Table>
-                        </>
-                    )}
-                </div>
+                        </div>
+                    </>
+                )}
+                {selectedIds.length > 0 && (
+                    <div className="hidden md:flex">
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="destructive" className="cursor-pointer">
+                                    <Trash2 className="w-4 h-4 mr-2" /> ลบรายการที่เลือก
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการที่เลือกนี้?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        การลบนี้จะลบข้อมูลรายการที่เลือกทั้งหมด และไม่สามารถเรียกคืนได้ (ยกเว้นกด "เลิกทำ")
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDeleteSelected}>ลบรายการที่เลือก</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
+                )}
+                <div className="flex flex-col md:flex-row justify-between items-center gap-2 mt-4">
+                    <div className="hidden md:block text-sm text-muted-foreground">
+                        {selectedIds.length} จาก {complaints.length} รายการถูกเลือก
+                    </div>
 
-                <div className="flex justify-center pt-4">
-                    <div className="inline-flex gap-2">
-                        <Button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-                            ก่อนหน้า
-                        </Button>
-                        <span className="px-2 py-1 text-sm font-medium">
-                            หน้า {page} / {totalPages}
-                        </span>
-                        <Button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
-                            ถัดไป
-                        </Button>
+                    <div className="flex flex-row md:items-center gap-2 md:gap-4 w-full md:w-auto justify-between">
+                        <div className="hidden md:flex justify-center items-center gap-2">
+                            <span className="text-sm">แสดง:</span>
+                            <Select value={limit.toString()} onValueChange={(val) => {
+                                setLimit(Number(val));
+                                setPage(1);
+                            }}>
+                                <SelectTrigger className="w-[80px]">
+                                    {limit}
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {[10, 20, 50, 100].map(val => (
+                                        <SelectItem key={val} value={val.toString()}>{val}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <span className="text-sm">รายการ</span>
+                        </div>
+                        <div className="flex justify-center items-center gap-2">
+                            <span className="text-sm mx-2 whitespace-nowrap">หน้า {page} จาก {totalPages}</span>
+                        </div>
+                        <div className="inline-flex justify-center gap-1">
+                            <Button onClick={() => setPage(1)} disabled={page === 1}>
+                                <ChevronsLeft className="w-4 h-4" />
+                            </Button>
+                            <Button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
+                                <ChevronLeft className="w-4 h-4" />
+                            </Button>
+                            <Button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+                                <ChevronRight className="w-4 h-4" />
+                            </Button>
+                            <Button onClick={() => setPage(totalPages)} disabled={page === totalPages}>
+                                <ChevronsRight className="w-4 h-4" />
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
+            {selectedIds.length > 0 && (
+                <div className="fixed bottom-4 right-4 z-50 md:hidden">
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button size="lg" variant="destructive" className="rounded-full cursor-pointer">
+                                <Trash2 className="w-4 h-4 mr-2" /> ลบรายการ
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการที่เลือกนี้?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    การลบนี้จะลบข้อมูลรายการที่เลือกทั้งหมด และไม่สามารถเรียกคืนได้ (ยกเว้นกด "เลิกทำ")
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDeleteSelected}>ลบรายการที่เลือก</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
+            )}
         </TooltipProvider>
     );
 }
