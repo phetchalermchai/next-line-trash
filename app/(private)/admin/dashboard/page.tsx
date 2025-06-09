@@ -33,9 +33,7 @@ export default function AdminDashboardPage() {
   if (!data) return <p>Loading...</p>
 
   return (
-    <div className="p-4 space-y-6">
-      <h1 className="text-2xl font-bold text-zinc-800 dark:text-white">แดชบอร์ดเรื่องร้องเรียน</h1>
-
+    <div className="p-6 space-y-6">
       {/* Section 1: Summary Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryCard icon="🧾" label="ทั้งหมด" value={data.total} />

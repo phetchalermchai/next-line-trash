@@ -1,6 +1,7 @@
 "use client"
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react'
+import { useTheme } from "next-themes"
 import api from '@/lib/axios';
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -11,6 +12,7 @@ interface MonthlyTrend {
 
 export default function MonthlyTrendChart() {
   const [data, setData] = useState<MonthlyTrend[]>([])
+  const { resolvedTheme } = useTheme()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,9 +32,13 @@ export default function MonthlyTrendChart() {
       type: "area" as "area",
       toolbar: { show: false },
       zoom: { enabled: false },
+      foreColor: resolvedTheme === "dark" ? "#e0e0e0" : "#333"
     },
     dataLabels: { enabled: false },
     stroke: { curve: "smooth" as "smooth" },
+    grid: {
+      borderColor: resolvedTheme === "dark" ? "#444" : "#eee",
+    },
     xaxis: {
       categories: [
         "ม.ค.",
@@ -50,7 +56,15 @@ export default function MonthlyTrendChart() {
       ],
     },
     yaxis: {
-      labels: { formatter: (val: number) => `${val}` },
+      labels: {
+        formatter: (val: number) => `${val}`,
+        style: {
+          colors: resolvedTheme === "dark" ? "#bbb" : "#333"
+        }
+      }
+    },
+    tooltip: {
+      theme: resolvedTheme === "dark" ? "dark" : "light"
     }
   }
 

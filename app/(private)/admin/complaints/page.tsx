@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import api from "@/lib/axios";
-import { CheckCircle, Hourglass, Trash2, Pencil, Bell, Eye, FileDown, FileText, ClipboardCheck, MoreVertical, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, RefreshCcw } from "lucide-react";
+import { CheckCircle, Trash2, Pencil, Bell, Eye, FileDown, FileText, ClipboardCheck, MoreVertical, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, RefreshCcw, Clock } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import debounce from "lodash.debounce";
 import * as XLSX from "xlsx";
@@ -64,13 +64,13 @@ interface Complaint {
 const statusMap = {
     PENDING: {
         label: "รอดำเนินการ",
-        icon: <Hourglass className="w-3.5 h-3.5" />,
-        color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-800/20",
+        icon: <Clock className="w-4 h-4 text-yellow-500" />,
+        color: "text-yellow-600 bg-yellow-50",
     },
     DONE: {
         label: "เสร็จสิ้น",
-        icon: <CheckCircle className="w-3.5 h-3.5" />,
-        color: "bg-green-100 text-green-800 dark:bg-green-800/20",
+        icon: <CheckCircle className="w-4 h-4 text-green-500" />,
+        color: "text-green-600 bg-green-50",
     },
 };
 
@@ -442,37 +442,7 @@ export default function ComplaintSearchPage() {
 
     return (
         <TooltipProvider>
-            <div className="p-6 bg-background text-foreground rounded-xl shadow-md space-y-6">
-                <div className="flex flex-row justify-between items-center mb-4 gap-4">
-                    <h1 className="text-2xl font-semibold">ค้นหาร้องเรียนย้อนหลัง</h1>
-                    <div className="flex flex-wrap gap-2 justify-end">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="icon">
-                                    <FileDown className="w-4 h-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                    onClick={exportExcel}
-                                    disabled={loadingExportExcel}
-                                    className="cursor-pointer"
-                                >
-                                    <FileDown className="w-4 h-4 mr-2" />
-                                    {loadingExportExcel ? "กำลังส่งออก Excel..." : "ส่งออก Excel"}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={exportPDF}
-                                    disabled={loadingExportPDF}
-                                    className="cursor-pointer"
-                                >
-                                    <FileText className="w-4 h-4 mr-2" />
-                                    {loadingExportPDF ? "กำลังส่งออก PDF..." : "ส่งออก PDF"}
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </div>
+            <div className="p-6 text-foreground space-y-6">
                 <div className="sticky top-0 z-50 bg-muted p-4 rounded-lg shadow-sm">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="flex flex-col gap-1">
@@ -523,6 +493,58 @@ export default function ComplaintSearchPage() {
                                 ล้าง
                             </Button>
                         </div>
+                    </div>
+                </div>
+                <div className="flex flex-row justify-end items-center mb-4 gap-4">
+                    <div className="flex flex-wrap gap-2 justify-end">
+                        {selectedIds.length > 0 && (
+                            <div className="hidden md:flex">
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" className="cursor-pointer">
+                                            <Trash2 className="w-4 h-4 mr-2" /> ลบรายการที่เลือก
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการที่เลือกนี้?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                การลบนี้จะลบข้อมูลรายการที่เลือกทั้งหมด และไม่สามารถเรียกคืนได้ (ยกเว้นกด "เลิกทำ")
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                            <AlertDialogAction onClick={handleDeleteSelected}>ลบรายการที่เลือก</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
+                        )}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                    <FileDown className="w-4 h-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                    onClick={exportExcel}
+                                    disabled={loadingExportExcel}
+                                    className="cursor-pointer"
+                                >
+                                    <FileDown className="w-4 h-4 mr-2" />
+                                    {loadingExportExcel ? "กำลังส่งออก Excel..." : "ส่งออก Excel"}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={exportPDF}
+                                    disabled={loadingExportPDF}
+                                    className="cursor-pointer"
+                                >
+                                    <FileText className="w-4 h-4 mr-2" />
+                                    {loadingExportPDF ? "กำลังส่งออก PDF..." : "ส่งออก PDF"}
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
                 {complaints.length === 0 ? (
@@ -582,7 +604,7 @@ export default function ComplaintSearchPage() {
                                                         <TooltipTrigger asChild>
                                                             <Button size="icon" variant="ghost" asChild>
                                                                 <Link href={`/complaints/${c.id}`}>
-                                                                    <Eye className="w-4 h-4 text-violet-500"/>
+                                                                    <Eye className="w-4 h-4 text-violet-500" />
                                                                 </Link>
                                                             </Button>
                                                         </TooltipTrigger>
@@ -737,29 +759,6 @@ export default function ComplaintSearchPage() {
                             </Table>
                         </div>
                     </>
-                )}
-                {selectedIds.length > 0 && (
-                    <div className="hidden md:flex">
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button size="sm" variant="destructive" className="cursor-pointer">
-                                    <Trash2 className="w-4 h-4 mr-2" /> ลบรายการที่เลือก
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการที่เลือกนี้?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        การลบนี้จะลบข้อมูลรายการที่เลือกทั้งหมด และไม่สามารถเรียกคืนได้ (ยกเว้นกด "เลิกทำ")
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleDeleteSelected}>ลบรายการที่เลือก</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </div>
                 )}
                 <div className="flex flex-col md:flex-row justify-between items-center gap-2 mt-4">
                     <div className="hidden md:block text-sm text-muted-foreground">

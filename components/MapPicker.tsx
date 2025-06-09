@@ -67,75 +67,76 @@ export default function MapPicker({
     };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="outline" className="cursor-pointer">
-                            <MapPin className="w-4 h-4 mr-1" />
-                            ปักหมุด
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>เปิดแผนที่เพื่อเลือกตำแหน่ง</TooltipContent>
-                </Tooltip>
-            </DialogTrigger>
-            <DialogPortal>
-                <DialogContent className="max-w-4xl w-full overflow-hidden p-0 z-50">
-                    <DialogHeader className="p-4">
-                        <DialogTitle>เลือกตำแหน่ง</DialogTitle>
-                        <DialogDescription>
-                            ลากหมุดเพื่อเลือกพิกัดที่ต้องการ แล้วกดบันทึก
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="h-[400px]">
-                        <MapContainer
-                            center={tempPosition}
-                            zoom={16}
-                            style={{ height: "100%", width: "100%" }}
-                            scrollWheelZoom
-                        >
-                            <TileLayer
-                                attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            />
-                            <MapAutoCenter position={tempPosition} />
-                            <Marker
-                                draggable
-                                position={tempPosition}
-                                eventHandlers={{
-                                    dragend: (e) => {
-                                        const pos = e.target.getLatLng();
-                                        setTempPosition([pos.lat, pos.lng]);
-                                    },
-                                }}
-                                icon={markerIcon}
-                            />
-                        </MapContainer>
-                    </div>
-
-                    <DialogFooter className="p-4 flex flex-wrap gap-2 justify-between items-center border-t">
-                        <div className="flex gap-2">
-                            <Button variant="secondary" onClick={handleUseCurrentLocation}>
-                                <Crosshair className="w-4 h-4 mr-1" />
-                                ใช้ตำแหน่งปัจจุบัน
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <div>
+                    <Dialog open={open} onOpenChange={setOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" className="cursor-pointer">
+                                <MapPin className="w-4 h-4 mr-1" />
+                                ปักหมุด
                             </Button>
-                            <Button variant="secondary" onClick={handleReset}>
-                                <RotateCcw className="w-4 h-4 mr-1" />
-                                รีเซตตำแหน่ง
-                            </Button>
-                        </div>
-                        <Button
-                            onClick={() => {
-                                onChange(`${tempPosition[0]},${tempPosition[1]}`);
-                                setOpen(false);
-                            }}
-                        >
-                            ✅ บันทึกตำแหน่งนี้
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </DialogPortal>
-        </Dialog>
+                        </DialogTrigger>
+
+                        <DialogContent className="max-w-4xl w-full overflow-hidden p-0 z-50">
+                            <DialogHeader className="p-4">
+                                <DialogTitle>เลือกตำแหน่ง</DialogTitle>
+                                <DialogDescription>
+                                    ลากหมุดเพื่อเลือกพิกัดที่ต้องการ แล้วกดบันทึก
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            <div className="h-[400px]">
+                                <MapContainer
+                                    center={tempPosition}
+                                    zoom={16}
+                                    style={{ height: "100%", width: "100%" }}
+                                    scrollWheelZoom
+                                >
+                                    <TileLayer
+                                        attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                    />
+                                    <MapAutoCenter position={tempPosition} />
+                                    <Marker
+                                        draggable
+                                        position={tempPosition}
+                                        eventHandlers={{
+                                            dragend: (e) => {
+                                                const pos = e.target.getLatLng();
+                                                setTempPosition([pos.lat, pos.lng]);
+                                            },
+                                        }}
+                                        icon={markerIcon}
+                                    />
+                                </MapContainer>
+                            </div>
+                            <DialogFooter className="p-4 flex flex-wrap gap-2 justify-between items-center border-t">
+                                <div className="flex gap-2">
+                                    <Button variant="secondary" onClick={handleUseCurrentLocation} className="cursor-pointer">
+                                        <Crosshair className="w-4 h-4 mr-1" />
+                                        ใช้ตำแหน่งปัจจุบัน
+                                    </Button>
+                                    <Button variant="secondary" onClick={handleReset} className="cursor-pointer">
+                                        <RotateCcw className="w-4 h-4 mr-1" />
+                                        รีเซตตำแหน่ง
+                                    </Button>
+                                </div>
+                                <Button
+                                    className="cursor-pointer"
+                                    onClick={() => {
+                                        onChange(`${tempPosition[0]},${tempPosition[1]}`);
+                                        setOpen(false);
+                                    }}
+                                >
+                                    ✅ บันทึกตำแหน่งนี้
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                </div>
+            </TooltipTrigger>
+            <TooltipContent>เปิดแผนที่เพื่อเลือกตำแหน่ง</TooltipContent>
+        </Tooltip>
     );
 }

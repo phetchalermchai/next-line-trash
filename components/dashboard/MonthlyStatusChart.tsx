@@ -2,6 +2,7 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react'
 import api from '@/lib/axios';
+import { useTheme } from 'next-themes'
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 type StatusType = 'PENDING' | 'DONE';
@@ -14,6 +15,7 @@ interface MonthlyStatus {
 
 const MonthlyStatusChart = () => {
     const [data, setData] = useState<MonthlyStatus[]>([]);
+    const { resolvedTheme } = useTheme();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -46,7 +48,8 @@ const MonthlyStatusChart = () => {
         chart: {
             type: "bar",
             stacked: true,
-            toolbar: { show: false }
+            toolbar: { show: false },
+            foreColor: resolvedTheme === "dark" ? "#e0e0e0" : "#333",
         },
         plotOptions: {
             bar: {
@@ -55,10 +58,25 @@ const MonthlyStatusChart = () => {
             }
         },
         xaxis: {
-            categories: monthLabels
+            categories: monthLabels,
+            labels: {
+                style: {
+                    colors: resolvedTheme === "dark" ? "#bbb" : "#333"
+                }
+            }
+        },
+        yaxis: {
+            labels: {
+                style: {
+                    colors: resolvedTheme === "dark" ? "#bbb" : "#333"
+                }
+            }
         },
         legend: {
-            position: "bottom"
+            position: "bottom",
+            labels: {
+                colors: resolvedTheme === "dark" ? "#ccc" : "#444"
+            }
         },
         fill: {
             opacity: 1
@@ -68,6 +86,7 @@ const MonthlyStatusChart = () => {
             enabled: false
         },
         tooltip: {
+            theme: resolvedTheme === "dark" ? "dark" : "light",
             y: {
                 formatter: (val: number) => `${val} เรื่อง`
             }
@@ -87,7 +106,7 @@ const MonthlyStatusChart = () => {
 
     return (
         <div>
-            <Chart options={options} series={series} type="bar" height={350} />
+            <Chart key={resolvedTheme + JSON.stringify(data)} options={options} series={series} type="bar" height={350} />
         </div>
     );
 };
