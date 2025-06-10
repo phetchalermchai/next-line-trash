@@ -29,7 +29,7 @@ export function DatePickerWithRange({ value, onChange }: Props) {
       <PopoverTrigger asChild>
         <Button variant="outline" className="w-full justify-start text-left font-normal">
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {formatted}
+          <span className="overflow-hidden">{formatted}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">

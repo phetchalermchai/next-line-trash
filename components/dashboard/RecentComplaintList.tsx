@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { Clock, CheckCircle, Search } from "lucide-react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
 import { useEffect, useState } from 'react'
 import api from "@/lib/axios";
 
@@ -40,35 +46,44 @@ export default function RecentComplaintList() {
   }, [])
 
   return (
-    <div>
-      <div className="space-y-3">
-        {items.map((item) => {
-          const status = statusStyles[item.status as "PENDING" | "DONE"];
-          return (
-            <div
-              key={item.id}
-              className="flex justify-between items-center border rounded-md px-4 py-2 hover:bg-muted transition"
-            >
-              <div className="flex-1">
-                <p className="font-medium text-sm">{item.lineDisplayName || "ไม่ระบุชื่อ"}</p>
-                <p className="text-xs text-muted-foreground">{item.date}</p>
-              </div>
+    <Card className="@container/card transition-colors">
+      <CardHeader>
+        <CardTitle className="text-base font-semibold">
+          รายการร้องเรียนล่าสุด
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {items.map((item) => {
+            const status = statusStyles[item.status];
+            return (
               <div
-                className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${status.color}`}
+                key={item.id}
+                className="flex justify-between items-center border rounded-md px-4 py-2 hover:bg-muted transition"
               >
-                {status.icon}
-                {status.label}
+                <div className="flex-1">
+                  <p className="font-medium text-sm">
+                    {item.lineDisplayName || "ไม่ระบุชื่อ"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{item.date}</p>
+                </div>
+                <div
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${status.color}`}
+                >
+                  {status.icon}
+                  {status.label}
+                </div>
+                <Link
+                  href={`/complaints/${item.id}`}
+                  className="ml-4 p-2 hover:text-primary transition"
+                >
+                  <Search className="w-4 h-4" />
+                </Link>
               </div>
-              <Link
-                href={`/admin/complaints/${item.id}`}
-                className="ml-4 p-2 hover:text-primary transition"
-              >
-                <Search className="w-4 h-4" />
-              </Link>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

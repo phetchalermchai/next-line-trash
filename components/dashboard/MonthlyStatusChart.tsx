@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react'
 import api from '@/lib/axios';
 import { useTheme } from 'next-themes'
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 type StatusType = 'PENDING' | 'DONE';
@@ -105,9 +106,22 @@ const MonthlyStatusChart = () => {
     ];
 
     return (
-        <div>
-            <Chart key={resolvedTheme + JSON.stringify(data)} options={options} series={series} type="bar" height={350} />
-        </div>
+        <Card className="@container/card transition-colors">
+            <CardHeader>
+                <CardTitle className="text-base font-semibold">
+                    สรุปจำนวนแยกตามเดือนและสถานะ
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Chart
+                    key={resolvedTheme + JSON.stringify(data)}
+                    options={options}
+                    series={series}
+                    type="bar"
+                    height={350}
+                />
+            </CardContent>
+        </Card>
     );
 };
 

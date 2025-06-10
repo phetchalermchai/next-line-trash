@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { useTheme } from "next-themes"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 interface StatusPie {
@@ -57,16 +58,23 @@ export default function StatusPieChart() {
     const series = data.map((d) => typeof d.count === 'number' ? d.count : 0);
 
     return (
-        <div className="min-h-[300px] w-full">
-            {data.length > 0 && (
-                <Chart
-                    key={JSON.stringify(data) + resolvedTheme} 
-                    options={options}
-                    series={series}
-                    type="donut"
-                    height={300}
-                />
-            )}
-        </div>
+        <Card className="@container/card transition-colors w-full">
+      <CardHeader>
+        <CardTitle className="text-base font-semibold">
+          สัดส่วนสถานะเรื่องร้องเรียน
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="min-h-[300px]">
+        {data.length > 0 && (
+          <Chart
+            key={JSON.stringify(data) + resolvedTheme}
+            options={options}
+            series={series}
+            type="donut"
+            height={300}
+          />
+        )}
+      </CardContent>
+    </Card>
     );
 }

@@ -1,17 +1,27 @@
+import { Card, CardContent } from "@/components/ui/card"
+import { LucideIcon } from "lucide-react"
+
 interface SummaryCardProps {
-  icon: string
+  icon: LucideIcon
   label: string
   value: string | number
+  iconColor?: string
 }
 
-export default function SummaryCard({ icon, label, value }: SummaryCardProps) {
+export default function SummaryCard({ icon: Icon, label, value, iconColor }: SummaryCardProps) {
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-lg shadow p-4 flex items-center gap-4">
-      <div className="text-3xl">{icon}</div>
-      <div>
-        <div className="text-sm text-gray-500 dark:text-gray-400">{label}</div>
-        <div className="text-xl font-bold">{value}</div>
-      </div>
-    </div>
+    <Card className="@container/card transition-colors">
+      <CardContent className="flex items-center gap-4 p-5">
+        <div
+          className={`flex items-center justify-center w-12 h-12 rounded-full bg-accent ${iconColor ?? "text-primary"}`}
+        >
+          <Icon className="w-6 h-6" />
+        </div>
+        <div className="flex flex-col justify-center">
+          <span className="text-sm font-medium text-muted-foreground">{label}</span>
+          <span className="text-xl font-bold text-foreground leading-tight">{value}</span>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

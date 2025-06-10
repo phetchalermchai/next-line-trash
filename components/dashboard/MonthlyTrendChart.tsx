@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react'
 import { useTheme } from "next-themes"
 import api from '@/lib/axios';
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 interface MonthlyTrend {
@@ -75,8 +76,21 @@ export default function MonthlyTrendChart() {
     },
   ]
   return (
-    <div>
-      <Chart options={options} series={series} type="area" height={300} />
-    </div>
+    <Card className="@container/card transition-colors">
+      <CardHeader>
+        <CardTitle className="text-base font-semibold">
+          แนวโน้มร้องเรียนรายเดือน
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Chart
+          key={JSON.stringify(data) + resolvedTheme}
+          options={options}
+          series={series}
+          type="area"
+          height={300}
+        />
+      </CardContent>
+    </Card>
   )
 }

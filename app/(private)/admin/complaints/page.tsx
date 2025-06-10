@@ -10,7 +10,7 @@ import { DatePickerWithRange } from "@/components/complaint/DatePickerWithRange"
 import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody } from "@/components/ui/table";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -442,59 +442,61 @@ export default function ComplaintSearchPage() {
 
     return (
         <TooltipProvider>
-            <div className="p-6 text-foreground space-y-6">
-                <div className="sticky top-0 z-50 bg-muted p-4 rounded-lg shadow-sm">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="flex flex-col gap-1">
-                            <Label htmlFor="search">คำค้นหา</Label>
-                            <Input id="search" placeholder="ค้นหาคำสำคัญ..." value={search} onChange={handleSearchChange} />
-                        </div>
+            <div className="p-6 text-foreground space-y-6 transition-colors">
+                <Card className="@container/card sticky top-0 z-50">
+                    <CardContent>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="flex flex-col gap-1">
+                                <Label htmlFor="search">คำค้นหา</Label>
+                                <Input id="search" placeholder="ค้นหาคำสำคัญ..." value={search} onChange={handleSearchChange} />
+                            </div>
 
-                        <div className="flex flex-col gap-1">
-                            <Label htmlFor="status">สถานะ</Label>
-                            <Select onValueChange={(val) => { setStatus(val); setPage(1); }} value={status}>
-                                <SelectTrigger id="status">
-                                    {status === "ALL"
-                                        ? "ทั้งหมด"
-                                        : statusMap[status as keyof typeof statusMap]?.label || status}
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ALL">ทั้งหมด</SelectItem>
-                                    <SelectItem value="PENDING">PENDING</SelectItem>
-                                    <SelectItem value="DONE">DONE</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+                            <div className="flex flex-col gap-1">
+                                <Label htmlFor="status">สถานะ</Label>
+                                <Select onValueChange={(val) => { setStatus(val); setPage(1); }} value={status}>
+                                    <SelectTrigger id="status">
+                                        {status === "ALL"
+                                            ? "ทั้งหมด"
+                                            : statusMap[status as keyof typeof statusMap]?.label || status}
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ALL">ทั้งหมด</SelectItem>
+                                        <SelectItem value="PENDING">PENDING</SelectItem>
+                                        <SelectItem value="DONE">DONE</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                        <div className="flex flex-col gap-1">
-                            <Label>ช่วงวันที่</Label>
-                            <DatePickerWithRange
-                                value={dateRange}
-                                onChange={(range) => {
-                                    setDateRange(range);
-                                    setPage(1);
-                                }}
-                            />
-                        </div>
+                            <div className="flex flex-col gap-1">
+                                <Label>ช่วงวันที่</Label>
+                                <DatePickerWithRange
+                                    value={dateRange}
+                                    onChange={(range) => {
+                                        setDateRange(range);
+                                        setPage(1);
+                                    }}
+                                />
+                            </div>
 
-                        <div className="flex items-end">
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    setSearch("");
-                                    setStatus("ALL");
-                                    setDateRange(undefined);
-                                    setPage(1);
-                                    fetchData("");
-                                }}
-                                className="w-full cursor-pointer"
-                            >
-                                <RefreshCcw className="w-4 h-4 mr-2" />
-                                ล้าง
-                            </Button>
+                            <div className="flex items-end">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setSearch("");
+                                        setStatus("ALL");
+                                        setDateRange(undefined);
+                                        setPage(1);
+                                        fetchData("");
+                                    }}
+                                    className="w-full"
+                                >
+                                    <RefreshCcw className="w-4 h-4 mr-2" />
+                                    ล้าง
+                                </Button>
+                            </div>
                         </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
                 <div className="flex flex-row justify-end items-center mb-4 gap-4">
                     <div className="flex flex-wrap gap-2 justify-end">
                         {selectedIds.length > 0 && (
@@ -657,7 +659,7 @@ export default function ComplaintSearchPage() {
                         </div>
                         <div className="rounded-md border">
                             <Table className="hidden md:table">
-                                <TableHeader>
+                                <TableHeader className="bg-muted">
                                     <TableRow>
                                         <TableHead>
                                             <Checkbox
@@ -673,7 +675,7 @@ export default function ComplaintSearchPage() {
                                         <TableHead>สถานะ</TableHead>
                                         <TableHead>วันที่บันทึก</TableHead>
                                         <TableHead>อัปเดตล่าสุด</TableHead>
-                                        <TableHead className="text-right">การจัดการ</TableHead>
+                                        <TableHead className="text-right pe-10">การจัดการ</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -761,12 +763,12 @@ export default function ComplaintSearchPage() {
                     </>
                 )}
                 <div className="flex flex-col md:flex-row justify-between items-center gap-2 mt-4">
-                    <div className="hidden md:block text-sm text-muted-foreground">
+                    <div className="hidden lg:block text-sm text-muted-foreground">
                         {selectedIds.length} จาก {complaints.length} รายการถูกเลือก
                     </div>
 
-                    <div className="flex flex-row md:items-center gap-2 md:gap-4 w-full md:w-auto justify-between">
-                        <div className="hidden md:flex justify-center items-center gap-2">
+                    <div className="flex flex-row lg:items-center gap-2 lg:gap-4 w-full lg:w-auto justify-between">
+                        <div className="hidden lg:flex justify-center items-center gap-2">
                             <span className="text-sm">แสดง:</span>
                             <Select value={limit.toString()} onValueChange={(val) => {
                                 setLimit(Number(val));
@@ -787,16 +789,16 @@ export default function ComplaintSearchPage() {
                             <span className="text-sm mx-2 whitespace-nowrap">หน้า {page} จาก {totalPages}</span>
                         </div>
                         <div className="inline-flex justify-center gap-1">
-                            <Button onClick={() => setPage(1)} disabled={page === 1}>
+                            <Button variant="outline" onClick={() => setPage(1)} disabled={page === 1}>
                                 <ChevronsLeft className="w-4 h-4" />
                             </Button>
-                            <Button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
+                            <Button variant="outline" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
                                 <ChevronLeft className="w-4 h-4" />
                             </Button>
-                            <Button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+                            <Button variant="outline" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
                                 <ChevronRight className="w-4 h-4" />
                             </Button>
-                            <Button onClick={() => setPage(totalPages)} disabled={page === totalPages}>
+                            <Button variant="outline" onClick={() => setPage(totalPages)} disabled={page === totalPages}>
                                 <ChevronsRight className="w-4 h-4" />
                             </Button>
                         </div>
