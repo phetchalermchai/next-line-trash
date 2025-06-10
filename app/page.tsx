@@ -90,7 +90,7 @@ export default function ComplaintCreatePage() {
 
       form.append("lineUserId", lineProfile.userId);
       form.append("lineDisplayName", lineProfile.displayName);
-      imageFiles.imageBefore.forEach((file) => form.append("imageBeforeFiles", file));
+      imageFiles.imageBefore.forEach((file) => form.append("images", file));
 
       setLoading(true);
 
