@@ -27,6 +27,7 @@ export default function ComplaintCreatePage() {
     imageBefore: "",
     location: "",
   });
+  const [errors, setErrors] = useState<{ phone?: string; description?: string; imageBefore?: string }>({});
   const [imageFiles, setImageFiles] = useState<{ imageBefore: File[] }>({ imageBefore: [] });
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const [cropImage, setCropImage] = useState<File | null>(null);
@@ -62,20 +63,28 @@ export default function ComplaintCreatePage() {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value ?? "" }));
   };
 
+  const validateForm = () => {
+    const newErrors: typeof errors = {};
+    if (!formData.phone.trim()) newErrors.phone = "กรุณากรอกเบอร์โทร";
+    if (!formData.description.trim()) newErrors.description = "กรุณากรอกรายละเอียด";
+    if (imageBeforeUrls.length === 0 || imageFiles.imageBefore.length === 0) newErrors.imageBefore = "กรุณาแนบภาพก่อนอย่างน้อย 1 รูป";
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      const firstError = Object.values(newErrors)[0];
+      toast.error(firstError);
+      return false;
+    }
+    return true;
+  };
+
+
   const handleSave = async () => {
     if (!lineProfile) {
       toast.error("ไม่พบข้อมูลผู้ใช้ LINE");
       return;
     }
-    if (!formData.phone?.trim()) {
-      toast.error("กรุณากรอกเบอร์โทร");
-      return;
-    }
 
-    if (!formData.description?.trim()) {
-      toast.error("กรุณากรอกรายละเอียด");
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
       const form = new FormData();
@@ -90,7 +99,7 @@ export default function ComplaintCreatePage() {
 
       form.append("lineUserId", lineProfile.userId);
       form.append("lineDisplayName", lineProfile.displayName);
-      imageFiles.imageBefore.forEach((file) => form.append("images", file));
+      imageFiles.imageBefore.forEach((file) => form.append("imageBeforeFiles", file));
 
       setLoading(true);
 
@@ -120,17 +129,19 @@ export default function ComplaintCreatePage() {
 
       <div className="grid w-full items-center gap-3">
         <Label htmlFor="displayName">ผู้แจ้ง</Label>
-        <Input id="displayName" name="phone" value={lineProfile?.displayName ?? ""} onChange={handleChange} placeholder="เบอร์โทร" />
+        <Input id="displayName" name="displayName" value={lineProfile?.displayName ?? ""} readOnly disabled />
       </div>
 
       <div className="grid w-full items-center gap-3">
         <Label htmlFor="phone">เบอร์โทร</Label>
-        <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="เบอร์โทร" />
+        <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="เบอร์โทร" className={errors.phone ? "border-red-500" : ""}/>
+        {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
       </div>
 
       <div className="grid w-full items-center gap-3">
         <Label htmlFor="description">รายละเอียด</Label>
-        <Textarea id="description" name="description" value={formData.description || ""} onChange={handleChange} rows={3} placeholder="รายละเอียด" />
+        <Textarea id="description" name="description" value={formData.description || ""} onChange={handleChange} rows={3} placeholder="รายละเอียด" className={errors.description ? "border-red-500" : ""}/>
+        {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
       </div>
 
       <DropzoneUploader
@@ -150,6 +161,7 @@ export default function ComplaintCreatePage() {
           setShowGallery(true);
         }}
       />
+      {errors.imageBefore && <p className="text-sm text-red-500">{errors.imageBefore}</p>}
 
       {showGallery && (
         <ImageGalleryModal

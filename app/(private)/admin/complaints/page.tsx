@@ -524,7 +524,7 @@ export default function ComplaintSearchPage() {
                         )}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="icon">
+                                <Button className="cursor-pointer" variant="outline" size="icon">
                                     <FileDown className="w-4 h-4" />
                                 </Button>
                             </DropdownMenuTrigger>
@@ -722,7 +722,7 @@ export default function ComplaintSearchPage() {
                                                         </Tooltip>
                                                         <DropdownMenuContent align="end">
                                                             <DropdownMenuItem asChild>
-                                                                <Link href={`/complaints/${c.id}`} className="w-full">รายละเอียด</Link>
+                                                                <Link href={`/complaints/${c.id}`} className="w-full cursor-pointer">รายละเอียด</Link>
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem asChild>
                                                                 <Link href={`/admin/complaints/${c.id}/edit`} className="w-full cursor-pointer">แก้ไข</Link>
