@@ -70,7 +70,7 @@ export default function ComplaintCreatePage() {
     const newErrors: typeof errors = {};
     if (!formData.phone.trim()) newErrors.phone = "กรุณากรอกเบอร์โทร";
     if (!formData.description.trim()) newErrors.description = "กรุณากรอกรายละเอียด";
-    if (imageBeforeUrls.length === 0) newErrors.imageBefore = "กรุณาแนบภาพก่อนอย่างน้อย 1 รูป";
+    if (imageFiles.imageBefore.length === 0) newErrors.imageBefore = "กรุณาแนบภาพก่อนอย่างน้อย 1 รูป";
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
       const firstField = Object.keys(newErrors)[0];
