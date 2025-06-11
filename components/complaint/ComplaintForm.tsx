@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, ChangeEvent, useEffect } from "react";
+import { useState, ChangeEvent, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,9 @@ const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ss
 
 export default function ComplaintCreatePage() {
   const router = useRouter();
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const uploaderRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     phone: "",
@@ -70,8 +73,11 @@ export default function ComplaintCreatePage() {
     if (imageBeforeUrls.length === 0 || imageFiles.imageBefore.length === 0) newErrors.imageBefore = "กรุณาแนบภาพก่อนอย่างน้อย 1 รูป";
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
-      const firstError = Object.values(newErrors)[0];
-      toast.error(firstError);
+      const firstField = Object.keys(newErrors)[0];
+      toast.error(Object.values(newErrors)[0]);
+      if (firstField === "phone" && phoneRef.current) phoneRef.current.focus();
+      if (firstField === "description" && descriptionRef.current) descriptionRef.current.focus();
+      if (firstField === "imageBefore" && uploaderRef.current) uploaderRef.current.scrollIntoView({ behavior: "smooth" });
       return false;
     }
     return true;
@@ -134,34 +140,36 @@ export default function ComplaintCreatePage() {
 
       <div className="grid w-full items-center gap-3">
         <Label htmlFor="phone">เบอร์โทร</Label>
-        <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="เบอร์โทร" className={errors.phone ? "border-red-500" : ""}/>
+        <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="เบอร์โทร" className={errors.phone ? "border-red-500" : ""} ref={phoneRef}/>
         {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
       </div>
 
       <div className="grid w-full items-center gap-3">
         <Label htmlFor="description">รายละเอียด</Label>
-        <Textarea id="description" name="description" value={formData.description || ""} onChange={handleChange} rows={3} placeholder="รายละเอียด" className={errors.description ? "border-red-500" : ""}/>
+        <Textarea id="description" name="description" value={formData.description || ""} onChange={handleChange} rows={3} placeholder="รายละเอียด" className={errors.description ? "border-red-500" : ""} ref={descriptionRef}/>
         {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
       </div>
 
-      <DropzoneUploader
-        field="imageBefore"
-        label="ภาพก่อน"
-        files={imageFiles.imageBefore}
-        previewUrls={imageBeforeUrls}
-        setPreviewUrls={(urls) => setImageBeforeUrls(Array.from(new Set(urls)))}
-        setFiles={(files) => setImageFiles({ imageBefore: files })}
-        onCrop={(file, done) => {
-          setCropImage(file);
-          setOnCropDone(() => done);
-        }}
-        onPreview={(urls, idx) => {
-          setPreviewImages(urls);
-          setPreviewIndex(idx);
-          setShowGallery(true);
-        }}
-      />
-      {errors.imageBefore && <p className="text-sm text-red-500">{errors.imageBefore}</p>}
+      <div ref={uploaderRef}>
+        <DropzoneUploader
+          field="imageBefore"
+          label="ภาพก่อน"
+          files={imageFiles.imageBefore}
+          previewUrls={imageBeforeUrls}
+          setPreviewUrls={(urls) => setImageBeforeUrls(Array.from(new Set(urls)))}
+          setFiles={(files) => setImageFiles({ imageBefore: files })}
+          error={errors.imageBefore}
+          onCrop={(file, done) => {
+            setCropImage(file);
+            setOnCropDone(() => done);
+          }}
+          onPreview={(urls, idx) => {
+            setPreviewImages(urls);
+            setPreviewIndex(idx);
+            setShowGallery(true);
+          }}
+        />
+      </div>
 
       {showGallery && (
         <ImageGalleryModal
