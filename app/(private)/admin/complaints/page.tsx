@@ -697,7 +697,7 @@ export default function ComplaintSearchPage() {
                                                     />
                                                 </TableCell>
                                                 <TableCell>{c.lineDisplayName || "-"}</TableCell>
-                                                <TableCell>{c.description}</TableCell>
+                                                <TableCell className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[250px]">{c.description}</TableCell>
                                                 <TableCell>
                                                     <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium w-fit ${status.color}`}>
                                                         {status.icon}

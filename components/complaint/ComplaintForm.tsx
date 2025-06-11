@@ -121,7 +121,7 @@ export default function ComplaintCreatePage() {
       const complaintId = res.data.id;
       await api.put(`/webhook/line/${complaintId}/notify`);
       toast.success("สร้างรายการเรียบร้อย");
-      router.push("/");
+      router.push(`/complaints/${complaintId}`);
     } catch {
       toast.error("สร้างรายการล้มเหลว");
     } finally {
