@@ -90,12 +90,20 @@ export default function ComplaintCreatePage() {
       return;
     }
 
+    if (!formData.location) {
+      toast.error("กรุณาเลือกพิกัดหรือระบุตำแหน่ง");
+      return;
+    }
+
     if (!validateForm()) return;
 
     try {
       const form = new FormData();
       const dataToSubmit = {
         ...formData,
+        source: "LINE",
+        reporterName: lineProfile.displayName,
+        lineUserId: lineProfile.userId,
         imageBefore: imageBeforeUrls.join(","),
       };
 
@@ -103,8 +111,6 @@ export default function ComplaintCreatePage() {
         form.append(key, value);
       });
 
-      form.append("lineUserId", lineProfile.userId);
-      form.append("lineDisplayName", lineProfile.displayName);
       imageFiles.imageBefore.forEach((file) => form.append("imageBeforeFiles", file));
 
       setLoading(true);
@@ -140,13 +146,13 @@ export default function ComplaintCreatePage() {
 
       <div className="grid w-full items-center gap-3">
         <Label htmlFor="phone">เบอร์โทร</Label>
-        <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="เบอร์โทร" className={errors.phone ? "border-red-500" : ""} ref={phoneRef}/>
+        <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="เบอร์โทร" className={errors.phone ? "border-red-500" : ""} ref={phoneRef} />
         {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
       </div>
 
       <div className="grid w-full items-center gap-3">
         <Label htmlFor="description">รายละเอียด</Label>
-        <Textarea id="description" name="description" value={formData.description || ""} onChange={handleChange} rows={3} placeholder="รายละเอียด" className={errors.description ? "border-red-500" : ""} ref={descriptionRef}/>
+        <Textarea id="description" name="description" value={formData.description || ""} onChange={handleChange} rows={3} placeholder="รายละเอียด" className={errors.description ? "border-red-500" : ""} ref={descriptionRef} />
         {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
       </div>
 
