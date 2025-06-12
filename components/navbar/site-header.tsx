@@ -26,10 +26,10 @@ export function SiteHeader() {
     }
 
     if (/^\/admin\/complaints\/.+\/edit$/.test(pathname)) {
-        const id = pathname.split("/")[3]?.slice(-4).toUpperCase() || "...";
+        const id = pathname.split("/")[3]?.slice(-6).toUpperCase() || "...";
         pageTitle = `แก้ไขเรื่องร้องเรียน #${id}`;
     } else if (/^\/admin\/complaints\/.+\/report$/.test(pathname)) {
-        const id = pathname.split("/")[3]?.slice(-4).toUpperCase() || "...";
+        const id = pathname.split("/")[3]?.slice(-6).toUpperCase() || "...";
         pageTitle = `รายงานผลการดำเนินงาน #${id}`;
     }
     

@@ -16,14 +16,27 @@ const statusMap = {
 
 export const ComplaintInfo = ({ complaint }: { complaint: Complaint }) => {
     const status = statusMap[complaint.status];
+
+    const thaiTime = ((date: string) => {
+        return new Date(date).toLocaleString("th-TH", {
+            timeZone: "Asia/Bangkok",
+            year: "numeric",
+            month: "long",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+        })
+    })
+
     return (
         <>
-            <h1 className="text-2xl font-bold">รายการร้องเรียน #{complaint.id.slice(-4).toUpperCase()}</h1>
+            <h1 className="text-2xl font-bold">รายการร้องเรียน #{complaint.id.slice(-6).toUpperCase()}</h1>
             <div className="bg-muted p-4 rounded-md text-sm space-y-1 border">
-                <p><strong>วันที่แจ้ง:</strong> {new Date(complaint.createdAt).toLocaleString()}</p>
-                <p><strong>อัปเดตล่าสุด:</strong> {new Date(complaint.updatedAt).toLocaleString()}</p>
+                <p><strong>วันที่แจ้ง:</strong> {`${thaiTime(complaint.createdAt)} น.`}</p>
+                <p><strong>อัปเดตล่าสุด:</strong> {`${thaiTime(complaint.updatedAt)} น.`}</p>
                 {complaint.notifiedAt && (
-                    <p><strong>แจ้งเตือนล่าสุด:</strong> {new Date(complaint.updatedAt).toLocaleString()}</p>
+                    <p><strong>แจ้งเตือนล่าสุด:</strong> {`${thaiTime(complaint.notifiedAt)} น.`}</p>
                 )}
                 {complaint.lineDisplayName && <p><strong>ผู้แจ้ง:</strong> {complaint.lineDisplayName || "ไม่ทราบชื่อ"}</p>}
                 {complaint.phone && <p><strong>เบอร์โทร:</strong> {complaint.phone}</p>}

@@ -94,7 +94,17 @@ export default function ComplaintReportPage() {
     );
   }
 
-  const shortId = complaint.id.slice(-4).toUpperCase();
+  const shortId = complaint.id.slice(-6).toUpperCase();
+
+  const thaiTime = new Date(complaint.createdAt).toLocaleString("th-TH", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "long",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
@@ -121,7 +131,7 @@ export default function ComplaintReportPage() {
           </p>
         )}
         {complaint.lineDisplayName && <p><strong>ผู้แจ้ง:</strong> {complaint.lineDisplayName}</p>}
-        <p><strong>วันที่แจ้ง:</strong> {format(new Date(complaint.createdAt), "dd/MM/") + (parseInt(format(new Date(complaint.createdAt), "yyyy")) + 543)}</p>
+        <p><strong>วันที่แจ้ง:</strong> {`${thaiTime} น.`}</p>
       </div>
 
       <div>

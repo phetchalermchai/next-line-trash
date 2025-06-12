@@ -119,7 +119,7 @@ export default function ComplaintEditPage() {
                     }
                 },
             });
-           
+
             toast.success("บันทึกเรียบร้อย");
             router.push("/admin/complaints");
         } catch {
@@ -127,8 +127,15 @@ export default function ComplaintEditPage() {
         }
     };
 
-    const formatThaiDate = (date: Date) =>
-        format(date, "dd/MM/") + (date.getFullYear() + 543);
+    const thaiTime = new Date(formData.createdAt).toLocaleString("th-TH", {
+        timeZone: "Asia/Bangkok",
+        year: "numeric",
+        month: "long",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+    });
 
     if (loading) {
         return (
@@ -140,10 +147,10 @@ export default function ComplaintEditPage() {
 
     return (
         <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
-            <h1 className="text-2xl font-bold">แก้ไขรายการร้องเรียน #{formData.id.slice(-4).toUpperCase()}</h1>
+            <h1 className="text-2xl font-bold">แก้ไขรายการร้องเรียน #{formData.id.slice(-6).toUpperCase()}</h1>
             <div className="bg-muted p-4 rounded-md text-sm space-y-1 border">
                 {formData.lineDisplayName && <p><strong>ผู้แจ้ง:</strong> {formData.lineDisplayName}</p>}
-                <p><strong>วันที่แจ้ง:</strong> {formatThaiDate(new Date(formData.createdAt))}</p>
+                <p><strong>วันที่แจ้ง:</strong> {`${thaiTime} น.`}</p>
             </div>
             <div className="grid w-full items-center gap-3">
                 <Label htmlFor="phone">เบอร์โทร</Label>
