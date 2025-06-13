@@ -27,10 +27,12 @@ export default function ComplaintEditPage() {
     const [formData, setFormData] = useState({
         id: "",
         reporterName: "",
+        receivedBy: "",
         phone: "",
         description: "",
         message: "",
         status: "PENDING",
+        source: "",
         imageBefore: "",
         imageAfter: "",
         location: "",
@@ -144,12 +146,34 @@ export default function ComplaintEditPage() {
         );
     }
 
+    const renderSourceBadge = (source: string) => {
+        const colorMap: Record<string, string> = {
+            LINE: "bg-green-100 text-green-700 border-green-300",
+            FACEBOOK: "bg-blue-100 text-blue-700 border-blue-300",
+            PHONE: "bg-yellow-100 text-yellow-800 border-yellow-300",
+            COUNTER: "bg-pink-100 text-pink-700 border-pink-300",
+            OTHER: "bg-gray-100 text-gray-800 border-gray-300",
+        };
+
+        const color = colorMap[source] ?? "bg-gray-100 text-gray-700 border-gray-300";
+
+        return (
+            <span className={`inline-block text-xs px-2 py-1 rounded border ${color}`}>
+                {source}
+            </span>
+        );
+    };
+
     return (
         <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
             <h1 className="text-2xl font-bold">แก้ไขรายการร้องเรียน #{formData.id.slice(-6).toUpperCase()}</h1>
             <div className="bg-muted p-4 rounded-md text-sm space-y-1 border">
                 {formData.reporterName && <p><strong>ผู้แจ้ง:</strong> {formData.reporterName}</p>}
+                {formData.receivedBy && <p><strong>ผู้รับแจ้ง:</strong> {formData.receivedBy}</p>}
                 <p><strong>วันที่แจ้ง:</strong> {`${thaiTime} น.`}</p>
+                <p className="flex items-center gap-2">
+                    <strong>ช่องทาง:</strong> {renderSourceBadge(formData.source)}
+                </p>
             </div>
             <div className="grid w-full items-center gap-3">
                 <Label htmlFor="phone">เบอร์โทร</Label>
