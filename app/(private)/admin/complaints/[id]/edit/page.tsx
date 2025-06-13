@@ -11,7 +11,6 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { format } from "date-fns";
 import dynamic from "next/dynamic";
 import DropzoneUploader from "@/components/DropzoneUploader";
 import ImageCropperModal from "@/components/ImageCropperModal";
@@ -27,7 +26,7 @@ export default function ComplaintEditPage() {
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
         id: "",
-        lineDisplayName: "",
+        reporterName: "",
         phone: "",
         description: "",
         message: "",
@@ -149,7 +148,7 @@ export default function ComplaintEditPage() {
         <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
             <h1 className="text-2xl font-bold">แก้ไขรายการร้องเรียน #{formData.id.slice(-6).toUpperCase()}</h1>
             <div className="bg-muted p-4 rounded-md text-sm space-y-1 border">
-                {formData.lineDisplayName && <p><strong>ผู้แจ้ง:</strong> {formData.lineDisplayName}</p>}
+                {formData.reporterName && <p><strong>ผู้แจ้ง:</strong> {formData.reporterName}</p>}
                 <p><strong>วันที่แจ้ง:</strong> {`${thaiTime} น.`}</p>
             </div>
             <div className="grid w-full items-center gap-3">

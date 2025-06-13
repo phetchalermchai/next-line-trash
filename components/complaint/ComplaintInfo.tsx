@@ -38,7 +38,7 @@ export const ComplaintInfo = ({ complaint }: { complaint: Complaint }) => {
                 {complaint.notifiedAt && (
                     <p><strong>แจ้งเตือนล่าสุด:</strong> {`${thaiTime(complaint.notifiedAt)} น.`}</p>
                 )}
-                {complaint.lineDisplayName && <p><strong>ผู้แจ้ง:</strong> {complaint.lineDisplayName || "ไม่ทราบชื่อ"}</p>}
+                {complaint.reporterName && <p><strong>ผู้แจ้ง:</strong> {complaint.reporterName || "ไม่ทราบชื่อ"}</p>}
                 {complaint.phone && <p><strong>เบอร์โทร:</strong> {complaint.phone}</p>}
                 {complaint.description && <p><strong>รายละเอียด:</strong> {complaint.description}</p>}
                 {complaint.status === "DONE" && complaint.message && (

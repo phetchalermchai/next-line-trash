@@ -10,18 +10,7 @@ import DropzoneUploader from "@/components/DropzoneUploader";
 import ImageGalleryModal from "@/components/ImageGalleryModal";
 import ImageCropperModal from "@/components/ImageCropperModal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { format } from "date-fns";
-
-interface Complaint {
-  id: string;
-  message?: string;
-  imageAfter?: string;
-  status: "PENDING" | "DONE";
-  description: string;
-  location?: string;
-  lineDisplayName?: string;
-  createdAt: string;
-}
+import { Complaint } from "@/types/complaint";
 
 export default function ComplaintReportPage() {
   const { id } = useParams();
@@ -130,7 +119,7 @@ export default function ComplaintReportPage() {
             </Tooltip>
           </p>
         )}
-        {complaint.lineDisplayName && <p><strong>ผู้แจ้ง:</strong> {complaint.lineDisplayName}</p>}
+        {complaint.reporterName && <p><strong>ผู้แจ้ง:</strong> {complaint.reporterName}</p>}
         <p><strong>วันที่แจ้ง:</strong> {`${thaiTime} น.`}</p>
       </div>
 

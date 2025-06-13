@@ -10,7 +10,7 @@ import { DatePickerWithRange } from "@/components/complaint/DatePickerWithRange"
 import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody } from "@/components/ui/table";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -26,6 +26,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { font as sarabunFont } from "@/utils/fonts/Sarabun-normal";
 import { getExportFilename } from "@/utils/getExportFilename";
+import { Complaint } from "@/types/complaint";
 
 // Extend jsPDFAPI to include __sarabunFontLoaded
 declare module "jspdf" {
@@ -43,22 +44,6 @@ if (!jsPDF.API.__sarabunFontLoaded) {
             this.addFont("Sarabun-Regular.ttf", "Sarabun", "normal");
         },
     ]);
-}
-
-interface Complaint {
-    id: string;
-    lineUserId: string;
-    lineDisplayName?: string;
-    phone?: string;
-    description: string;
-    imageBefore: string;
-    imageAfter?: string;
-    location?: string;
-    status: "PENDING" | "DONE";
-    message?: string;
-    notifiedAt?: string | null;
-    createdAt: string;
-    updatedAt: string;
 }
 
 const statusMap = {
@@ -276,7 +261,7 @@ export default function ComplaintSearchPage() {
                 []
             ];
             const mapped = allComplaints.map(c => ({
-                "ชื่อผู้ร้องเรียน": c.lineDisplayName || "",
+                "ชื่อผู้ร้องเรียน": c.reporterName || "",
                 "เบอร์โทร": c.phone || "",
                 "รายละเอียด": c.description,
                 "พิกัด": c.location || "",
@@ -320,12 +305,12 @@ export default function ComplaintSearchPage() {
                     "พิกัด", "สถานะ", "สรุปผล", "วันที่บันทึก", "วันที่อัพเดท"
                 ]],
                 body: allComplaints.map(c => [
-                    c.lineDisplayName || "",
-                    c.phone || "",
-                    c.description,
-                    c.location || "",
-                    c.status,
-                    c.message || "",
+                    String(c.reporterName || ""),
+                    String(c.phone || ""),
+                    String(c.description),
+                    String(c.location || ""),
+                    String(c.status),
+                    String(c.message || ""),
                     format(new Date(c.createdAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString()),
                     format(new Date(c.updatedAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())
                 ]),
@@ -595,7 +580,7 @@ export default function ComplaintSearchPage() {
                                                 {status.icon}
                                                 {status.label}
                                             </div>
-                                            <div className="text-sm text-muted-foreground">ผู้แจ้ง: {c.lineDisplayName || "-"}</div>
+                                            <div className="text-sm text-muted-foreground">ผู้แจ้ง: {c.reporterName || "-"}</div>
 
                                             {isAdmin && (
                                                 <div className="flex justify-end gap-2 pt-2">
@@ -696,7 +681,7 @@ export default function ComplaintSearchPage() {
                                                         aria-label={`Select complaint ${c.id}`}
                                                     />
                                                 </TableCell>
-                                                <TableCell>{c.lineDisplayName || "-"}</TableCell>
+                                                <TableCell>{c.reporterName || "-"}</TableCell>
                                                 <TableCell className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[250px]">{c.description}</TableCell>
                                                 <TableCell>
                                                     <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium w-fit ${status.color}`}>

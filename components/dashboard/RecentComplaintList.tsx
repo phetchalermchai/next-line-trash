@@ -8,13 +8,7 @@ import {
 } from "@/components/ui/card";
 import { useEffect, useState } from 'react'
 import api from "@/lib/axios";
-
-interface ComplaintItem {
-  id: string;
-  date: string;
-  lineDisplayName: string;
-  status: "PENDING" | "DONE";
-}
+import { Complaint } from "@/types/complaint";
 
 const statusStyles = {
   PENDING: {
@@ -30,7 +24,7 @@ const statusStyles = {
 };
 
 export default function RecentComplaintList() {
-  const [items, setItems] = useState<ComplaintItem[]>([])
+  const [items, setItems] = useState<Complaint[]>([])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -63,9 +57,9 @@ export default function RecentComplaintList() {
               >
                 <div className="flex-1">
                   <p className="font-medium text-sm">
-                    {item.lineDisplayName || "ไม่ระบุชื่อ"}
+                    {item.reporterName || "ไม่ระบุชื่อ"}
                   </p>
-                  <p className="text-xs text-muted-foreground">{item.date}</p>
+                  <p className="text-xs text-muted-foreground">{item.createdAt}</p>
                 </div>
                 <div
                   className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${status.color}`}
