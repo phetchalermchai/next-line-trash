@@ -1,16 +1,16 @@
 import { Complaint } from "@/types/complaint";
-import { CheckCircle, Hourglass } from "lucide-react";
+import { CheckCircle, Clock } from "lucide-react";
 
 const statusMap = {
     PENDING: {
         label: "รอดำเนินการ",
-        icon: <Hourglass className="w-3.5 h-3.5" />,
-        color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-800/20",
+        icon: <Clock className="w-4 h-4 text-yellow-500" />,
+        color: "text-yellow-600 bg-yellow-50",
     },
     DONE: {
         label: "เสร็จสิ้น",
-        icon: <CheckCircle className="w-3.5 h-3.5" />,
-        color: "bg-green-100 text-green-800 dark:bg-green-800/20",
+        icon: <CheckCircle className="w-4 h-4 text-green-500" />,
+        color: "text-green-600 bg-green-50",
     },
 };
 
