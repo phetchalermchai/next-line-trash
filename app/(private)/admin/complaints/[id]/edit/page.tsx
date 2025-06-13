@@ -176,6 +176,16 @@ export default function ComplaintEditPage() {
                 </p>
             </div>
             <div className="grid w-full items-center gap-3">
+                <Label htmlFor="reporterName">ผู้แจ้ง</Label>
+                <Input id="reporterName" name="reporterName" value={formData.reporterName} onChange={handleChange} placeholder="ผู้แจ้ง" />
+            </div>
+            {formData.receivedBy && (
+                <div className="grid w-full items-center gap-3">
+                    <Label htmlFor="receivedBy">ผู้รับแจ้ง</Label>
+                    <Input id="receivedBy" name="receivedBy" value={formData.receivedBy} onChange={handleChange} placeholder="ผู้รับแจ้ง" />
+                </div>
+            )}
+            <div className="grid w-full items-center gap-3">
                 <Label htmlFor="phone">เบอร์โทร</Label>
                 <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="เบอร์โทร" />
             </div>
@@ -183,6 +193,21 @@ export default function ComplaintEditPage() {
                 <Label htmlFor="description">รายละเอียด</Label>
                 <Textarea id="description" name="description" value={formData.description || ""} onChange={handleChange} rows={3} placeholder="รายละเอียด" />
             </div>
+            {formData.source && (
+                <div className="grid w-full items-center gap-3">
+                    <Label htmlFor="source">ช่องทาง</Label>
+                    <Select value={formData.source} onValueChange={(val) => setFormData((prev) => ({ ...prev, source: val }))}>
+                        <SelectTrigger id="source"><SelectValue placeholder="เลือกช่องทาง" /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="LINE">LINE</SelectItem>
+                            <SelectItem value="FACEBOOK">FACEBOOK</SelectItem>
+                            <SelectItem value="PHONE">PHONE</SelectItem>
+                            <SelectItem value="COUNTER">COUNTER</SelectItem>
+                            <SelectItem value="OTHER">OTHER</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
             <div className="grid w-full items-center gap-3">
                 <Label htmlFor="message">สรุปผล</Label>
                 <Textarea id="message" name="message" value={formData.message || ""} onChange={handleChange} rows={2} placeholder="สรุปผล" />
