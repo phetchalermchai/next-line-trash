@@ -10,7 +10,7 @@ import { DatePickerWithRange } from "@/components/complaint/DatePickerWithRange"
 import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody } from "@/components/ui/table";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -26,6 +26,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { font as sarabunFont } from "@/utils/fonts/Sarabun-normal";
 import { getExportFilename } from "@/utils/getExportFilename";
+import { Complaint } from "@/types/complaint";
 
 // Extend jsPDFAPI to include __sarabunFontLoaded
 declare module "jspdf" {
@@ -45,22 +46,6 @@ if (!jsPDF.API.__sarabunFontLoaded) {
     ]);
 }
 
-interface Complaint {
-    id: string;
-    lineUserId: string;
-    lineDisplayName?: string;
-    phone?: string;
-    description: string;
-    imageBefore: string;
-    imageAfter?: string;
-    location?: string;
-    status: "PENDING" | "DONE";
-    message?: string;
-    notifiedAt?: string | null;
-    createdAt: string;
-    updatedAt: string;
-}
-
 const statusMap = {
     PENDING: {
         label: "รอดำเนินการ",
@@ -74,11 +59,20 @@ const statusMap = {
     },
 };
 
+const sourceMap = {
+    LINE: { label: "LINE" },
+    FACEBOOK: { label: "Facebook" },
+    PHONE: { label: "PHONE" },
+    COUNTER: { label: "COUNTER" },
+    OTHER: { label: "OTHER" },
+};
+
 export default function ComplaintSearchPage() {
     const { data: session } = useSession();
     const isAdmin = session?.user?.role === "admin";
     const [search, setSearch] = useState("");
     const [status, setStatus] = useState("ALL");
+    const [source, setSource] = useState("ALL");
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
         from: new Date(new Date().setDate(new Date().getDate() - 30)),
         to: new Date(),
@@ -99,6 +93,7 @@ export default function ComplaintSearchPage() {
         const keyword = overrideSearch ?? search;
         if (keyword) params.append("search", keyword);
         if (status !== "ALL") params.append("status", status);
+        if (source !== "ALL") params.append("source", source);
         if (dateRange?.from) {
             const start = new Date(dateRange.from);
             start.setHours(0, 0, 0, 0);
@@ -127,6 +122,7 @@ export default function ComplaintSearchPage() {
             const params = new URLSearchParams();
             if (search) params.append("search", search);
             if (status !== "ALL") params.append("status", status);
+            if (source !== "ALL") params.append("source", source);
             if (dateRange?.from) {
                 const start = new Date(dateRange.from);
                 start.setHours(0, 0, 0, 0);
@@ -276,9 +272,11 @@ export default function ComplaintSearchPage() {
                 []
             ];
             const mapped = allComplaints.map(c => ({
-                "ชื่อผู้ร้องเรียน": c.lineDisplayName || "",
+                "ผู้แจ้ง": c.reporterName || "",
+                "ผู้รับแจ้ง": c.receivedBy || "",
                 "เบอร์โทร": c.phone || "",
                 "รายละเอียด": c.description,
+                "ช่องทาง": c.source,
                 "พิกัด": c.location || "",
                 "สถานะ": c.status,
                 "สรุปผล": c.message || "",
@@ -316,16 +314,17 @@ export default function ComplaintSearchPage() {
             autoTable(doc, {
                 startY: 28,
                 head: [[
-                    "ชื่อผู้ร้องเรียน", "เบอร์โทร", "รายละเอียด",
-                    "พิกัด", "สถานะ", "สรุปผล", "วันที่บันทึก", "วันที่อัพเดท"
+                    "ผู้แจ้ง", "ผู้รับแจ้ง", "เบอร์โทร", "รายละเอียด", "ช่องทาง",
+                    "สถานะ", "สรุปผล", "วันที่บันทึก", "วันที่อัพเดท"
                 ]],
                 body: allComplaints.map(c => [
-                    c.lineDisplayName || "",
-                    c.phone || "",
-                    c.description,
-                    c.location || "",
-                    c.status,
-                    c.message || "",
+                    String(c.reporterName || ""),
+                    String(c.receivedBy || ""),
+                    String(c.phone || ""),
+                    String(c.description),
+                    String(c.source),
+                    String(c.status),
+                    String(c.message || ""),
                     format(new Date(c.createdAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString()),
                     format(new Date(c.updatedAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())
                 ]),
@@ -440,34 +439,43 @@ export default function ComplaintSearchPage() {
         );
     };
 
+    const renderSourceBadge = (source: string) => {
+        const colorMap: Record<string, string> = {
+            LINE: "bg-green-100 text-green-700 border-green-300",
+            FACEBOOK: "bg-blue-100 text-blue-700 border-blue-300",
+            PHONE: "bg-yellow-100 text-yellow-800 border-yellow-300",
+            COUNTER: "bg-pink-100 text-pink-700 border-pink-300",
+            OTHER: "bg-gray-100 text-gray-800 border-gray-300",
+        };
+
+        const color = colorMap[source] ?? "bg-gray-100 text-gray-700 border-gray-300";
+
+        return (
+            <span className={`inline-block text-xs px-2 py-1 rounded border ${color}`}>
+                {source}
+            </span>
+        );
+    };
+
     return (
         <TooltipProvider>
             <div className="p-6 text-foreground space-y-6 transition-colors">
                 <Card className="@container/card sticky top-0 z-50">
                     <CardContent>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="flex flex-col gap-1">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+                            {/* Search */}
+                            <div className="md:col-span-3 lg:col-span-3 xl:col-span-2 flex flex-col gap-1">
                                 <Label htmlFor="search">คำค้นหา</Label>
-                                <Input id="search" placeholder="ค้นหาคำสำคัญ..." value={search} onChange={handleSearchChange} />
+                                <Input
+                                    id="search"
+                                    placeholder="ค้นหาคำสำคัญ..."
+                                    value={search}
+                                    onChange={handleSearchChange}
+                                />
                             </div>
 
-                            <div className="flex flex-col gap-1">
-                                <Label htmlFor="status">สถานะ</Label>
-                                <Select onValueChange={(val) => { setStatus(val); setPage(1); }} value={status}>
-                                    <SelectTrigger id="status">
-                                        {status === "ALL"
-                                            ? "ทั้งหมด"
-                                            : statusMap[status as keyof typeof statusMap]?.label || status}
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="ALL">ทั้งหมด</SelectItem>
-                                        <SelectItem value="PENDING">PENDING</SelectItem>
-                                        <SelectItem value="DONE">DONE</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="flex flex-col gap-1">
+                            {/* Date Range Picker */}
+                            <div className="md:col-span-3 lg:col-span-3 xl:col-span-2 flex flex-col gap-1">
                                 <Label>ช่วงวันที่</Label>
                                 <DatePickerWithRange
                                     value={dateRange}
@@ -478,23 +486,72 @@ export default function ComplaintSearchPage() {
                                 />
                             </div>
 
-                            <div className="flex items-end">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                        setSearch("");
-                                        setStatus("ALL");
-                                        setDateRange(undefined);
-                                        setPage(1);
-                                        fetchData("");
-                                    }}
-                                    className="w-full"
-                                >
-                                    <RefreshCcw className="w-4 h-4 mr-2" />
-                                    ล้าง
-                                </Button>
+                            <div className="md:col-span-3 lg:col-span-3 xl:col-span-2 flex flex-wrap gap-2">
+                                <div className="flex flex-col gap-1">
+                                    <Label htmlFor="source">ช่องทาง</Label>
+                                    <Select
+                                        onValueChange={(val) => {
+                                            setSource(val);
+                                            setPage(1);
+                                        }}
+                                        value={source}
+                                    >
+                                        <SelectTrigger id="source">
+                                            {source === "ALL"
+                                                ? "ทั้งหมด"
+                                                : sourceMap[source as keyof typeof sourceMap]?.label || source}
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="ALL">ทั้งหมด</SelectItem>
+                                            {Object.entries(sourceMap).map(([key, val]) => (
+                                                <SelectItem key={key} value={key}>
+                                                    {val.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <Label htmlFor="status">สถานะ</Label>
+                                    <Select
+                                        onValueChange={(val) => {
+                                            setStatus(val);
+                                            setPage(1);
+                                        }}
+                                        value={status}
+                                    >
+                                        <SelectTrigger id="status">
+                                            {status === "ALL"
+                                                ? "ทั้งหมด"
+                                                : statusMap[status as keyof typeof statusMap]?.label || status}
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="ALL">ทั้งหมด</SelectItem>
+                                            <SelectItem value="PENDING">PENDING</SelectItem>
+                                            <SelectItem value="DONE">DONE</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="flex flex-1 items-end">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            setSearch("");
+                                            setStatus("ALL");
+                                            setSource("ALL");
+                                            setDateRange(undefined);
+                                            setPage(1);
+                                            fetchData("");
+                                        }}
+                                        className="w-full"
+                                    >
+                                        <RefreshCcw className="w-4 h-4 mr-2" />
+                                        ล้าง
+                                    </Button>
+                                </div>
                             </div>
                         </div>
+
                     </CardContent>
                 </Card>
                 <div className="flex flex-row justify-end items-center mb-4 gap-4">
@@ -591,11 +648,14 @@ export default function ComplaintSearchPage() {
                                                 อัปเดตล่าสุด: {format(new Date(c.updatedAt), "dd/MM/yyyy").replace(/\d{4}$/, y => (parseInt(y) + 543).toString())}
                                             </div>
                                             <div className="font-medium">{c.description}</div>
+                                            <div className="flex items-center gap-2">
+                                                <span>ช่องทาง:</span> {renderSourceBadge(c.source)}
+                                            </div>
                                             <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${status.color}`}>
                                                 {status.icon}
                                                 {status.label}
                                             </div>
-                                            <div className="text-sm text-muted-foreground">ผู้แจ้ง: {c.lineDisplayName || "-"}</div>
+                                            <div className="text-sm text-muted-foreground">ผู้แจ้ง: {c.reporterName || "-"}</div>
 
                                             {isAdmin && (
                                                 <div className="flex justify-end gap-2 pt-2">
@@ -672,6 +732,7 @@ export default function ComplaintSearchPage() {
                                         </TableHead>
                                         <TableHead>ชื่อผู้ร้องเรียน</TableHead>
                                         <TableHead>รายละเอียด</TableHead>
+                                        <TableHead>ช่องทาง</TableHead>
                                         <TableHead>สถานะ</TableHead>
                                         <TableHead>วันที่บันทึก</TableHead>
                                         <TableHead>อัปเดตล่าสุด</TableHead>
@@ -696,8 +757,11 @@ export default function ComplaintSearchPage() {
                                                         aria-label={`Select complaint ${c.id}`}
                                                     />
                                                 </TableCell>
-                                                <TableCell>{c.lineDisplayName || "-"}</TableCell>
+                                                <TableCell>{c.reporterName || "-"}</TableCell>
                                                 <TableCell className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[250px]">{c.description}</TableCell>
+                                                <TableCell>
+                                                    {renderSourceBadge(c.source)}
+                                                </TableCell>
                                                 <TableCell>
                                                     <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium w-fit ${status.color}`}>
                                                         {status.icon}

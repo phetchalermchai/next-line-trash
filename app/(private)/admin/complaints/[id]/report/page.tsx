@@ -10,18 +10,7 @@ import DropzoneUploader from "@/components/DropzoneUploader";
 import ImageGalleryModal from "@/components/ImageGalleryModal";
 import ImageCropperModal from "@/components/ImageCropperModal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { format } from "date-fns";
-
-interface Complaint {
-  id: string;
-  message?: string;
-  imageAfter?: string;
-  status: "PENDING" | "DONE";
-  description: string;
-  location?: string;
-  lineDisplayName?: string;
-  createdAt: string;
-}
+import { Complaint } from "@/types/complaint";
 
 export default function ComplaintReportPage() {
   const { id } = useParams();
@@ -94,6 +83,24 @@ export default function ComplaintReportPage() {
     );
   }
 
+  const renderSourceBadge = (source: string) => {
+    const colorMap: Record<string, string> = {
+      LINE: "bg-green-100 text-green-700 border-green-300",
+      FACEBOOK: "bg-blue-100 text-blue-700 border-blue-300",
+      PHONE: "bg-yellow-100 text-yellow-800 border-yellow-300",
+      COUNTER: "bg-pink-100 text-pink-700 border-pink-300",
+      OTHER: "bg-gray-100 text-gray-800 border-gray-300",
+    };
+
+    const color = colorMap[source] ?? "bg-gray-100 text-gray-700 border-gray-300";
+
+    return (
+      <span className={`inline-block text-xs px-2 py-1 rounded border ${color}`}>
+        {source}
+      </span>
+    );
+  };
+
   const shortId = complaint.id.slice(-6).toUpperCase();
 
   const thaiTime = new Date(complaint.createdAt).toLocaleString("th-TH", {
@@ -130,8 +137,11 @@ export default function ComplaintReportPage() {
             </Tooltip>
           </p>
         )}
-        {complaint.lineDisplayName && <p><strong>ผู้แจ้ง:</strong> {complaint.lineDisplayName}</p>}
+        {complaint.reporterName && <p><strong>ผู้แจ้ง:</strong> {complaint.reporterName}</p>}
         <p><strong>วันที่แจ้ง:</strong> {`${thaiTime} น.`}</p>
+        <p className="flex items-center gap-2">
+          <strong>ช่องทาง:</strong> {renderSourceBadge(complaint.source)}
+        </p>
       </div>
 
       <div>

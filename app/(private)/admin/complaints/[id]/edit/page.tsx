@@ -11,7 +11,6 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { format } from "date-fns";
 import dynamic from "next/dynamic";
 import DropzoneUploader from "@/components/DropzoneUploader";
 import ImageCropperModal from "@/components/ImageCropperModal";
@@ -27,15 +26,19 @@ export default function ComplaintEditPage() {
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
         id: "",
-        lineDisplayName: "",
+        reporterName: "",
+        receivedBy: "",
         phone: "",
         description: "",
         message: "",
         status: "PENDING",
+        source: "",
         imageBefore: "",
         imageAfter: "",
         location: "",
+        notifiedAt: "",
         createdAt: "",
+        updatedAt: "",
     });
     const [imageFiles, setImageFiles] = useState<{ imageBefore: File[]; imageAfter: File[] }>({ imageBefore: [], imageAfter: [] });
     const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
@@ -127,15 +130,17 @@ export default function ComplaintEditPage() {
         }
     };
 
-    const thaiTime = new Date(formData.createdAt).toLocaleString("th-TH", {
-        timeZone: "Asia/Bangkok",
-        year: "numeric",
-        month: "long",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false
-    });
+    const thaiTime = ((date: string) => {
+        return new Date(date).toLocaleString("th-TH", {
+            timeZone: "Asia/Bangkok",
+            year: "numeric",
+            month: "long",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+        })
+    })
 
     if (loading) {
         return (
@@ -149,9 +154,22 @@ export default function ComplaintEditPage() {
         <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
             <h1 className="text-2xl font-bold">แก้ไขรายการร้องเรียน #{formData.id.slice(-6).toUpperCase()}</h1>
             <div className="bg-muted p-4 rounded-md text-sm space-y-1 border">
-                {formData.lineDisplayName && <p><strong>ผู้แจ้ง:</strong> {formData.lineDisplayName}</p>}
-                <p><strong>วันที่แจ้ง:</strong> {`${thaiTime} น.`}</p>
+                <p><strong>วันที่แจ้ง:</strong> {`${thaiTime(formData.createdAt)} น.`}</p>
+                <p><strong>อัปเดตล่าสุด:</strong> {`${thaiTime(formData.updatedAt)} น.`}</p>
+                {formData.notifiedAt && (
+                    <p><strong>แจ้งเตือนล่าสุด:</strong> {`${thaiTime(formData.notifiedAt)} น.`}</p>
+                )}
             </div>
+            <div className="grid w-full items-center gap-3">
+                <Label htmlFor="reporterName">ผู้แจ้ง</Label>
+                <Input id="reporterName" name="reporterName" value={formData.reporterName} onChange={handleChange} placeholder="ผู้แจ้ง" />
+            </div>
+            {formData.receivedBy && (
+                <div className="grid w-full items-center gap-3">
+                    <Label htmlFor="receivedBy">ผู้รับแจ้ง</Label>
+                    <Input id="receivedBy" name="receivedBy" value={formData.receivedBy} onChange={handleChange} placeholder="ผู้รับแจ้ง" />
+                </div>
+            )}
             <div className="grid w-full items-center gap-3">
                 <Label htmlFor="phone">เบอร์โทร</Label>
                 <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="เบอร์โทร" />
@@ -160,6 +178,21 @@ export default function ComplaintEditPage() {
                 <Label htmlFor="description">รายละเอียด</Label>
                 <Textarea id="description" name="description" value={formData.description || ""} onChange={handleChange} rows={3} placeholder="รายละเอียด" />
             </div>
+            {formData.source && (
+                <div className="grid w-full items-center gap-3">
+                    <Label htmlFor="source">ช่องทาง</Label>
+                    <Select value={formData.source} onValueChange={(val) => setFormData((prev) => ({ ...prev, source: val }))}>
+                        <SelectTrigger id="source"><SelectValue placeholder="เลือกช่องทาง" /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="LINE">LINE</SelectItem>
+                            <SelectItem value="FACEBOOK">FACEBOOK</SelectItem>
+                            <SelectItem value="PHONE">PHONE</SelectItem>
+                            <SelectItem value="COUNTER">COUNTER</SelectItem>
+                            <SelectItem value="OTHER">OTHER</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
             <div className="grid w-full items-center gap-3">
                 <Label htmlFor="message">สรุปผล</Label>
                 <Textarea id="message" name="message" value={formData.message || ""} onChange={handleChange} rows={2} placeholder="สรุปผล" />

@@ -1,10 +1,12 @@
 export type Complaint = {
   id: string;
-  lineUserId: string;
-  lineDisplayName?: string;
+  source: ComplaintSource;
+  receivedBy?: string;
+  reporterName?:   String;
+  lineUserId?: string;
   phone?: string;
   description: string;
-  imageBefore: string;
+  imageBefore?: string;
   imageAfter?: string;
   location: string;
   status: "PENDING" | "DONE";
@@ -13,3 +15,11 @@ export type Complaint = {
   createdAt: string;
   updatedAt: string;
 };
+
+enum ComplaintSource {
+  LINE = "LINE",
+  FACEBOOK = "FACEBOOK",
+  PHONE = "PHONE",
+  COUNTER = "COUNTER",
+  OTHER = "OTHER",
+}
