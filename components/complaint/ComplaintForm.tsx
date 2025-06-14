@@ -108,7 +108,9 @@ export default function ComplaintCreatePage() {
       };
 
       Object.entries(dataToSubmit).forEach(([key, value]) => {
-        form.append(key, value);
+        if (value !== undefined && value !== null) {
+          form.append(key, value);
+        }
       });
 
       imageFiles.imageBefore.forEach((file) => form.append("imageBeforeFiles", file));
@@ -125,11 +127,12 @@ export default function ComplaintCreatePage() {
         },
       });
       const complaintId = res.data.id;
-      await api.put(`/webhook/line/${complaintId}/notify`);
+      // await api.put(`/webhook/line/${complaintId}/notify`);
       toast.success("สร้างรายการเรียบร้อย");
       router.push(`/complaints/${complaintId}`);
-    } catch {
-      toast.error("สร้างรายการล้มเหลว");
+    } catch (error: any) {
+      console.error("create complaint error", error);
+      toast.error(error?.response?.data?.message || "สร้างรายการล้มเหลว");
     } finally {
       setLoading(false);
     }
