@@ -114,90 +114,85 @@ export default function ComplaintReportPage() {
   });
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold">รายงานผลการดำเนินงาน #{shortId}</h1>
-
-      <div className="bg-muted p-4 rounded-md text-sm space-y-1 border">
-        <p><strong>รายละเอียดเรื่องร้องเรียน:</strong> {complaint.description}</p>
-        {complaint.location && (
-          <p>
-            <strong>ตำแหน่งที่ตั้ง:</strong>{" "}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <a
-                  href={`https://www.google.com/maps?q=${encodeURIComponent(complaint.location)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 underline hover:text-blue-800"
-                >
-                  Google Maps
-                </a>
-              </TooltipTrigger>
-              <TooltipContent>เปิดดูสถานที่บน Google Maps</TooltipContent>
-            </Tooltip>
+    <div className="w-full flex justify-center">
+      <div className="max-w-4xl w-full p-6 space-y-6">
+        <div className="bg-muted p-4 rounded-md text-sm space-y-1 border">
+          <p><strong>รายละเอียดเรื่องร้องเรียน:</strong> {complaint.description}</p>
+          {complaint.location && (
+            <p>
+              <strong>ตำแหน่งที่ตั้ง:</strong>{" "}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <a
+                    href={`https://www.google.com/maps?q=${encodeURIComponent(complaint.location)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline hover:text-blue-800"
+                  >
+                    Google Maps
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent>เปิดดูสถานที่บน Google Maps</TooltipContent>
+              </Tooltip>
+            </p>
+          )}
+          {complaint.reporterName && <p><strong>ผู้แจ้ง:</strong> {complaint.reporterName}</p>}
+          <p><strong>วันที่แจ้ง:</strong> {`${thaiTime} น.`}</p>
+          <p className="flex items-center gap-2">
+            <strong>ช่องทาง:</strong> {renderSourceBadge(complaint.source)}
           </p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">สรุปผล</label>
+          <Textarea
+            placeholder="สรุปผล"
+            rows={4}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+          />
+        </div>
+        <div>
+          <DropzoneUploader
+            field="imageAfter"
+            label="ภาพหลังดำเนินการ"
+            files={imageFiles.imageAfter}
+            previewUrls={imageAfterUrls}
+            setPreviewUrls={setImageAfterUrls}
+            setFiles={(files) => setImageFiles((prev) => ({ ...prev, imageAfter: files }))}
+            onCrop={(file, done) => {
+              setCropImage(file);
+              setOnCropDone(() => done);
+            }}
+            onPreview={(urls, idx) => {
+              setPreviewImages(urls);
+              setPreviewIndex(idx);
+              setShowGallery(true);
+            }}
+          />
+        </div>
+        <div className="pt-4 flex justify-end gap-2">
+          <Button onClick={handleSubmit} disabled={loading} className="w-full sm:w-auto cursor-pointer">
+            {loading ? "กำลังบันทึก..." : "บันทึกรายงานผล"}
+          </Button>
+        </div>
+        {showGallery && (
+          <ImageGalleryModal
+            images={previewImages}
+            initialIndex={previewIndex}
+            onClose={() => setShowGallery(false)}
+          />
         )}
-        {complaint.reporterName && <p><strong>ผู้แจ้ง:</strong> {complaint.reporterName}</p>}
-        <p><strong>วันที่แจ้ง:</strong> {`${thaiTime} น.`}</p>
-        <p className="flex items-center gap-2">
-          <strong>ช่องทาง:</strong> {renderSourceBadge(complaint.source)}
-        </p>
+        {cropImage && onCropDone && (
+          <ImageCropperModal
+            file={cropImage}
+            onClose={() => setCropImage(null)}
+            onDone={(cropped) => {
+              onCropDone(cropped);
+              setCropImage(null);
+            }}
+          />
+        )}
       </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1">สรุปผล</label>
-        <Textarea
-          placeholder="สรุปผล"
-          rows={4}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-        />
-      </div>
-
-      <div>
-        <DropzoneUploader
-          field="imageAfter"
-          label="ภาพหลังดำเนินการ"
-          files={imageFiles.imageAfter}
-          previewUrls={imageAfterUrls}
-          setPreviewUrls={setImageAfterUrls}
-          setFiles={(files) => setImageFiles((prev) => ({ ...prev, imageAfter: files }))}
-          onCrop={(file, done) => {
-            setCropImage(file);
-            setOnCropDone(() => done);
-          }}
-          onPreview={(urls, idx) => {
-            setPreviewImages(urls);
-            setPreviewIndex(idx);
-            setShowGallery(true);
-          }}
-        />
-      </div>
-
-      <div className="pt-4 flex justify-end gap-2">
-        <Button onClick={handleSubmit} disabled={loading} className="w-full sm:w-auto cursor-pointer">
-          {loading ? "กำลังบันทึก..." : "บันทึกรายงานผล"}
-        </Button>
-      </div>
-
-      {showGallery && (
-        <ImageGalleryModal
-          images={previewImages}
-          initialIndex={previewIndex}
-          onClose={() => setShowGallery(false)}
-        />
-      )}
-
-      {cropImage && onCropDone && (
-        <ImageCropperModal
-          file={cropImage}
-          onClose={() => setCropImage(null)}
-          onDone={(cropped) => {
-            onCropDone(cropped);
-            setCropImage(null);
-          }}
-        />
-      )}
     </div>
   );
 }

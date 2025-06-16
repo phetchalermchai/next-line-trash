@@ -151,156 +151,156 @@ export default function ComplaintEditPage() {
     }
 
     return (
-        <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
-            <h1 className="text-2xl font-bold">แก้ไขรายการร้องเรียน #{formData.id.slice(-6).toUpperCase()}</h1>
-            <div className="bg-muted p-4 rounded-md text-sm space-y-1 border">
-                <p><strong>วันที่แจ้ง:</strong> {`${thaiTime(formData.createdAt)} น.`}</p>
-                <p><strong>อัปเดตล่าสุด:</strong> {`${thaiTime(formData.updatedAt)} น.`}</p>
-                {formData.notifiedAt && (
-                    <p><strong>แจ้งเตือนล่าสุด:</strong> {`${thaiTime(formData.notifiedAt)} น.`}</p>
-                )}
-            </div>
-            <div className="grid w-full items-center gap-3">
-                <Label htmlFor="reporterName">ผู้แจ้ง</Label>
-                <Input id="reporterName" name="reporterName" value={formData.reporterName} onChange={handleChange} placeholder="ผู้แจ้ง" />
-            </div>
-            {formData.receivedBy && (
-                <div className="grid w-full items-center gap-3">
-                    <Label htmlFor="receivedBy">ผู้รับแจ้ง</Label>
-                    <Input id="receivedBy" name="receivedBy" value={formData.receivedBy} onChange={handleChange} placeholder="ผู้รับแจ้ง" />
-                </div>
-            )}
-            <div className="grid w-full items-center gap-3">
-                <Label htmlFor="phone">เบอร์โทร</Label>
-                <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="เบอร์โทร" />
-            </div>
-            <div className="grid w-full items-center gap-3">
-                <Label htmlFor="description">รายละเอียด</Label>
-                <Textarea id="description" name="description" value={formData.description || ""} onChange={handleChange} rows={3} placeholder="รายละเอียด" />
-            </div>
-            {formData.source && (
-                <div className="grid w-full items-center gap-3">
-                    <Label htmlFor="source">ช่องทาง</Label>
-                    <Select value={formData.source} onValueChange={(val) => setFormData((prev) => ({ ...prev, source: val }))}>
-                        <SelectTrigger id="source"><SelectValue placeholder="เลือกช่องทาง" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="LINE">LINE</SelectItem>
-                            <SelectItem value="FACEBOOK">FACEBOOK</SelectItem>
-                            <SelectItem value="PHONE">PHONE</SelectItem>
-                            <SelectItem value="COUNTER">COUNTER</SelectItem>
-                            <SelectItem value="OTHER">OTHER</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            )}
-            <div className="grid w-full items-center gap-3">
-                <Label htmlFor="message">สรุปผล</Label>
-                <Textarea id="message" name="message" value={formData.message || ""} onChange={handleChange} rows={2} placeholder="สรุปผล" />
-            </div>
-
-            <div className="grid w-full items-center gap-3">
-                <Label htmlFor="status">สถานะ</Label>
-                <Select value={formData.status} onValueChange={(val) => setFormData((prev) => ({ ...prev, status: val }))}>
-                    <SelectTrigger id="status"><SelectValue placeholder="เลือกสถานะ" /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="PENDING">รอดำเนินการ</SelectItem>
-                        <SelectItem value="DONE">เสร็จสิ้น</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-
-            <DropzoneUploader
-                field="imageBefore"
-                label="ภาพก่อน"
-                files={imageFiles.imageBefore}
-                previewUrls={imageBeforeUrls}
-                setPreviewUrls={setImageBeforeUrls}
-                setFiles={(files) => setImageFiles((prev) => ({ ...prev, imageBefore: files }))}
-                onCrop={(file, done) => {
-                    setCropImage(file);
-                    setOnCropDone(() => done);
-                }}
-                onPreview={(urls, idx) => {
-                    setPreviewImages(urls);
-                    setPreviewIndex(idx);
-                    setShowGallery(true);
-                }}
-            />
-            <DropzoneUploader
-                field="imageAfter"
-                label="ภาพหลัง"
-                files={imageFiles.imageAfter}
-                previewUrls={imageAfterUrls}
-                setPreviewUrls={setImageAfterUrls}
-                setFiles={(files) => setImageFiles((prev) => ({ ...prev, imageAfter: files }))}
-                onCrop={(file, done) => {
-                    setCropImage(file);
-                    setOnCropDone(() => done);
-                }}
-                onPreview={(urls, idx) => {
-                    setPreviewImages(urls);
-                    setPreviewIndex(idx);
-                    setShowGallery(true);
-                }}
-            />
-
-            {showGallery && (
-                <ImageGalleryModal
-                    images={previewImages}
-                    initialIndex={previewIndex}
-                    onClose={() => setShowGallery(false)}
-                />
-            )}
-
-            <div className="space-y-2">
-                <Label htmlFor="location">ระบุตำแหน่งจาก GPS</Label>
-                <div className="flex flex-col sm:flex-row gap-2">
-                    <Input id="location" name="location" value={formData.location || ""} onChange={handleChange} className="flex-1" />
-                    <Button type="button" className="cursor-pointer" onClick={() => {
-                        if (!navigator.geolocation) return;
-                        navigator.geolocation.getCurrentPosition((pos) => {
-                            const { latitude, longitude } = pos.coords;
-                            setFormData((p) => ({ ...p, location: `${latitude},${longitude}` }));
-                        }, (err) => {
-                            toast.error("ไม่สามารถดึงตำแหน่งปัจจุบันได้");
-                            console.error("GPS error:", err);
-                        });
-                    }}>
-                        ตำแหน่งปัจจุบัน
-                    </Button>
-                    {formData.location && (
-                        <MapPicker location={formData.location} onChange={(loc) => setFormData((p) => ({ ...p, location: loc }))} />
+        <div className="w-full flex justify-center">
+            <div className="max-w-4xl w-full grid grid-cols-1 sm:grid-cols-2 gap-6 p-6">
+                <div className="bg-muted p-4 rounded-md text-sm border col-span-full space-y-1">
+                    <p><strong>วันที่แจ้ง:</strong> {`${thaiTime(formData.createdAt)} น.`}</p>
+                    <p><strong>อัปเดตล่าสุด:</strong> {`${thaiTime(formData.updatedAt)} น.`}</p>
+                    {formData.notifiedAt && (
+                        <p><strong>แจ้งเตือนล่าสุด:</strong> {`${thaiTime(formData.notifiedAt)} น.`}</p>
                     )}
                 </div>
-                {formData.location && (
-                    <MiniMapPreview location={formData.location} />
+                <div className="space-y-3">
+                    <Label htmlFor="reporterName">ผู้แจ้ง</Label>
+                    <Input id="reporterName" name="reporterName" value={formData.reporterName} onChange={handleChange} placeholder="ผู้แจ้ง" />
+                </div>
+                {formData.receivedBy && (
+                    <div className="space-y-3">
+                        <Label htmlFor="receivedBy">ผู้รับแจ้ง</Label>
+                        <Input id="receivedBy" name="receivedBy" value={formData.receivedBy} onChange={handleChange} placeholder="ผู้รับแจ้ง" />
+                    </div>
+                )}
+                <div className="space-y-3">
+                    <Label htmlFor="phone">เบอร์โทร</Label>
+                    <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="เบอร์โทร" />
+                </div>
+                {formData.source && (
+                    <div className="flex items-center gap-2">
+                        <div className=" space-y-3">
+                            <Label htmlFor="source">ช่องทาง</Label>
+                            <Select value={formData.source} onValueChange={(val) => setFormData((prev) => ({ ...prev, source: val }))}>
+                                <SelectTrigger id="source"><SelectValue placeholder="เลือกช่องทาง" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="LINE">LINE</SelectItem>
+                                    <SelectItem value="FACEBOOK">FACEBOOK</SelectItem>
+                                    <SelectItem value="PHONE">PHONE</SelectItem>
+                                    <SelectItem value="COUNTER">COUNTER</SelectItem>
+                                    <SelectItem value="OTHER">OTHER</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className=" space-y-3">
+                            <Label htmlFor="status">สถานะ</Label>
+                            <Select value={formData.status} onValueChange={(val) => setFormData((prev) => ({ ...prev, status: val }))}>
+                                <SelectTrigger id="status"><SelectValue placeholder="เลือกสถานะ" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="PENDING">รอดำเนินการ</SelectItem>
+                                    <SelectItem value="DONE">เสร็จสิ้น</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                )}
+                <div className="col-span-full space-y-3">
+                    <Label htmlFor="description">รายละเอียด</Label>
+                    <Textarea id="description" name="description" value={formData.description || ""} onChange={handleChange} rows={3} placeholder="รายละเอียด" />
+                </div>
+                <div className="col-span-full space-y-3">
+                    <Label htmlFor="message">สรุปผล</Label>
+                    <Textarea id="message" name="message" value={formData.message || ""} onChange={handleChange} rows={2} placeholder="สรุปผล" />
+                </div>
+                <div className="col-span-full">
+                    <DropzoneUploader
+                        field="imageBefore"
+                        label="ภาพก่อน"
+                        files={imageFiles.imageBefore}
+                        previewUrls={imageBeforeUrls}
+                        setPreviewUrls={setImageBeforeUrls}
+                        setFiles={(files) => setImageFiles((prev) => ({ ...prev, imageBefore: files }))}
+                        onCrop={(file, done) => {
+                            setCropImage(file);
+                            setOnCropDone(() => done);
+                        }}
+                        onPreview={(urls, idx) => {
+                            setPreviewImages(urls);
+                            setPreviewIndex(idx);
+                            setShowGallery(true);
+                        }}
+                    />
+                </div>
+                <div className="col-span-full">
+                    <DropzoneUploader
+                        field="imageAfter"
+                        label="ภาพหลัง"
+                        files={imageFiles.imageAfter}
+                        previewUrls={imageAfterUrls}
+                        setPreviewUrls={setImageAfterUrls}
+                        setFiles={(files) => setImageFiles((prev) => ({ ...prev, imageAfter: files }))}
+                        onCrop={(file, done) => {
+                            setCropImage(file);
+                            setOnCropDone(() => done);
+                        }}
+                        onPreview={(urls, idx) => {
+                            setPreviewImages(urls);
+                            setPreviewIndex(idx);
+                            setShowGallery(true);
+                        }}
+                    />
+                </div>
+                {showGallery && (
+                    <ImageGalleryModal
+                        images={previewImages}
+                        initialIndex={previewIndex}
+                        onClose={() => setShowGallery(false)}
+                    />
+                )}
+                <div className="col-span-full space-y-3">
+                    <Label htmlFor="location">ระบุตำแหน่งจาก GPS</Label>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                        <Input id="location" name="location" value={formData.location || ""} onChange={handleChange} className="flex-1" />
+                        <Button type="button" className="cursor-pointer" onClick={() => {
+                            if (!navigator.geolocation) return;
+                            navigator.geolocation.getCurrentPosition((pos) => {
+                                const { latitude, longitude } = pos.coords;
+                                setFormData((p) => ({ ...p, location: `${latitude},${longitude}` }));
+                            }, (err) => {
+                                toast.error("ไม่สามารถดึงตำแหน่งปัจจุบันได้");
+                                console.error("GPS error:", err);
+                            });
+                        }}>
+                            ตำแหน่งปัจจุบัน
+                        </Button>
+                        {formData.location && (
+                            <MapPicker location={formData.location} onChange={(loc) => setFormData((p) => ({ ...p, location: loc }))} />
+                        )}
+                    </div>
+                    {formData.location && (
+                        <MiniMapPreview location={formData.location} />
+                    )}
+                </div>
+                {uploadProgress.total !== undefined && (
+                    <div className="col-span-full">
+                        <p className="text-sm text-muted-foreground">กำลังอัปโหลด: {uploadProgress.total}%</p>
+                        <Progress value={uploadProgress.total} className="h-2" />
+                    </div>
+                )}
+                <div className="flex justify-end gap-2 col-span-full">
+                    <Button variant="outline" onClick={() => router.back()} className="px-6 cursor-pointer">
+                        ย้อนกลับ
+                    </Button>
+                    <Button onClick={handleSave} className="px-6 cursor-pointer">บันทึก</Button>
+                </div>
+                {cropImage && onCropDone && (
+                    <ImageCropperModal
+                        file={cropImage}
+                        onClose={() => setCropImage(null)}
+                        onDone={(cropped) => {
+                            onCropDone(cropped);
+                            setCropImage(null);
+                        }}
+                    />
                 )}
             </div>
-
-            {uploadProgress.total !== undefined && (
-                <div>
-                    <p className="text-sm text-muted-foreground">กำลังอัปโหลด: {uploadProgress.total}%</p>
-                    <Progress value={uploadProgress.total} className="h-2" />
-                </div>
-            )}
-
-            <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => router.back()} className="px-6 cursor-pointer">
-                    ย้อนกลับ
-                </Button>
-                <Button onClick={handleSave} className="px-6 cursor-pointer">บันทึก</Button>
-            </div>
-
-            {cropImage && onCropDone && (
-                <ImageCropperModal
-                    file={cropImage}
-                    onClose={() => setCropImage(null)}
-                    onDone={(cropped) => {
-                        onCropDone(cropped);
-                        setCropImage(null);
-                    }}
-                />
-            )}
         </div>
     );
 }

@@ -207,7 +207,7 @@ export default function AdminComplaintCreatePage() {
                     </div>
                 )}
                 <div className="col-span-full flex justify-end">
-                    <Button onClick={handleSave} disabled={loading}>
+                    <Button className="cursor-pointer" onClick={handleSave} disabled={loading}>
                         {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} บันทึก
                     </Button>
                 </div>
