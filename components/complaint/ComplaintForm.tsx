@@ -127,7 +127,6 @@ export default function ComplaintCreatePage() {
         },
       });
       const complaintId = res.data.id;
-      // await api.put(`/webhook/line/${complaintId}/notify`);
       toast.success("สร้างรายการเรียบร้อย");
       router.push(`/complaints/${complaintId}`);
     } catch (error: any) {

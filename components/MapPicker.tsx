@@ -3,11 +3,10 @@
 import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
-import { MapPin, Crosshair, RotateCcw } from "lucide-react";
+import { MapPin, Crosshair, RotateCcw, Check } from "lucide-react";
 import {
     Dialog,
     DialogContent,
-    DialogPortal,
     DialogTrigger,
     DialogHeader,
     DialogTitle,
@@ -129,7 +128,8 @@ export default function MapPicker({
                                         setOpen(false);
                                     }}
                                 >
-                                    ✅ บันทึกตำแหน่งนี้
+                                    <Check className="w-4 h-4 mr-1" />
+                                    บันทึกตำแหน่งนี้
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
