@@ -11,15 +11,15 @@ const api = axios.create({
 
 api.interceptors.request.use(async (config) => {
   const session = await getSession();
-  const token = session?.token;
-  
-  if (token && config.headers) {
-    config.headers['Authorization'] = `Bearer ${token}`;
-  }
+  const accessToken = session?.accessToken;
 
+  if (accessToken && config.headers) {
+    config.headers['Authorization'] = `Bearer ${accessToken}`;
+  } 
+  
   return config;
 }, (error) => {
   return Promise.reject(error);
 });
 
-export default api
+export default api;
