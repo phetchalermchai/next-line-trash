@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation"
 
 const SignInPage = () => {
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get("callbackUrl") || "/"
+  const callbackUrl = searchParams.get("callbackUrl") || "/admin/dashboard"
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

@@ -34,7 +34,7 @@ const documentMenu = [
 ];
 
 const settingsMenu = [
-    { title: "ตั้งค่า", href: "/admin/setting", icon: Settings },
+    { title: "ตั้งค่าบัญชีผู้ใช้", href: "/admin/settings/profile", icon: Settings },
 ];
 
 export function AppSidebar() {

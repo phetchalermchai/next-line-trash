@@ -42,17 +42,29 @@ export const authOptions: AuthOptions = {
   ],
   callbacks: {
     async jwt({ token, account, profile }) {
+      const base = process.env.NEXT_PUBLIC_API_COMPLAINTS;
+      const isBrowser = typeof window !== "undefined";
       if (account && profile) {
-        // เรียก NestJS API เพื่อตรวจสอบหรือสร้างผู้ใช้ใหม่
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_COMPLAINTS}/auth/sync`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const providerAccountId = (profile as any).sub || (profile as any).id;
+
+        // 👇 ดึง userId จาก sessionStorage (ถ้ามี)
+        let currentUserId = token.id;
+        if (isBrowser && !currentUserId) {
+          currentUserId = sessionStorage.getItem("linkingUserId") || undefined;
+          sessionStorage.removeItem("linkingUserId"); // clear ทันที
+        }
+
+        const res = await fetch(`${base}/auth/sync`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             profile,
             provider: account.provider,
+            currentUserId,
           }),
         });
-        const data = await response.json();
+
+        const data = await res.json();
         token.id = data.id;
         token.role = data.role;
         token.status = data.status;
