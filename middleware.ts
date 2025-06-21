@@ -1,33 +1,35 @@
-import { getToken } from "next-auth/jwt"
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { jwtVerify } from 'jose';
 
 export async function middleware(req: NextRequest) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+  const token = req.cookies.get('accessToken')?.value;
 
-  const url = req.nextUrl
-  const isAdminRoute = url.pathname.startsWith("/admin")
+  const isAdminRoute = req.nextUrl.pathname.startsWith('/admin');
 
   if (isAdminRoute) {
-    // ✅ ไม่ได้ login
     if (!token) {
-      return NextResponse.redirect(new URL("/auth/signin", req.url))
+      return NextResponse.redirect(new URL('/login', req.url));
     }
 
-    // ✅ ถูก login แล้ว แต่ยังไม่อนุมัติ
-    if (token.status === "PENDING") {
-      return NextResponse.redirect(new URL("/auth/pending", req.url))
-    }
+    try {
+      const { payload } = await jwtVerify(
+        token,
+        new TextEncoder().encode(process.env.NEXT_PUBLIC_JWT_SECRET),
+      );
 
-    // ✅ login แล้วแต่ไม่ใช่ ADMIN หรือ SUPERADMIN
-    if (token.role !== "ADMIN" && token.role !== "SUPERADMIN") {
-      return NextResponse.redirect(new URL("/auth/unauthorized", req.url))
+      if (payload.role !== 'ADMIN' && payload.role !== 'SUPERADMIN') {
+        return NextResponse.redirect(new URL('/unauthorized', req.url));
+      }
+    } catch (err) {
+      console.error('[JWT Error]', err);
+      return NextResponse.redirect(new URL('/login', req.url));
     }
   }
 
-  return NextResponse.next()
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
-}
+  matcher: ['/admin/:path*'],
+};

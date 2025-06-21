@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
@@ -68,8 +67,6 @@ const sourceMap = {
 };
 
 export default function ComplaintSearchPage() {
-    const { data: session } = useSession();
-    const isAdmin = session?.user?.role === "admin";
     const [search, setSearch] = useState("");
     const [status, setStatus] = useState("ALL");
     const [source, setSource] = useState("ALL");
@@ -656,62 +653,59 @@ export default function ComplaintSearchPage() {
                                                 {status.label}
                                             </div>
                                             <div className="text-sm text-muted-foreground">ผู้แจ้ง: {c.reporterName || "-"}</div>
+                                            <div className="flex justify-end gap-2 pt-2">
+                                                {renderNotifyButton(c)}
+                                                {renderReportButton(c)}
 
-                                            {isAdmin && (
-                                                <div className="flex justify-end gap-2 pt-2">
-                                                    {renderNotifyButton(c)}
-                                                    {renderReportButton(c)}
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button size="icon" variant="ghost" asChild>
+                                                            <Link href={`/complaints/${c.id}`}>
+                                                                <Eye className="w-4 h-4 text-violet-500" />
+                                                            </Link>
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>ดูรายละเอียด</TooltipContent>
+                                                </Tooltip>
 
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button size="icon" variant="ghost" asChild>
+                                                            <Link href={`/admin/complaints/${c.id}/edit`}>
+                                                                <Pencil className="w-4 h-4 text-yellow-500" />
+                                                            </Link>
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>แก้ไขเรื่องร้องเรียน</TooltipContent>
+                                                </Tooltip>
+
+                                                <AlertDialog>
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
-                                                            <Button size="icon" variant="ghost" asChild>
-                                                                <Link href={`/complaints/${c.id}`}>
-                                                                    <Eye className="w-4 h-4 text-violet-500" />
-                                                                </Link>
-                                                            </Button>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button size="icon" variant="ghost" className="cursor-pointer">
+                                                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                                                </Button>
+                                                            </AlertDialogTrigger>
                                                         </TooltipTrigger>
-                                                        <TooltipContent>ดูรายละเอียด</TooltipContent>
+                                                        <TooltipContent>ลบเรื่องร้องเรียน</TooltipContent>
                                                     </Tooltip>
-
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button size="icon" variant="ghost" asChild>
-                                                                <Link href={`/admin/complaints/${c.id}/edit`}>
-                                                                    <Pencil className="w-4 h-4 text-yellow-500" />
-                                                                </Link>
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>แก้ไขเรื่องร้องเรียน</TooltipContent>
-                                                    </Tooltip>
-
-                                                    <AlertDialog>
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <AlertDialogTrigger asChild>
-                                                                    <Button size="icon" variant="ghost" className="cursor-pointer">
-                                                                        <Trash2 className="w-4 h-4 text-red-500" />
-                                                                    </Button>
-                                                                </AlertDialogTrigger>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent>ลบเรื่องร้องเรียน</TooltipContent>
-                                                        </Tooltip>
-                                                        <AlertDialogContent>
-                                                            <AlertDialogHeader>
-                                                                <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</AlertDialogTitle>
-                                                                <AlertDialogDescription>
-                                                                    การลบนี้จะลบข้อมูลทั้งหมด และไม่สามารถเรียกคืนได้ (ยกเว้นกด "เลิกทำ")
-                                                                </AlertDialogDescription>
-                                                            </AlertDialogHeader>
-                                                            <AlertDialogFooter>
-                                                                <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                                                                <AlertDialogAction onClick={() => handleDelete(c.id)}>
-                                                                    ลบรายการ
-                                                                </AlertDialogAction>
-                                                            </AlertDialogFooter>
-                                                        </AlertDialogContent>
-                                                    </AlertDialog>
-                                                </div>
-                                            )}
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                การลบนี้จะลบข้อมูลทั้งหมด และไม่สามารถเรียกคืนได้ (ยกเว้นกด "เลิกทำ")
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => handleDelete(c.id)}>
+                                                                ลบรายการ
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                            </div>
                                         </CardContent>
                                     </Card>
                                 );

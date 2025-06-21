@@ -21,7 +21,6 @@ import {
     SelectContent,
     SelectItem,
 } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });

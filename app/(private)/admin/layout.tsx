@@ -1,5 +1,4 @@
 "use client";
-import { SessionProvider } from "next-auth/react";
 import { ReactNode } from "react";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/navbar/app-sidebar";
@@ -7,7 +6,6 @@ import { SiteHeader } from "@/components/navbar/site-header";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <SessionProvider>
       <SidebarProvider style={
         {
           "--sidebar-width": "calc(var(--spacing) * 72)",
@@ -26,6 +24,5 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </div>
         </SidebarInset>
       </SidebarProvider>
-    </SessionProvider>
   );
 }
