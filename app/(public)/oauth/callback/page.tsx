@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { decodeToken } from '@/lib/jwt';
 import { setCookie } from 'cookies-next';
 
-export default function OAuthCallbackPage() {
+function OAuthCallbackContent() {
   const router = useRouter();
   const params = useSearchParams();
 
@@ -17,9 +17,9 @@ export default function OAuthCallbackPage() {
         // ✅ เก็บ token ลง cookie แทน localStorage
         setCookie('accessToken', token, {
           path: '/',
-          maxAge: 60 * 60 * 24 * 7,
+          maxAge: 60 * 60 * 24 * 7, // 7 วัน
           sameSite: 'lax',
-          secure: true, // ✅ ถ้าเป็น local dev
+          secure: false, // เปลี่ยนเป็น true ถ้า deploy จริง
         });
 
         const payload = decodeToken(token);
@@ -35,9 +35,15 @@ export default function OAuthCallbackPage() {
     }
   }, [params, router]);
 
+  return <p>กำลังเข้าสู่ระบบ...</p>;
+}
+
+export default function OAuthCallbackPage() {
   return (
     <div className="flex items-center justify-center h-screen">
-      <p>กำลังเข้าสู่ระบบ...</p>
+      <Suspense fallback={<p>กำลังโหลด...</p>}>
+        <OAuthCallbackContent />
+      </Suspense>
     </div>
   );
 }
