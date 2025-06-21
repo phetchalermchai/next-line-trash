@@ -19,7 +19,7 @@ function OAuthCallbackContent() {
           path: '/',
           maxAge: 60 * 60 * 24 * 7, // 7 วัน
           sameSite: 'lax',
-          secure: false, // เปลี่ยนเป็น true ถ้า deploy จริง
+          secure: true, // เปลี่ยนเป็น true ถ้า deploy จริง
         });
 
         const payload = decodeToken(token);
