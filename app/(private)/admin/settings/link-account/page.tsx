@@ -1,74 +1,78 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import axios from '@/lib/axios';
-import { getCookie } from 'cookies-next';
+import { useSession } from "next-auth/react";
+import { signIn, getProviders } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, Link2 } from "lucide-react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
-interface LinkedProviders {
-  google: boolean;
-  line: boolean;
-  facebook: boolean;
+interface LinkedProvider {
+  provider: string;
+  providerAccountId: string;
 }
 
-const providerNames = {
-  google: 'Google',
-  line: 'LINE',
-  facebook: 'Facebook',
-};
-
-export default function LinkAccountPage() {
-  const [linked, setLinked] = useState<LinkedProviders | null>(null);
+export default function AccountLinkingPage() {
+  const { data: session } = useSession();
+  const [linked, setLinked] = useState<LinkedProvider[]>([]);
+  const [providers, setProviders] = useState<Record<string, any>>({});
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchLinked = async () => {
-      try {
-        const token = getCookie('accessToken');
-        if (!token || typeof token !== 'string') return;
-
-        const res = await axios.get('/me/linked-providers', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setLinked(res.data);
-      } catch (err) {
-        console.error('Error fetching linked providers:', err);
-      }
+    const fetchLinkedAccounts = async () => {
+      if (!session?.user?.id) return;
+      const res = await axios.get("/api/user/linked-accounts");
+      setLinked(res.data);
     };
 
-    fetchLinked();
-  }, []);
+    const fetchProviders = async () => {
+      const p = await getProviders();
+      setProviders(p || {});
+    };
 
-  const handleLink = (provider: keyof LinkedProviders) => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/link/${provider}`;
+    fetchLinkedAccounts();
+    fetchProviders();
+  }, [session]);
+
+  const isLinked = (provider: string) =>
+    linked.some((acc) => acc.provider === provider);
+
+  const handleLink = async (providerId: string) => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+    signIn(providerId, {
+      callbackUrl: `/link-account/callback?provider=${providerId}&linkingUserId=${userId}`,
+    });
   };
 
   return (
-    <div className="max-w-xl mx-auto py-10">
-      <h1 className="text-2xl font-bold mb-6">ผูกบัญชีของคุณ</h1>
-      {linked ? (
-        <div className="space-y-4">
-          {Object.entries(linked).map(([provider, isLinked]) => (
-            <div
-              key={provider}
-              className="flex items-center justify-between border p-4 rounded"
-            >
-              <span>{providerNames[provider as keyof LinkedProviders]}</span>
-              {isLinked ? (
-                <span className="text-green-600">เชื่อมแล้ว</span>
-              ) : (
-                <button
-                  onClick={() => handleLink(provider as keyof LinkedProviders)}
-                  className="bg-blue-600 text-white px-4 py-1 rounded"
+    <div className="max-w-md mx-auto mt-10">
+      <h2 className="text-xl font-semibold mb-4">ผูกบัญชีเพิ่มเติม</h2>
+      <Card>
+        <CardContent className="space-y-4 p-6">
+          {Object.values(providers).map((provider) => (
+            <div key={provider.id} className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span>{provider.name}</span>
+                {isLinked(provider.id) && (
+                  <CheckCircle className="text-green-500 w-4 h-4" />
+                )}
+              </div>
+              {!isLinked(provider.id) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleLink(provider.id)}
                 >
-                  เชื่อมต่อ
-                </button>
+                  <Link2 className="w-4 h-4 mr-1" /> ผูกบัญชี
+                </Button>
               )}
             </div>
           ))}
-        </div>
-      ) : (
-        <p>กำลังโหลด...</p>
-      )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,35 +1,25 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { jwtVerify } from 'jose';
+import { withAuth } from "next-auth/middleware";
+import { NextResponse } from "next/server";
 
-export async function middleware(req: NextRequest) {
-  const token = req.cookies.get('accessToken')?.value;
+export default withAuth(
+  function middleware(req) {
+    const token = req.nextauth.token;
 
-  const isAdminRoute = req.nextUrl.pathname.startsWith('/admin');
-
-  if (isAdminRoute) {
-    if (!token) {
-      return NextResponse.redirect(new URL('/login', req.url));
+    // 🔒 ตรวจ role และ status อย่างปลอดภัย
+    if (
+      req.nextUrl.pathname.startsWith("/admin") &&
+      (token?.role !== "ADMIN" || token?.status !== "APPROVED")
+    ) {
+      return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
-
-    try {
-      const { payload } = await jwtVerify(
-        token,
-        new TextEncoder().encode(process.env.NEXT_PUBLIC_JWT_SECRET),
-      );
-
-      if (payload.role !== 'ADMIN' && payload.role !== 'SUPERADMIN') {
-        return NextResponse.redirect(new URL('/unauthorized', req.url));
-      }
-    } catch (err) {
-      console.error('[JWT Error]', err);
-      return NextResponse.redirect(new URL('/login', req.url));
-    }
+  },
+  {
+    callbacks: {
+      authorized: ({ token }) => !!token, // ต้องมี token ถึงจะเข้าผ่าน
+    },
   }
-
-  return NextResponse.next();
-}
+);
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ["/admin/:path*"],
 };

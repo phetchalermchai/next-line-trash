@@ -10,23 +10,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-    async headers() {
-    return [
-      {
-        source: '/(.*)', // ทุกเส้นทาง
-        headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080', // Origin ของ NestJS
-          },
-          {
-            key: 'Access-Control-Allow-Credentials',
-            value: 'true',
-          },
-        ],
-      },
-    ];
-  },
 };
 
 export default nextConfig;
