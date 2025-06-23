@@ -113,11 +113,24 @@ export const authOptions: AuthOptions = {
       return session;
     },
     async jwt({ token, user }) {
+      // เมื่อมี user (login ครั้งแรก)
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.status = user.status;
+      } else {
+        // fallback: กรณี refresh token หรือ session reload
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id },
+          select: { role: true, status: true },
+        });
+
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.status = dbUser.status;
+        }
       }
+
       return token;
     },
   },

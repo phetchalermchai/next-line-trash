@@ -12,7 +12,7 @@ export function SiteHeader() {
         { path: "/admin/complaints", title: "ค้นหาร้องเรียนย้อนหลัง" },
         { path: "/admin/reports", title: "รายงาน" },
         { path: "/admin/assistant", title: "ตัวช่วยจัดทำเอกสาร" },
-        { path: "/admin/settings", title: "ตั้งค่าระบบ" },
+        { path: "/admin/settings/profile", title: "ตั้งค่าบัญชีผู้ใช้งาน" },
     ];
 
     // Dynamic matcher logic
