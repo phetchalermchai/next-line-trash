@@ -33,6 +33,11 @@ const documentMenu = [
     { title: "ร่างเอกสาร/หนังสือราชการ", href: "/admin/doc", icon: FileText },
 ];
 
+const usersMenu = [
+    { title: "อนุมัติผู้ใช้งาน", href: "/admin/users/pending", icon: FileBarChart2 },
+    { title: "ร่างเอกสาร/หนังสือราชการ", href: "/admin/doc", icon: FileText },
+];
+
 const settingsMenu = [
     { title: "ตั้งค่าบัญชีผู้ใช้", href: "/admin/settings/profile", icon: Settings },
 ];
@@ -95,6 +100,11 @@ export function AppSidebar() {
                         รายงานและเอกสาร
                     </SidebarGroupLabel>
                     <SidebarGroupContent>{renderMenu(documentMenu)}</SidebarGroupContent>
+
+                    <SidebarGroupLabel className="text-xs uppercase text-muted-foreground px-4 py-2">
+                        ระบบจัดการผู้ใช้งาน
+                    </SidebarGroupLabel>
+                    <SidebarGroupContent>{renderMenu(usersMenu)}</SidebarGroupContent>
 
                     <SidebarGroupLabel className="text-xs uppercase text-muted-foreground px-4 py-2">
                         การตั้งค่า
