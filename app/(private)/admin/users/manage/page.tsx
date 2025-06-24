@@ -75,6 +75,7 @@ export default function ManageUsersPage() {
     const [deleteUser, setDeleteUser] = React.useState<User | null>(null);
     const [pendingRole, setPendingRole] = React.useState<string | null>(null);
     const [pendingStatus, setPendingStatus] = React.useState<string | null>(null);
+    const [openDialogProviderId, setOpenDialogProviderId] = React.useState<string | null>(null);
     const isMobile = useMediaQuery("(max-width: 768px)");
 
     const refreshUsers = async () => {
@@ -109,7 +110,7 @@ export default function ManageUsersPage() {
                 accessorKey: "role",
                 header: "สิทธิ์",
                 cell: ({ row }) => (
-                    <Badge variant="outline" className="capitalize">
+                    <Badge variant="default" className="capitalize">
                         {row.original.role}
                     </Badge>
                 ),
@@ -177,11 +178,24 @@ export default function ManageUsersPage() {
     };
 
     const updateRoleStatus = async () => {
-        if (!editUser || !pendingRole || !pendingStatus) return;
+        if (!editUser) return;
+
+        const updatedRole = pendingRole ?? editUser.role;
+        const updatedStatus = pendingStatus ?? editUser.status;
+
+        const isChanged =
+            updatedRole !== editUser.role || updatedStatus !== editUser.status;
+
+        if (!isChanged) return;
+
         await fetch(`/api/users/${editUser.id}/update`, {
             method: "PATCH",
-            body: JSON.stringify({ role: pendingRole, status: pendingStatus }),
+            body: JSON.stringify({
+                role: updatedRole,
+                status: updatedStatus,
+            }),
         });
+
         refreshUsers();
         setEditUser(null);
         setPendingRole(null);
@@ -323,21 +337,56 @@ export default function ManageUsersPage() {
                 <Drawer direction={isMobile ? "bottom" : "right"} open={!!viewUser} onOpenChange={() => setViewUser(null)}>
                     <DrawerContent>
                         <DrawerHeader>
-                            <DrawerTitle>ข้อมูลผู้ใช้</DrawerTitle>
-                            <DrawerDescription>
-                                <p><strong>ชื่อ:</strong> {viewUser.name}</p>
-                                <p><strong>อีเมล:</strong> {viewUser.email}</p>
-                                <p><strong>สิทธิ์:</strong> {viewUser.role}</p>
-                                <p><strong>สถานะ:</strong> {viewUser.status}</p>
-                                <p><strong>วันที่สมัคร:</strong> {format(new Date(viewUser.createdAt), "dd MMM yyyy", { locale: th })}</p>
-                                <p><strong>บัญชีที่เชื่อมต่อ:</strong></p>
-                                <ul className="list-disc pl-4">
-                                    {viewUser.accounts?.map((acc) => (
-                                        <li key={acc.id}>{acc.provider}</li>
-                                    )) || <li>ไม่มีบัญชีที่เชื่อมต่อ</li>}
-                                </ul>
-                            </DrawerDescription>
+                            <DrawerTitle>ข้อมูลผู้ใช้งาน</DrawerTitle>
+                            <DrawerDescription>แสดงรายละเอียดบัญชีผู้ใช้งาน</DrawerDescription>
                         </DrawerHeader>
+                        <div className="px-4 py-2 space-y-4 text-sm">
+                            <div><strong>ชื่อ:</strong> {viewUser.name}</div>
+                            <div><strong>อีเมล:</strong> {viewUser.email}</div>
+                            <div className="flex items-center gap-2">
+                                <strong>สิทธิ์ผู้ใช้งาน:</strong>
+                                <Badge variant={viewUser.role === "SUPERADMIN" ? "default" : "secondary"}>{viewUser.role}</Badge>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <strong>สถานะ:</strong>
+                                {viewUser.status === "APPROVED" && (
+                                    <Badge className="bg-green-100 text-green-800">APPROVED</Badge>
+                                )}
+                                {viewUser.status === "PENDING" && (
+                                    <Badge className="bg-yellow-100 text-yellow-800">PENDING</Badge>
+                                )}
+                                {viewUser.status === "BANNED" && (
+                                    <Badge className="bg-red-100 text-red-800">BANNED</Badge>
+                                )}
+                            </div>
+                            <div><strong>วันที่สมัคร:</strong> {format(new Date(viewUser.createdAt), "dd MMM yyyy", { locale: th })}</div>
+                            <div>
+                                <strong>บัญชีที่เชื่อมต่อ:</strong>
+                                <ul className="list-disc pl-6 mt-1 space-y-1">
+                                    {viewUser.accounts && viewUser.accounts.length > 0 ? (
+                                        viewUser.accounts.map((acc) => {
+                                            const brandStyles: Record<string, string> = {
+                                                google: "bg-red-100 text-red-800",
+                                                facebook: "bg-blue-100 text-blue-800",
+                                                line: "bg-green-100 text-green-800",
+                                            };
+                                            const defaultStyle = "bg-gray-100 text-gray-800";
+                                            const style = brandStyles[acc.provider] || defaultStyle;
+
+                                            return (
+                                                <li key={acc.id}>
+                                                    <Badge className={`capitalize ${style} px-2 py-1 text-xs font-medium`}>
+                                                        {acc.provider}
+                                                    </Badge>
+                                                </li>
+                                            );
+                                        })
+                                    ) : (
+                                        <li className="text-muted-foreground text-sm">ไม่มีบัญชีที่เชื่อมต่อ</li>
+                                    )}
+                                </ul>
+                            </div>
+                        </div>
                     </DrawerContent>
                 </Drawer>
             )}
@@ -346,7 +395,7 @@ export default function ManageUsersPage() {
                     <DrawerContent>
                         <DrawerHeader className="gap-1">
                             <DrawerTitle>แก้ไขผู้ใช้</DrawerTitle>
-                            <DrawerDescription>This action cannot be undone.</DrawerDescription>
+                            <DrawerDescription>คุณสามารถแก้ไขสิทธิ์หรือสถานะของผู้ใช้นี้ได้จากด้านล่าง</DrawerDescription>
                             <div className="space-y-2 my-2">
                                 <div className="flex flex-col gap-3">
                                     <Label htmlFor="role">สิทธิ์ผู้ใช้งาน</Label>
@@ -372,31 +421,42 @@ export default function ManageUsersPage() {
                                 <div className="flex flex-col gap-3 my-5">
                                     <span className="text-sm text-start">บัญชีที่เชื่อมต่อ</span>
                                     <ul className="space-y-2">
-                                        {editUser.accounts?.map((acc) => (
-                                            <li key={acc.id} className="flex justify-between items-center">
-                                                <span className="capitalize">{acc.provider}</span>
-                                                <Dialog>
-                                                    <DialogTrigger asChild>
-                                                        <Button size="sm" variant="destructive">ถอดบัญชี</Button>
-                                                    </DialogTrigger>
-                                                    <DialogContent>
-                                                        <DialogHeader>
-                                                            <DialogTitle>ยืนยันการลบบัญชี {acc.provider}</DialogTitle>
-                                                            <p>คุณแน่ใจว่าต้องการลบบัญชีนี้หรือไม่?</p>
-                                                        </DialogHeader>
-                                                        <DialogFooter>
-                                                            <Button variant="outline" >ยกเลิก</Button>
-                                                            <Button variant="destructive" onClick={() => removeProvider(acc.id)}>ลบ</Button>
-                                                        </DialogFooter>
-                                                    </DialogContent>
-                                                </Dialog>
-                                            </li>
-                                        )) || <li>ไม่มีบัญชี</li>}
+                                        {editUser.accounts && editUser.accounts.length > 0 ? (
+                                            editUser.accounts.map((acc) => (
+                                                <li key={acc.id} className="flex justify-between items-center">
+                                                    <span className="capitalize">{acc.provider}</span>
+                                                    <Dialog open={openDialogProviderId === acc.id} onOpenChange={(open) => {
+                                                        if (!open) setOpenDialogProviderId(null);
+                                                    }}>
+                                                        <DialogTrigger asChild>
+                                                            <Button className="cursor-pointer" size="sm" variant="destructive" onClick={() => setOpenDialogProviderId(acc.id)}>
+                                                                ถอดบัญชี
+                                                            </Button>
+                                                        </DialogTrigger>
+                                                        <DialogContent>
+                                                            <DialogHeader>
+                                                                <DialogTitle>ยืนยันการลบบัญชี {acc.provider}</DialogTitle>
+                                                                <p>คุณแน่ใจว่าต้องการลบบัญชีนี้หรือไม่?</p>
+                                                            </DialogHeader>
+                                                            <DialogFooter>
+                                                                <Button className="cursor-pointer" variant="outline" onClick={() => setOpenDialogProviderId(null)}>ยกเลิก</Button>
+                                                                <Button className="cursor-pointer" variant="destructive" onClick={() => {
+                                                                    removeProvider(acc.id);
+                                                                    setOpenDialogProviderId(null);
+                                                                }}>ลบ</Button>
+                                                            </DialogFooter>
+                                                        </DialogContent>
+                                                    </Dialog>
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <li className="text-muted-foreground text-sm">ไม่มีบัญชีที่เชื่อมต่อ</li>
+                                        )}
                                     </ul>
                                 </div>
                                 <div className="flex justify-end gap-2 my-5">
-                                    <Button variant="outline" onClick={() => setEditUser(null)}>ยกเลิก</Button>
-                                    <Button onClick={updateRoleStatus}>ยืนยัน</Button>
+                                    <Button className="cursor-pointer" variant="outline" onClick={() => setEditUser(null)}>ยกเลิก</Button>
+                                    <Button className="cursor-pointer" onClick={updateRoleStatus}>ยืนยัน</Button>
                                 </div>
                             </div>
                         </DrawerHeader>
