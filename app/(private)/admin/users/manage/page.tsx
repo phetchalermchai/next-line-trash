@@ -13,7 +13,7 @@ import {
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Info, Trash2, Pencil } from "lucide-react";
+import { Download, Info, Trash2, Pencil, Loader2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
@@ -23,7 +23,6 @@ import { getExportFilename } from "@/utils/getExportFilename";
 import { DatePickerWithRange } from "@/components/complaint/DatePickerWithRange";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
 import {
     Select,
     SelectContent,
@@ -38,6 +37,9 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { roleVariants, statusColors } from "@/utils/userLabels";
+import { formatThaiDatetime } from "@/utils/date";
 
 if (!jsPDF.API.__sarabunFontLoaded) {
     jsPDF.API.__sarabunFontLoaded = true;
@@ -63,11 +65,15 @@ export interface User {
     }[];
 }
 
-export default function ManageUsersPage() {
+interface ManageUsersPageProps {
+    initialStatus?: string;
+}
+
+export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPageProps) {
     const [users, setUsers] = React.useState<User[]>([]);
     const [globalFilter, setGlobalFilter] = React.useState("");
     const [dateRange, setDateRange] = React.useState<DateRange | undefined>();
-    const [status, setStatus] = React.useState("ALL");
+    const [status, setStatus] = React.useState(initialStatus);
     const [role, setRole] = React.useState("ALL");
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [editUser, setEditUser] = React.useState<User | null>(null);
@@ -76,19 +82,34 @@ export default function ManageUsersPage() {
     const [pendingRole, setPendingRole] = React.useState<string | null>(null);
     const [pendingStatus, setPendingStatus] = React.useState<string | null>(null);
     const [openDialogProviderId, setOpenDialogProviderId] = React.useState<string | null>(null);
+    const [loadingExport, setLoadingExport] = React.useState(false);
+    const [loadingFetch, setLoadingFetch] = React.useState(false);
+    const [isUpdating, setIsUpdating] = React.useState(false);
+    const [isDeleting, setIsDeleting] = React.useState(false);
+    const [deletingAccountId, setDeletingAccountId] = React.useState<string | null>(null);
     const isMobile = useMediaQuery("(max-width: 768px)");
 
     const refreshUsers = async () => {
-        const params = new URLSearchParams();
-        if (globalFilter) params.set("search", globalFilter);
-        if (status) params.set("status", status);
-        if (role) params.set("role", role);
-        if (dateRange?.from) params.set("from", dateRange.from.toISOString());
-        if (dateRange?.to) params.set("to", dateRange.to.toISOString());
+        setLoadingFetch(true);
+        try {
+            const params = new URLSearchParams();
+            if (globalFilter) params.set("search", globalFilter);
+            if (status) params.set("status", status);
+            if (role) params.set("role", role);
+            if (dateRange?.from) params.set("from", dateRange.from.toISOString());
+            if (dateRange?.to) params.set("to", dateRange.to.toISOString());
 
-        const res = await fetch(`/api/users?${params.toString()}`);
-        const data = await res.json();
-        setUsers(data.users);
+            const res = await fetch(`/api/users?${params.toString()}`);
+            const data = await res.json();
+            setUsers(data.users);
+            if (data.users.length === 0) {
+                toast.info("ไม่พบผู้ใช้งานตามเงื่อนไข");
+            }
+        } catch (error) {
+            toast.error("เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้");
+        } finally {
+            setLoadingFetch(false);
+        }
     };
 
     React.useEffect(() => {
@@ -110,7 +131,10 @@ export default function ManageUsersPage() {
                 accessorKey: "role",
                 header: "สิทธิ์",
                 cell: ({ row }) => (
-                    <Badge variant="default" className="capitalize">
+                    <Badge
+                        variant={roleVariants[row.original.role as keyof typeof roleVariants]}
+                        className="capitalize"
+                    >
                         {row.original.role}
                     </Badge>
                 ),
@@ -120,28 +144,23 @@ export default function ManageUsersPage() {
                 header: "สถานะ",
                 cell: ({ row }) => {
                     const status = row.original.status;
-                    const color =
-                        status === "APPROVED"
-                            ? "bg-green-100 text-green-800"
-                            : status === "PENDING"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800";
+                    const color = statusColors[status as keyof typeof statusColors] ?? "bg-gray-100 text-gray-800";
                     return <span className={`px-2 py-1 rounded text-xs font-medium ${color}`}>{status}</span>;
                 },
             },
             {
                 accessorKey: "createdAt",
                 header: "วันที่สมัคร",
-                cell: ({ row }) => format(new Date(row.original.createdAt), "dd MMM yyyy", { locale: th }),
+                cell: ({ row }) => formatThaiDatetime(row.original.createdAt),
             },
             {
                 id: "actions",
                 header: "การจัดการ",
                 cell: ({ row }) => (
                     <div className="flex gap-2">
-                        <Button size="icon" variant="outline" onClick={() => setViewUser(row.original)}><Info className="w-4 h-4" /></Button>
-                        <Button size="icon" variant="outline" onClick={() => setEditUser(row.original)}><Pencil className="w-4 h-4" /></Button>
-                        <Button size="icon" variant="destructive" onClick={() => setDeleteUser(row.original)}><Trash2 className="w-4 h-4" /></Button>
+                        <Button className="cursor-pointer" size="icon" variant="outline" onClick={() => setViewUser(row.original)}><Info className="w-4 h-4" /></Button>
+                        <Button className="cursor-pointer" size="icon" variant="outline" onClick={() => setEditUser(row.original)}><Pencil className="w-4 h-4" /></Button>
+                        <Button className="cursor-pointer" size="icon" variant="destructive" onClick={() => setDeleteUser(row.original)}><Trash2 className="w-4 h-4" /></Button>
                     </div>
                 ),
             },
@@ -159,26 +178,47 @@ export default function ManageUsersPage() {
     });
 
     const handleConfirmDeleteUser = async () => {
-        if (!deleteUser) return;
-        const res = await fetch(`/api/users/${deleteUser.id}`, { method: "DELETE" });
-        if (res.ok) {
-            toast.success("ลบผู้ใช้สำเร็จ");
-            refreshUsers();
-        } else {
-            toast.error("เกิดข้อผิดพลาดในการลบผู้ใช้");
+        if (!deleteUser || isDeleting) return;
+        setIsDeleting(true);
+        try {
+            const res = await fetch(`/api/users/${deleteUser.id}`, { method: "DELETE" });
+            if (res.ok) {
+                toast.success("ลบผู้ใช้สำเร็จ");
+                refreshUsers();
+            } else {
+                toast.error("เกิดข้อผิดพลาดในการลบผู้ใช้");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("เกิดข้อผิดพลาดที่ไม่คาดคิดในการลบผู้ใช้");
+        } finally {
+            setIsDeleting(false);
+            setDeleteUser(null);
         }
-        setDeleteUser(null);
     };
 
     const removeProvider = async (accountId: string) => {
-        if (!editUser) return;
+        if (!editUser || deletingAccountId === accountId) return;
         if (!confirm("คุณต้องการลบบัญชีนี้หรือไม่?")) return;
-        await fetch(`/api/users/${editUser.id}/accounts/${accountId}`, { method: "DELETE" });
-        refreshUsers();
+        try {
+            const res = await fetch(`/api/users/${editUser.id}/accounts/${accountId}`, { method: "DELETE" });
+            if (!res.ok) {
+                toast.error("ไม่สามารถลบบัญชีนี้ได้");
+                return;
+            }
+            toast.success("ลบบัญชีเชื่อมต่อสำเร็จ");
+            refreshUsers();
+        } catch (error) {
+            console.error(error);
+            toast.error("เกิดข้อผิดพลาดในการลบบัญชี");
+        } finally {
+            setDeletingAccountId(null);
+        }
     };
 
     const updateRoleStatus = async () => {
-        if (!editUser) return;
+        if (!editUser || isUpdating) return;
+        setIsUpdating(true);
 
         const updatedRole = pendingRole ?? editUser.role;
         const updatedStatus = pendingStatus ?? editUser.status;
@@ -186,61 +226,133 @@ export default function ManageUsersPage() {
         const isChanged =
             updatedRole !== editUser.role || updatedStatus !== editUser.status;
 
-        if (!isChanged) return;
+        if (!isChanged) {
+            setIsUpdating(false);
+            return;
+        }
 
-        await fetch(`/api/users/${editUser.id}/update`, {
-            method: "PATCH",
-            body: JSON.stringify({
-                role: updatedRole,
-                status: updatedStatus,
-            }),
-        });
+        try {
+            const res = await fetch(`/api/users/${editUser.id}/update`, {
+                method: "PATCH",
+                body: JSON.stringify({
+                    role: updatedRole,
+                    status: updatedStatus,
+                }),
+            });
 
-        refreshUsers();
-        setEditUser(null);
-        setPendingRole(null);
-        setPendingStatus(null);
+            if (!res.ok) {
+                toast.error("อัปเดตข้อมูลไม่สำเร็จ");
+                return;
+            }
+
+            toast.success("อัปเดตข้อมูลสำเร็จ");
+            refreshUsers();
+        } catch (error) {
+            console.error(error);
+            toast.error("เกิดข้อผิดพลาดในการอัปเดตข้อมูล");
+        } finally {
+            setIsUpdating(false);
+            setEditUser(null);
+            setPendingRole(null);
+            setPendingStatus(null);
+        }
     };
 
-    const handleExportExcel = () => {
-        const exportData = table.getFilteredRowModel().rows.map(({ original }) => ({
-            ชื่อ: original.name,
-            อีเมล: original.email,
-            สิทธิ์: original.role,
-            สถานะ: original.status,
-            วันที่สมัคร: format(new Date(original.createdAt), "dd/MM/yyyy"),
-        }));
+    const handleExportExcel = async () => {
+        setLoadingExport(true);
+        try {
+            const exportData = table.getFilteredRowModel().rows.map(({ original }) => ({
+                ชื่อ: original.name,
+                อีเมล: original.email,
+                สิทธิ์: original.role,
+                สถานะ: original.status,
+                วันที่สมัคร: formatThaiDatetime(original.createdAt),
+            }));
 
-        const ws = XLSX.utils.json_to_sheet(exportData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Users");
-        const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-        saveAs(new Blob([buf]), getExportFilename("excel", status || "ALL", dateRange));
+            const header = [
+                ["รายงานข้อมูลผู้ใช้งาน"],
+                [`สถานะ: ${status === "ALL" ? "ทั้งหมด" : status}`],
+                [`สิทธิ์ผู้ใช้งาน: ${role === "ALL" ? "ทั้งหมด" : role}`],
+                [
+                    dateRange?.from && dateRange?.to
+                        ? `ช่วงวันที่: ${format(dateRange.from, "dd/MM/yyyy")} - ${format(dateRange.to, "dd/MM/yyyy")}`
+                        : "",
+                ],
+                [],
+            ];
+
+            const worksheet = XLSX.utils.json_to_sheet([]);
+            XLSX.utils.sheet_add_aoa(worksheet, header, { origin: 0 });
+            XLSX.utils.sheet_add_json(worksheet, exportData, { origin: -1 });
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
+
+            const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+            const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+            saveAs(data, getExportFilename({ type: "excel", status, dateRange, prefix: "ผู้ใช้งาน" }));
+        } catch (error) {
+            toast.error("เกิดข้อผิดพลาดในการส่งออก Excel");
+        } finally {
+            setLoadingExport(false);
+        }
     };
 
-    const handleExportPDF = () => {
-        const doc = new jsPDF();
-        doc.setFont("Sarabun", "normal");
-        doc.text("รายชื่อผู้ใช้งาน", 14, 20);
+    const handleExportPDF = async () => {
+        setLoadingExport(true);
+        try {
+            const doc = new jsPDF();
+            doc.setFont("Sarabun", "normal");
+            doc.setFontSize(10);
+            doc.text("รายชื่อผู้ใช้งาน", 14, 20);
+            let y = 26;
 
-        autoTable(doc, {
-            startY: 30,
-            head: [["ชื่อ", "อีเมล", "สิทธิ์", "สถานะ", "วันที่สมัคร"]],
-            body: table.getFilteredRowModel().rows.map(({ original }) => [
-                original.name,
-                original.email,
-                original.role,
-                original.status,
-                format(new Date(original.createdAt), "dd/MM/yyyy"),
-            ]),
-            styles: { font: "Sarabun", fontSize: 10 },
-        });
+            doc.text(`สถานะ: ${status === "ALL" ? "ทั้งหมด" : status}`, 14, y); y += 6;
+            doc.text(`สิทธิ์ผู้ใช้งาน: ${role === "ALL" ? "ทั้งหมด" : role}`, 14, y); y += 6;
+            if (dateRange?.from && dateRange?.to) {
+                const from = format(dateRange.from, "dd/MM/yyyy");
+                const to = format(dateRange.to, "dd/MM/yyyy");
+                doc.text(`ช่วงเวลา: ${from} - ${to}`, 14, y); y += 6;
+            }
 
-        doc.save(getExportFilename("pdf", status || "ALL", dateRange));
+            autoTable(doc, {
+                startY: y + 2,
+                head: [["ชื่อ", "อีเมล", "สิทธิ์", "สถานะ", "วันที่สมัคร"]],
+                body: table.getFilteredRowModel().rows.map(({ original }) => [
+                    original.name,
+                    original.email,
+                    original.role,
+                    original.status,
+                    formatThaiDatetime(original.createdAt),
+                ]),
+                styles: {
+                    font: "Sarabun",
+                    fontStyle: "normal",
+                    fontSize: 10,
+                },
+                headStyles: {
+                    font: "Sarabun",
+                    fontStyle: "normal",
+                    fontSize: 10,
+                },
+                bodyStyles: {
+                    font: "Sarabun",
+                    fontStyle: "normal",
+                    fontSize: 10,
+                },
+            });
+
+            doc.save(getExportFilename({ type: "pdf", status, dateRange, prefix: "ผู้ใช้งาน" }));
+        } catch (error) {
+            toast.error("เกิดข้อผิดพลาดในการส่งออก PDF");
+        } finally {
+            setLoadingExport(false);
+        }
     };
 
     return (
         <div className="space-y-4 m-6">
+            <h2 className="text-xl font-bold">ค้นหาข้อมูลผู้ใช้งาน</h2>
             <div className="flex flex-wrap gap-2 items-center">
                 <Input
                     placeholder="ค้นหาชื่อหรืออีเมล..."
@@ -248,82 +360,95 @@ export default function ManageUsersPage() {
                     onChange={(e) => setGlobalFilter(e.target.value)}
                     className="max-w-sm"
                 />
-                <div className="w-full md:w-auto max-w-xs">
+                <div className="w-full md:w-auto max-w-sm grow">
                     <DatePickerWithRange value={dateRange} onChange={setDateRange} />
                 </div>
-                <Select onValueChange={setStatus} value={status}>
-                    <SelectTrigger className="w-[160px]">
-                        <SelectValue placeholder="สถานะ" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="ALL">ทั้งหมด</SelectItem>
-                        <SelectItem value="APPROVED">Approved</SelectItem>
-                        <SelectItem value="PENDING">Pending</SelectItem>
-                        <SelectItem value="BANNED">Banned</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Select onValueChange={setRole} value={role}>
-                    <SelectTrigger className="w-[160px]">
-                        <SelectValue placeholder="สิทธิ์" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="ALL">ทั้งหมด</SelectItem>
-                        <SelectItem value="ADMIN">Admin</SelectItem>
-                        <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Button onClick={handleExportExcel}><Download className="mr-2 h-4 w-4" />Export Excel</Button>
-                <Button onClick={handleExportPDF} variant="outline"><Download className="mr-2 h-4 w-4" />Export PDF</Button>
+                <div className="flex gap-2 items-center">
+                    <Select onValueChange={setStatus} value={status}>
+                        <SelectTrigger className="w-[160px]">
+                            <SelectValue placeholder="สถานะ" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="ALL">ทั้งหมด</SelectItem>
+                            <SelectItem value="APPROVED">Approved</SelectItem>
+                            <SelectItem value="PENDING">Pending</SelectItem>
+                            <SelectItem value="BANNED">Banned</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Select onValueChange={setRole} value={role}>
+                        <SelectTrigger className="w-[160px]">
+                            <SelectValue placeholder="สิทธิ์" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="ALL">ทั้งหมด</SelectItem>
+                            <SelectItem value="ADMIN">Admin</SelectItem>
+                            <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
-
-            {!isMobile ? (
-                <div className="rounded-md border">
-                    <Table>
-                        <TableHeader>
-                            {table.getHeaderGroups().map((headerGroup) => (
-                                <TableRow key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => (
-                                        <TableHead key={header.id}>
-                                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                                        </TableHead>
-                                    ))}
-                                </TableRow>
-                            ))}
-                        </TableHeader>
-                        <TableBody>
-                            {table.getRowModel().rows.length ? (
-                                table.getRowModel().rows.map((row) => (
-                                    <TableRow key={row.id}>
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
-                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-8">
-                                        ไม่มีข้อมูล
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+            <div className="flex flex-wrap gap-2 items-center">
+                <Button className="cursor-pointer" onClick={handleExportExcel} disabled={loadingExport}>{loadingExport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}Export Excel</Button>
+                <Button className="cursor-pointer" onClick={handleExportPDF} disabled={loadingExport} variant="outline">{loadingExport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}Export PDF</Button>
+            </div>
+            {loadingFetch ? (
+                <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
             ) : (
-                <div className="grid grid-cols-1 gap-4">
-                    {table.getRowModel().rows.map((row) => (
-                        <div key={row.id} className="rounded border p-4 shadow">
-                            {row.getVisibleCells().map((cell) => (
-                                <div key={cell.id} className="mb-1">
-                                    <strong>{cell.column.id}: </strong>
-                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                !isMobile ? (
+                    <div className="rounded-md border">
+                        <Table>
+                            <TableHeader>
+                                {table.getHeaderGroups().map((headerGroup) => (
+                                    <TableRow key={headerGroup.id}>
+                                        {headerGroup.headers.map((header) => (
+                                            <TableHead key={header.id} className="ps-5">
+                                                {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                                            </TableHead>
+                                        ))}
+                                    </TableRow>
+                                ))}
+                            </TableHeader>
+                            <TableBody>
+                                {table.getRowModel().rows.length ? (
+                                    table.getRowModel().rows.map((row) => (
+                                        <TableRow key={row.id}>
+                                            {row.getVisibleCells().map((cell) => (
+                                                <TableCell key={cell.id} className="ps-5">
+                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="text-center py-8">
+                                            ไม่มีข้อมูล
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                        {table.getRowModel().rows.length ? (
+                            table.getRowModel().rows.map((row) => (
+                                <div key={row.id} className="rounded border p-4 shadow">
+                                    {row.getVisibleCells().map((cell) => (
+                                        <div key={cell.id} className="mb-1">
+                                            <strong>{cell.column.id}: </strong>
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
-                    ))}
-                </div>
+                            ))
+                        ) : (
+                            <p className="text-center text-muted-foreground py-8">ไม่มีข้อมูล</p>
+                        )}
+                    </div>
+                )
             )}
             <div className="flex justify-end gap-2">
                 <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
@@ -345,21 +470,15 @@ export default function ManageUsersPage() {
                             <div><strong>อีเมล:</strong> {viewUser.email}</div>
                             <div className="flex items-center gap-2">
                                 <strong>สิทธิ์ผู้ใช้งาน:</strong>
-                                <Badge variant={viewUser.role === "SUPERADMIN" ? "default" : "secondary"}>{viewUser.role}</Badge>
+                                <Badge variant={roleVariants[viewUser.role as keyof typeof roleVariants]}>
+                                    {viewUser.role}
+                                </Badge>
                             </div>
                             <div className="flex items-center gap-2">
                                 <strong>สถานะ:</strong>
-                                {viewUser.status === "APPROVED" && (
-                                    <Badge className="bg-green-100 text-green-800">APPROVED</Badge>
-                                )}
-                                {viewUser.status === "PENDING" && (
-                                    <Badge className="bg-yellow-100 text-yellow-800">PENDING</Badge>
-                                )}
-                                {viewUser.status === "BANNED" && (
-                                    <Badge className="bg-red-100 text-red-800">BANNED</Badge>
-                                )}
+                                <Badge className={statusColors[viewUser.status as keyof typeof statusColors] || "bg-gray-100 text-gray-800"}>{viewUser.status}</Badge>
                             </div>
-                            <div><strong>วันที่สมัคร:</strong> {format(new Date(viewUser.createdAt), "dd MMM yyyy", { locale: th })}</div>
+                            <div><strong>วันที่สมัคร:</strong> {formatThaiDatetime(viewUser.createdAt)} </div>
                             <div>
                                 <strong>บัญชีที่เชื่อมต่อ:</strong>
                                 <ul className="list-disc pl-6 mt-1 space-y-1">
@@ -374,7 +493,7 @@ export default function ManageUsersPage() {
                                             const style = brandStyles[acc.provider] || defaultStyle;
 
                                             return (
-                                                <li key={acc.id}>
+                                                <li key={acc.id} className="my-2">
                                                     <Badge className={`capitalize ${style} px-2 py-1 text-xs font-medium`}>
                                                         {acc.provider}
                                                     </Badge>
@@ -418,6 +537,7 @@ export default function ManageUsersPage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
+                                <Separator className="my-5" />
                                 <div className="flex flex-col gap-3 my-5">
                                     <span className="text-sm text-start">บัญชีที่เชื่อมต่อ</span>
                                     <ul className="space-y-2">
@@ -429,8 +549,14 @@ export default function ManageUsersPage() {
                                                         if (!open) setOpenDialogProviderId(null);
                                                     }}>
                                                         <DialogTrigger asChild>
-                                                            <Button className="cursor-pointer" size="sm" variant="destructive" onClick={() => setOpenDialogProviderId(acc.id)}>
-                                                                ถอดบัญชี
+                                                            <Button
+                                                                className="cursor-pointer"
+                                                                size="sm"
+                                                                variant="destructive"
+                                                                disabled={deletingAccountId === acc.id}
+                                                                onClick={() => setOpenDialogProviderId(acc.id)}
+                                                            >
+                                                                {deletingAccountId === acc.id && <Loader2 className="w-4 h-4 animate-spin mr-1" />} ถอดบัญชี
                                                             </Button>
                                                         </DialogTrigger>
                                                         <DialogContent>
@@ -456,7 +582,9 @@ export default function ManageUsersPage() {
                                 </div>
                                 <div className="flex justify-end gap-2 my-5">
                                     <Button className="cursor-pointer" variant="outline" onClick={() => setEditUser(null)}>ยกเลิก</Button>
-                                    <Button className="cursor-pointer" onClick={updateRoleStatus}>ยืนยัน</Button>
+                                    <Button className="cursor-pointer" onClick={updateRoleStatus} disabled={isUpdating}>
+                                        {isUpdating && <Loader2 className="w-4 h-4 animate-spin mr-2" />} ยืนยัน
+                                    </Button>
                                 </div>
                             </div>
                         </DrawerHeader>
@@ -471,8 +599,10 @@ export default function ManageUsersPage() {
                             <p>คุณต้องการลบผู้ใช้ <strong>{deleteUser.name || deleteUser.email}</strong> หรือไม่?</p>
                         </DialogHeader>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setDeleteUser(null)}>ยกเลิก</Button>
-                            <Button variant="destructive" onClick={handleConfirmDeleteUser}>ลบ</Button>
+                            <Button className="cursor-pointer" variant="outline" onClick={() => setDeleteUser(null)}>ยกเลิก</Button>
+                            <Button className="cursor-pointer" variant="destructive" disabled={isDeleting} onClick={handleConfirmDeleteUser}>
+                                {isDeleting && <Loader2 className="w-4 h-4 animate-spin mr-2" />} ลบ
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

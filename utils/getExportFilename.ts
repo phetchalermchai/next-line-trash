@@ -8,7 +8,21 @@ function toThaiYear(date: Date) {
     return format(d, "dd-MM-") + year.toString();
 }
 
-export function getExportFilename(type: "excel" | "pdf", status: string, dateRange?: DateRange) {
+interface ExportFilenameOptions {
+    type: "excel" | "pdf";
+    status?: string;
+    dateRange?: DateRange;
+    prefix?: string; // เพิ่มตรงนี้
+    customLabel?: string; // เพิ่มตรงนี้
+}
+
+export function getExportFilename({
+    type,
+    status = "ALL",
+    dateRange,
+    prefix = "ข้อมูล",
+    customLabel,
+}: ExportFilenameOptions) {
     const statusLabel = status === "ALL" ? "ทั้งหมด" : status;
     const today = new Date();
     const thaiToday = toThaiYear(today);
@@ -20,5 +34,6 @@ export function getExportFilename(type: "excel" | "pdf", status: string, dateRan
         rangeText = `_ช่วง-${from}_ถึง-${to}`;
     }
 
-    return `ร้องเรียน_${statusLabel}${rangeText}_${thaiToday}.${type === "excel" ? "xlsx" : "pdf"}`;
+    const label = customLabel ?? `_${statusLabel}${rangeText}`;
+    return `${prefix}${label}_${thaiToday}.${type === "excel" ? "xlsx" : "pdf"}`;
 }

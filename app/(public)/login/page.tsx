@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/admin/dashboard';
+  const callbackUrl = searchParams.get('callbackUrl') || '/admin/users/pending';
 
   const handleLogin = (provider: string) => {
     signIn(provider, { callbackUrl });
