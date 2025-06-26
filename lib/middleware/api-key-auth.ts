@@ -13,7 +13,7 @@ export async function apiKeyAuth(req: NextRequest) {
       revokedAt: null,
       OR: [
         { expiresAt: null },
-        { expiresAt: { gt: new Date() } }, // ยังไม่หมดอายุ
+        { expiresAt: { gt: new Date() } },
       ],
     },
   });
@@ -22,5 +22,5 @@ export async function apiKeyAuth(req: NextRequest) {
     return NextResponse.json({ error: "API Key ไม่ถูกต้อง หรือถูกยกเลิก/หมดอายุแล้ว" }, { status: 403 });
   }
 
-  return apiKey; // ✅ ส่งข้อมูล API Key กลับมาใช้งานต่อได้
+  return apiKey;
 }

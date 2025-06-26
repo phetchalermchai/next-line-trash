@@ -41,17 +41,6 @@ import { Separator } from "@/components/ui/separator";
 import { roleVariants, statusColors } from "@/utils/userLabels";
 import { formatThaiDatetime } from "@/utils/date";
 
-if (!jsPDF.API.__sarabunFontLoaded) {
-    jsPDF.API.__sarabunFontLoaded = true;
-    jsPDF.API.events.push([
-        "addFonts",
-        function (this: jsPDF) {
-            this.addFileToVFS("Sarabun-Regular.ttf", sarabunFont);
-            this.addFont("Sarabun-Regular.ttf", "Sarabun", "normal");
-        },
-    ]);
-}
-
 export interface User {
     id: string;
     name: string;
@@ -302,7 +291,9 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
         setLoadingExport(true);
         try {
             const doc = new jsPDF();
-            doc.setFont("Sarabun", "normal");
+            doc.addFileToVFS("Sarabun.ttf", sarabunFont);
+            doc.addFont("Sarabun.ttf", "Sarabun", "normal");
+            doc.setFont("Sarabun");
             doc.setFontSize(10);
             doc.text("รายชื่อผู้ใช้งาน", 14, 20);
             let y = 26;

@@ -10,6 +10,7 @@ export function SiteHeader() {
     const staticPages: { path: string; title: string }[] = [
         { path: "/admin/dashboard", title: "แดชบอร์ดเรื่องร้องเรียน" },
         { path: "/admin/complaints", title: "ค้นหาร้องเรียนย้อนหลัง" },
+        { path: "/admin/users/dashboard", title: "แดชบอร์ดผู้ใช้งาน" },
         { path: "/admin/users/pending", title: "อนุมัติผู้ใช้งาน" },
         { path: "/admin/users/manage", title: "จัดการผู้ใช้งาน" },
         { path: "/admin/users/approved", title: "ผู้ใช้งานที่อนุมัติแล้ว" },

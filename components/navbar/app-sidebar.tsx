@@ -15,6 +15,7 @@ import {
     Users,
     UserX,
     UserCheck2,
+    BarChart3,
 } from "lucide-react";
 import {
     Sidebar,
@@ -41,6 +42,7 @@ const documentMenu = [
 ];
 
 const usersMenu = [
+    { title: "แดชบอร์ดผู้ใช้งาน", href: "/admin/users/dashboard", icon: BarChart3 },
     { title: "อนุมัติผู้ใช้งาน", href: "/admin/users/pending", icon: UserCheck },
     { title: "ผู้ใช้งานที่อนุมัติแล้ว", href: "/admin/users/approved", icon: UserCheck2 },
     { title: "จัดการผู้ใช้งาน", href: "/admin/users/manage", icon: Users },

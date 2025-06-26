@@ -29,8 +29,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { roleVariants, statusColors } from "@/utils/userLabels";
+import { useMediaQuery } from "@/lib/use-media-query";
 
 interface User {
   id: string;
@@ -45,6 +47,7 @@ const PendingUsersPage = () => {
   const [isApproving, setIsApproving] = useState(false);
   const [isBanning, setIsBanning] = useState(false);
   const [loading, setLoading] = useState(true);
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const fetchPendingUsers = async () => {
     setLoading(true);
@@ -86,7 +89,7 @@ const PendingUsersPage = () => {
     }
   };
 
-   useEffect(() => {
+  useEffect(() => {
     fetchPendingUsers();
   }, []);;
 
@@ -136,7 +139,7 @@ const PendingUsersPage = () => {
           <div className="flex  gap-2">
             <Dialog>
               <DialogTrigger asChild>
-                <Button size="sm" variant="default">อนุมัติ</Button>
+                <Button className="cursor-pointer" size="sm" variant="default">อนุมัติ</Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -144,7 +147,7 @@ const PendingUsersPage = () => {
                 </DialogHeader>
                 <DialogDescription>คุณต้องการอนุมัติผู้ใช้นี้ใช่หรือไม่?</DialogDescription>
                 <DialogFooter>
-                  <Button onClick={() => handleApprove(user.id)} disabled={isApproving}>
+                  <Button className="cursor-pointer" onClick={() => handleApprove(user.id)} disabled={isApproving}>
                     ยืนยัน
                   </Button>
                 </DialogFooter>
@@ -152,7 +155,7 @@ const PendingUsersPage = () => {
             </Dialog>
             <Dialog>
               <DialogTrigger asChild>
-                <Button size="sm" variant="destructive">ยกเลิก</Button>
+                <Button className="cursor-pointer" size="sm" variant="destructive">ยกเลิก</Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -160,7 +163,7 @@ const PendingUsersPage = () => {
                 </DialogHeader>
                 <DialogDescription>คุณต้องการยกเลิกผู้ใช้นี้ใช่หรือไม่? ผู้ใช้จะถูกแบน</DialogDescription>
                 <DialogFooter>
-                  <Button variant="destructive" onClick={() => handleBan(user.id)}>ยืนยัน</Button>
+                  <Button className="cursor-pointer" variant="destructive" onClick={() => handleBan(user.id)}>ยืนยัน</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -186,9 +189,8 @@ const PendingUsersPage = () => {
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <>
-            {/* Desktop Table */}
-            <div className="hidden md:block rounded-md border overflow-x-auto">
+          !isMobile ? (
+            <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
                   {table.getHeaderGroups().map((headerGroup) => (
@@ -222,63 +224,62 @@ const PendingUsersPage = () => {
                 </TableBody>
               </Table>
             </div>
-
-            {/* Mobile Card View */}
-            <div className="block md:hidden space-y-4">
+          ) : (
+            <div className="space-y-4">
               {users.length ? users.map(user => (
-                <div key={user.id} className="border rounded-md p-4 shadow-sm space-y-2">
-                  <div><strong>ชื่อ:</strong> {user.name}</div>
-                  <div><strong>อีเมล:</strong> {user.email}</div>
-                  <div className="flex gap-2">
-                    <strong>สิทธิ์:</strong>
-                    <Badge variant={roleVariants[user.role as keyof typeof roleVariants]}>
-                      {user.role}
-                    </Badge>
-                  </div>
-                  <div className="flex gap-2">
-                    <strong>สถานะ:</strong>
-                    <Badge
-                      className={cn("text-xs font-medium", statusColors[user.status as keyof typeof statusColors])}
-                    >
-                      {user.status}
-                    </Badge>
-                  </div>
-                  <div className="flex gap-2">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="default" disabled={isApproving}>อนุมัติ</Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>ยืนยันการอนุมัติ</DialogTitle>
-                        </DialogHeader>
-                        <DialogDescription>คุณต้องการอนุมัติผู้ใช้นี้ใช่หรือไม่?</DialogDescription>
-                        <DialogFooter>
-                          <Button onClick={() => handleApprove(user.id)} disabled={isApproving}>ยืนยัน</Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="destructive" disabled={isBanning}>ยกเลิก</Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>ยืนยันการยกเลิก</DialogTitle>
-                        </DialogHeader>
-                        <DialogDescription>คุณต้องการยกเลิกผู้ใช้นี้ใช่หรือไม่? ผู้ใช้จะถูกแบน</DialogDescription>
-                        <DialogFooter>
-                          <Button variant="destructive" onClick={() => handleBan(user.id)} disabled={isBanning}>ยืนยัน</Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </div>
+                <Card key={user.id}>
+                  <CardContent className="space-y-2">
+                    <CardTitle className="text-base">{user.name || "ไม่ระบุชื่อ"}</CardTitle>
+                    <div className="text-sm"><strong>อีเมล:</strong> {user.email}</div>
+                    <div className="text-sm flex gap-2">
+                      <strong>สิทธิ์:</strong>
+                      <Badge variant={roleVariants[user.role as keyof typeof roleVariants]}>
+                        {user.role}
+                      </Badge>
+                    </div>
+                    <div className="text-sm flex gap-2">
+                      <strong>สถานะ:</strong>
+                      <Badge className={cn("text-xs font-medium", statusColors[user.status as keyof typeof statusColors])}>
+                        {user.status}
+                      </Badge>
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button className="cursor-pointer" size="sm" variant="default" disabled={isApproving}>อนุมัติ</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>ยืนยันการอนุมัติ</DialogTitle>
+                          </DialogHeader>
+                          <DialogDescription>คุณต้องการอนุมัติผู้ใช้นี้ใช่หรือไม่?</DialogDescription>
+                          <DialogFooter>
+                            <Button className="cursor-pointer" onClick={() => handleApprove(user.id)} disabled={isApproving}>ยืนยัน</Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button className="cursor-pointer" size="sm" variant="destructive" disabled={isBanning}>ยกเลิก</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>ยืนยันการยกเลิก</DialogTitle>
+                          </DialogHeader>
+                          <DialogDescription>คุณต้องการยกเลิกผู้ใช้นี้ใช่หรือไม่? ผู้ใช้จะถูกแบน</DialogDescription>
+                          <DialogFooter>
+                            <Button className="cursor-pointer" variant="destructive" onClick={() => handleBan(user.id)} disabled={isBanning}>ยืนยัน</Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  </CardContent>
+                </Card>
               )) : (
                 <p className="text-center text-gray-500">ไม่มีผู้ใช้ที่รออนุมัติ</p>
               )}
             </div>
-          </>
+          )
         )}
       </div>
     </div>
