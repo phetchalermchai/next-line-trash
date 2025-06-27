@@ -18,6 +18,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { font as sarabunFont } from "@/utils/fonts/Sarabun-normal";
+import { ChartSkeleton, RecentUserSkeleton, SummaryCardSkeleton } from "./Skeleton";
 
 // Lazy load ApexCharts
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -126,10 +127,23 @@ export default function UserDashboardPage() {
 
     if (loading) {
         return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                    <Skeleton key={i} className="h-24 w-full rounded-xl" />
-                ))}
+            <div className="space-y-6 p-6">
+                {/* Summary cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {Array.from({ length: 4 }).map((_, i) => <SummaryCardSkeleton key={i} />)}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {Array.from({ length: 3 }).map((_, i) => <SummaryCardSkeleton key={i} />)}
+                </div>
+
+                {/* Charts */}
+                <ChartSkeleton title="จำนวนผู้ใช้ใหม่ต่อเดือน" />
+                <ChartSkeleton title="ผู้ใช้ตามบทบาท (Role)" />
+                <ChartSkeleton title="บัญชีที่เชื่อมต่อ OAuth" />
+
+                {/* Recent user list */}
+                <RecentUserSkeleton />
             </div>
         );
     }

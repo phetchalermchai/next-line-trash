@@ -15,11 +15,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: "Permission denied" }, { status: 403 });
   }
 
-  const userId = params.id;
+  const { id } = await params
 
   try {
     const user = await prisma.user.update({
-      where: { id: userId },
+      where: { id: id },
       data: { status: UserStatus.BANNED },
     });
 

@@ -1,0 +1,129 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { randomUUID } from "crypto";
+import { apiKeyAuth } from "@/lib/middleware/api-key-auth";
+import { isValidComplaintStatus, isValidComplaintSource } from "@/lib/enum-utils";
+import { uploadImageToSupabase } from "@/lib/storage/upload-image";
+import { notifyGroupOnly, notifyUserAndGroup } from "@/lib/line/notify";
+
+export async function GET(req: NextRequest) {
+    const authResult = await apiKeyAuth(req);
+    if (authResult instanceof NextResponse) return authResult;
+    const { searchParams } = req.nextUrl;
+
+    const search = searchParams.get("search") || undefined;
+    const statusParam = searchParams.get("status");
+    const sourceParam = searchParams.get("source");
+    const status = isValidComplaintStatus(statusParam) ? statusParam : undefined;
+    const source = isValidComplaintSource(sourceParam) ? sourceParam : undefined;
+    const startDate = searchParams.get("startDate") || undefined;
+    const endDate = searchParams.get("endDate") || undefined;
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+
+    const conditions: any[] = [];
+
+    if (statusParam && !isValidComplaintStatus(statusParam)) {
+        return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    }
+
+    if (sourceParam && !isValidComplaintSource(sourceParam)) {
+        return NextResponse.json({ error: "Invalid source" }, { status: 400 });
+    }
+
+    if (search) {
+        conditions.push({
+            OR: [
+                { description: { contains: search, mode: "insensitive" } },
+                { reporterName: { contains: search, mode: "insensitive" } },
+                { phone: { contains: search, mode: "insensitive" } },
+            ],
+        });
+    }
+
+    if (status) conditions.push({ status });
+    if (source) conditions.push({ source });
+    if (startDate) conditions.push({ createdAt: { gte: new Date(startDate) } });
+    if (endDate) conditions.push({ createdAt: { lte: new Date(endDate) } });
+
+    const where = conditions.length > 0 ? { AND: conditions } : {};
+
+    const [items, total] = await prisma.$transaction([
+        prisma.complaint.findMany({
+            where,
+            orderBy: { createdAt: "desc" },
+            skip: (page - 1) * limit,
+            take: limit,
+        }),
+        prisma.complaint.count({ where }),
+    ]);
+
+    return NextResponse.json({
+        items,
+        totalPages: Math.ceil(total / limit),
+    });
+}
+
+export async function POST(req: NextRequest) {
+  const authResult = await apiKeyAuth(req);
+  if (authResult instanceof NextResponse) return authResult;
+
+  const formData = await req.formData();
+
+  const source = formData.get("source")?.toString();
+  const description = formData.get("description")?.toString();
+  const lineUserId = formData.get("lineUserId")?.toString();
+  const receivedBy = formData.get("receivedBy")?.toString();
+  const reporterName = formData.get("reporterName")?.toString();
+  const phone = formData.get("phone")?.toString();
+  const location = formData.get("location")?.toString();
+  const message = formData.get("message")?.toString();
+
+  const imageFiles = formData.getAll("imageBeforeFiles") as File[];
+
+  if (!source || !description) {
+    return NextResponse.json({ error: "source และ description เป็นค่าบังคับ" }, { status: 400 });
+  }
+
+  if (source === "LINE") {
+    if (!lineUserId) return NextResponse.json({ error: "LINE: ต้องมี lineUserId" }, { status: 400 });
+    if (!imageFiles || imageFiles.length === 0)
+      return NextResponse.json({ error: "LINE: ต้องแนบรูป" }, { status: 400 });
+  } else {
+    if (!receivedBy) return NextResponse.json({ error: "ต้องระบุ receivedBy" }, { status: 400 });
+    if (!reporterName) return NextResponse.json({ error: "ต้องระบุ reporterName" }, { status: 400 });
+  }
+
+  let imageBeforeUrls: string[] = [];
+  if (imageFiles && imageFiles.length > 0) {
+    imageBeforeUrls = await Promise.all(
+      imageFiles.map(async (file) => {
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const filename = `complaint-${randomUUID()}.jpg`;
+        return await uploadImageToSupabase(buffer, filename);
+      })
+    );
+  }
+
+  const complaint = await prisma.complaint.create({
+    data: {
+      source,
+      description,
+      lineUserId,
+      receivedBy,
+      reporterName,
+      phone,
+      location,
+      message,
+      imageBefore: imageBeforeUrls.join(","),
+    },
+  });
+
+  if (source === "LINE") {
+    await notifyUserAndGroup(complaint.id);
+  } else {
+    await notifyGroupOnly(complaint.id);
+  }
+
+  return NextResponse.json(complaint);
+}

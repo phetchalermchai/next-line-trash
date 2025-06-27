@@ -13,7 +13,7 @@ import {
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Info, Trash2, Pencil, Loader2 } from "lucide-react";
+import { Download, Trash2, Pencil, Loader2, Eye, AlertCircle } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
@@ -21,6 +21,7 @@ import autoTable from "jspdf-autotable";
 import { font as sarabunFont } from "@/utils/fonts/Sarabun-normal";
 import { getExportFilename } from "@/utils/getExportFilename";
 import { DatePickerWithRange } from "@/components/complaint/DatePickerWithRange";
+import { Card, CardContent } from "@/components/ui/card";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 import {
@@ -40,6 +41,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { roleVariants, statusColors } from "@/utils/userLabels";
 import { formatThaiDatetime } from "@/utils/date";
+import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { UserSearchSkeleton, UserTableSkeleton } from "./Skeleton";
 
 export interface User {
     id: string;
@@ -68,8 +72,10 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
     const [editUser, setEditUser] = React.useState<User | null>(null);
     const [viewUser, setViewUser] = React.useState<User | null>(null);
     const [deleteUser, setDeleteUser] = React.useState<User | null>(null);
+    const [pendingName, setPendingName] = React.useState<string>("");
     const [pendingRole, setPendingRole] = React.useState<string | null>(null);
     const [pendingStatus, setPendingStatus] = React.useState<string | null>(null);
+    const [nameError, setNameError] = React.useState<string>("");
     const [openDialogProviderId, setOpenDialogProviderId] = React.useState<string | null>(null);
     const [loadingExport, setLoadingExport] = React.useState(false);
     const [loadingFetch, setLoadingFetch] = React.useState(false);
@@ -105,6 +111,13 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
         refreshUsers();
     }, [globalFilter, dateRange, status, role]);
 
+    React.useEffect(() => {
+        if (editUser) {
+            setPendingName(editUser.name);
+            setNameError("");
+        }
+    }, [editUser]);
+
     const table = useReactTable({
         data: users,
         columns: [
@@ -133,8 +146,7 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
                 header: "สถานะ",
                 cell: ({ row }) => {
                     const status = row.original.status;
-                    const color = statusColors[status as keyof typeof statusColors] ?? "bg-gray-100 text-gray-800";
-                    return <span className={`px-2 py-1 rounded text-xs font-medium ${color}`}>{status}</span>;
+                    return <Badge className={cn("text-xs font-medium", statusColors[status as keyof typeof statusColors])}>{status}</Badge>
                 },
             },
             {
@@ -147,9 +159,32 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
                 header: "การจัดการ",
                 cell: ({ row }) => (
                     <div className="flex gap-2">
-                        <Button className="cursor-pointer" size="icon" variant="outline" onClick={() => setViewUser(row.original)}><Info className="w-4 h-4" /></Button>
-                        <Button className="cursor-pointer" size="icon" variant="outline" onClick={() => setEditUser(row.original)}><Pencil className="w-4 h-4" /></Button>
-                        <Button className="cursor-pointer" size="icon" variant="destructive" onClick={() => setDeleteUser(row.original)}><Trash2 className="w-4 h-4" /></Button>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button className="cursor-pointer" size="icon" variant="outline" onClick={() => setViewUser(row.original)}>
+                                        <Eye className="w-4 h-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">ดูรายละเอียด</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button className="cursor-pointer" size="icon" variant="outline" onClick={() => setEditUser(row.original)}><Pencil className="w-4 h-4" /></Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">แก้ไขผู้ใช้งาน</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button className="cursor-pointer" size="icon" variant="destructive" onClick={() => setDeleteUser(row.original)}><Trash2 className="w-4 h-4" /></Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">ลบผู้ใช้งาน</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     </div>
                 ),
             },
@@ -188,7 +223,6 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
 
     const removeProvider = async (accountId: string) => {
         if (!editUser || deletingAccountId === accountId) return;
-        if (!confirm("คุณต้องการลบบัญชีนี้หรือไม่?")) return;
         try {
             const res = await fetch(`/api/users/${editUser.id}/accounts/${accountId}`, { method: "DELETE" });
             if (!res.ok) {
@@ -202,6 +236,7 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
             toast.error("เกิดข้อผิดพลาดในการลบบัญชี");
         } finally {
             setDeletingAccountId(null);
+            setEditUser(null);
         }
     };
 
@@ -209,13 +244,21 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
         if (!editUser || isUpdating) return;
         setIsUpdating(true);
 
+        const updatedName = (pendingName?.trim() || "").trim();
         const updatedRole = pendingRole ?? editUser.role;
         const updatedStatus = pendingStatus ?? editUser.status;
 
+        if (!updatedName) {
+            toast.error("กรุณากรอกชื่อผู้ใช้งาน");
+            setIsUpdating(false);
+            return;
+        }
+
         const isChanged =
-            updatedRole !== editUser.role || updatedStatus !== editUser.status;
+            updatedName !== editUser.name || updatedRole !== editUser.role || updatedStatus !== editUser.status;
 
         if (!isChanged) {
+            toast.error("ไม่มีการเปลี่ยนแปลงข้อมูล");
             setIsUpdating(false);
             return;
         }
@@ -224,6 +267,7 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
             const res = await fetch(`/api/users/${editUser.id}/update`, {
                 method: "PATCH",
                 body: JSON.stringify({
+                    name: updatedName,
                     role: updatedRole,
                     status: updatedStatus,
                 }),
@@ -242,8 +286,10 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
         } finally {
             setIsUpdating(false);
             setEditUser(null);
+            setPendingName("");
             setPendingRole(null);
             setPendingStatus(null);
+            setNameError("");
         }
     };
 
@@ -343,49 +389,55 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
 
     return (
         <div className="space-y-4 m-6">
-            <h2 className="text-xl font-bold">ค้นหาข้อมูลผู้ใช้งาน</h2>
-            <div className="flex flex-wrap gap-2 items-center">
-                <Input
-                    placeholder="ค้นหาชื่อหรืออีเมล..."
-                    value={globalFilter}
-                    onChange={(e) => setGlobalFilter(e.target.value)}
-                    className="max-w-sm"
-                />
-                <div className="w-full md:w-auto max-w-sm grow">
-                    <DatePickerWithRange value={dateRange} onChange={setDateRange} />
-                </div>
-                <div className="flex gap-2 items-center">
-                    <Select onValueChange={setStatus} value={status}>
-                        <SelectTrigger className="w-[160px]">
-                            <SelectValue placeholder="สถานะ" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="ALL">ทั้งหมด</SelectItem>
-                            <SelectItem value="APPROVED">Approved</SelectItem>
-                            <SelectItem value="PENDING">Pending</SelectItem>
-                            <SelectItem value="BANNED">Banned</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Select onValueChange={setRole} value={role}>
-                        <SelectTrigger className="w-[160px]">
-                            <SelectValue placeholder="สิทธิ์" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="ALL">ทั้งหมด</SelectItem>
-                            <SelectItem value="ADMIN">Admin</SelectItem>
-                            <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-            <div className="flex flex-wrap gap-2 items-center">
-                <Button className="cursor-pointer" onClick={handleExportExcel} disabled={loadingExport}>{loadingExport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}Export Excel</Button>
-                <Button className="cursor-pointer" onClick={handleExportPDF} disabled={loadingExport} variant="outline">{loadingExport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}Export PDF</Button>
-            </div>
+            {
+                loadingFetch ? (
+                    <UserSearchSkeleton />
+                ) : (
+                    <>
+                        <h2 className="text-xl font-bold">ค้นหาข้อมูลผู้ใช้งาน</h2>
+                        <div className="flex flex-wrap gap-2 items-center">
+                            <Input
+                                placeholder="ค้นหาชื่อหรืออีเมล..."
+                                value={globalFilter}
+                                onChange={(e) => setGlobalFilter(e.target.value)}
+                                className="max-w-sm"
+                            />
+                            <div className="w-full md:w-auto max-w-sm grow">
+                                <DatePickerWithRange value={dateRange} onChange={setDateRange} />
+                            </div>
+                            <div className="flex gap-2 items-center">
+                                <Select onValueChange={setStatus} value={status}>
+                                    <SelectTrigger className="w-[160px]">
+                                        <SelectValue placeholder="สถานะ" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ALL">ทั้งหมด</SelectItem>
+                                        <SelectItem value="APPROVED">Approved</SelectItem>
+                                        <SelectItem value="PENDING">Pending</SelectItem>
+                                        <SelectItem value="BANNED">Banned</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Select onValueChange={setRole} value={role}>
+                                    <SelectTrigger className="w-[160px]">
+                                        <SelectValue placeholder="สิทธิ์" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ALL">ทั้งหมด</SelectItem>
+                                        <SelectItem value="ADMIN">Admin</SelectItem>
+                                        <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2 items-center">
+                            <Button className="cursor-pointer" onClick={handleExportExcel} disabled={loadingExport}>{loadingExport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}Export Excel</Button>
+                            <Button className="cursor-pointer" onClick={handleExportPDF} disabled={loadingExport} variant="outline">{loadingExport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}Export PDF</Button>
+                        </div>
+                    </>
+                )
+            }
             {loadingFetch ? (
-                <div className="flex justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
+                <UserTableSkeleton isMobile={isMobile} />
             ) : (
                 !isMobile ? (
                     <div className="rounded-md border">
@@ -426,14 +478,16 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
                     <div className="grid grid-cols-1 gap-4">
                         {table.getRowModel().rows.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <div key={row.id} className="rounded border p-4 shadow">
-                                    {row.getVisibleCells().map((cell) => (
-                                        <div key={cell.id} className="mb-1">
-                                            <strong>{cell.column.id}: </strong>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </div>
-                                    ))}
-                                </div>
+                                <Card key={row.id} className="shadow">
+                                    <CardContent className="pt-2 space-y-2">
+                                        {row.getVisibleCells().map((cell) => (
+                                            <div key={cell.id} className="text-sm">
+                                                <strong>{String(cell.column.columnDef.header)}:</strong>{" "}
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </div>
+                                        ))}
+                                    </CardContent>
+                                </Card>
                             ))
                         ) : (
                             <p className="text-center text-muted-foreground py-8">ไม่มีข้อมูล</p>
@@ -507,6 +561,22 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
                             <DrawerTitle>แก้ไขผู้ใช้</DrawerTitle>
                             <DrawerDescription>คุณสามารถแก้ไขสิทธิ์หรือสถานะของผู้ใช้นี้ได้จากด้านล่าง</DrawerDescription>
                             <div className="space-y-2 my-2">
+                                <div className="flex flex-col gap-3">
+                                    <Label htmlFor="name">ชื่อผู้ใช้งาน</Label>
+                                    <Input
+                                        id="name"
+                                        placeholder="ชื่อผู้ใช้งาน"
+                                        value={pendingName ?? editUser.name}
+                                        onChange={(e) => {
+                                            setPendingName(e.target.value);
+                                            setNameError("");
+                                        }}
+                                        maxLength={100}
+                                        required
+                                        className="w-full"
+                                    />
+
+                                </div>
                                 <div className="flex flex-col gap-3">
                                     <Label htmlFor="role">สิทธิ์ผู้ใช้งาน</Label>
                                     <Select value={pendingRole ?? editUser.role} onValueChange={(v) => setPendingRole(v)}>

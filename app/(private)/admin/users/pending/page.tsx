@@ -33,6 +33,7 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { roleVariants, statusColors } from "@/utils/userLabels";
 import { useMediaQuery } from "@/lib/use-media-query";
+import { PendingUserSkeleton, TableSkeleton } from "./Skeleton";
 
 interface User {
   id: string;
@@ -185,9 +186,7 @@ const PendingUsersPage = () => {
         <h2 className="text-xl font-bold">ข้อมูลผู้ใช้งานที่รออนุมัติ</h2>
 
         {loading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
+          isMobile ? <PendingUserSkeleton /> : <TableSkeleton columns={columns.length} />
         ) : (
           !isMobile ? (
             <div className="rounded-md border overflow-x-auto">
@@ -229,7 +228,7 @@ const PendingUsersPage = () => {
               {users.length ? users.map(user => (
                 <Card key={user.id}>
                   <CardContent className="space-y-2">
-                    <CardTitle className="text-base">{user.name || "ไม่ระบุชื่อ"}</CardTitle>
+                    <CardTitle className="text-sm"><strong>ชื่อ:</strong> {user.name || "ไม่ระบุชื่อ"}</CardTitle>
                     <div className="text-sm"><strong>อีเมล:</strong> {user.email}</div>
                     <div className="text-sm flex gap-2">
                       <strong>สิทธิ์:</strong>

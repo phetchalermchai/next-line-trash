@@ -7,6 +7,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Complaint {
+  id           String          @id @default(uuid())
+  source       ComplaintSource @default(LINE)
+  receivedBy   String?
+  reporterName String?
+  lineUserId   String?
+  phone        String?
+  description  String
+  imageBefore  String?
+  imageAfter   String?
+  location     String?
+  status       ComplaintStatus @default(PENDING)
+  message      String?
+  notifiedAt   DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+enum ComplaintStatus {
+  PENDING
+  DONE
+}
+
+enum ComplaintSource {
+  LINE
+  FACEBOOK
+  PHONE
+  COUNTER
+  OTHER
+}
+
 model User {
   id            String     @id @default(uuid())
   name          String?

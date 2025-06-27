@@ -20,6 +20,19 @@ export default withAuth(
     if (isAdminRoute && token.role !== "ADMIN" && token.role !== "SUPERADMIN") {
       return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
+
+    const superadminOnlyPaths = [
+      "/admin/users/dashboard",
+      "/admin/users/manage",
+      "/admin/users/approved",
+      "/admin/users/banned",
+    ];
+
+    if (superadminOnlyPaths.some((path) => req.nextUrl.pathname.startsWith(path))) {
+      if (token.role !== "SUPERADMIN") {
+        return NextResponse.redirect(new URL("/unauthorized", req.url));
+      }
+    }
   },
   {
     callbacks: {
@@ -29,5 +42,5 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ["/admin/:path*" ],
+  matcher: ["/admin/:path*"],
 };
