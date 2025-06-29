@@ -113,3 +113,11 @@ enum UserStatus {
   APPROVED
   BANNED
 }
+
+model Setting {
+  id            String @id @default(uuid())
+  key           String @unique // ชื่อคีย์ เช่น 'LINE_GROUP_ID', 'LINE_ACCESS_TOKEN'
+  value         String        // ค่าจริง เช่น รหัสกลุ่มหรือ access token
+  createdAt     DateTime @default(now()) // วันเวลาที่สร้าง
+  updatedAt     DateTime @updatedAt      // วันเวลาที่แก้ไขล่าสุด
+}
