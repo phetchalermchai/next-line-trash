@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import api from "@/lib/axios";
 import { Complaint } from "@/types/complaint";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ComplaintInfo } from "@/components/complaint/ComplaintInfo";
@@ -9,6 +8,7 @@ import dynamic from "next/dynamic";
 import { ComplaintImages } from "./ComplaintImages";
 import { Label } from "@/components/ui/label";
 import { AlertCircle } from "lucide-react";
+import axios from "axios";
 
 const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });
 
@@ -18,7 +18,7 @@ export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
 
     const fetchComplaint = async (id: string) => {
         try {
-            const res = await api.get(`/complaints/${id}`);
+            const res = await axios.get(`api/complaints/${id}`);
             setComplaint(res.data);
         } catch (err) {
             console.error("เกิดข้อผิดพลาดในการโหลดข้อมูล:", err);

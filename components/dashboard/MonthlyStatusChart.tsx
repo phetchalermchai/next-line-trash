@@ -1,9 +1,9 @@
 "use client";
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react'
-import api from '@/lib/axios';
 import { useTheme } from 'next-themes'
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import axios from 'axios';
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 type StatusType = 'PENDING' | 'DONE';
@@ -22,7 +22,7 @@ const MonthlyStatusChart = () => {
         const fetchData = async () => {
             try {
                 const year = new Date().getFullYear();
-                const res = await api.get(`/dashboard/monthly-status?year=${year}`);
+                const res = await axios.get(`api/dashboard/monthly-status?year=${year}`);
                 setData(res.data);
             } catch (err) {
                 console.error("Error fetching MonthlyStatusChart:", err);

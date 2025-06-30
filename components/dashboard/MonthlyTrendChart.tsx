@@ -2,8 +2,8 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react'
 import { useTheme } from "next-themes"
-import api from '@/lib/axios';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import axios from 'axios';
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 interface MonthlyTrend {
@@ -19,7 +19,7 @@ export default function MonthlyTrendChart() {
     const fetchData = async () => {
       try {
         const year = new Date().getFullYear();
-        const res = await api.get(`/dashboard/monthly-trend?year=${year}`);
+        const res = await axios.get(`api/dashboard/monthly-trend?year=${year}`);
         setData(res.data);
       } catch (err) {
         console.error("Error fetching MonthlyTrendChart:", err);

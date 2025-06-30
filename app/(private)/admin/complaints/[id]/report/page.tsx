@@ -5,12 +5,12 @@ import { useParams, useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import api from "@/lib/axios";
 import DropzoneUploader from "@/components/DropzoneUploader";
 import ImageGalleryModal from "@/components/ImageGalleryModal";
 import ImageCropperModal from "@/components/ImageCropperModal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Complaint } from "@/types/complaint";
+import axios from "axios";
 
 export default function ComplaintReportPage() {
   const { id } = useParams();
@@ -30,7 +30,7 @@ export default function ComplaintReportPage() {
   useEffect(() => {
     const fetchComplaint = async () => {
       try {
-        const res = await api.get(`/complaints/${id}`);
+        const res = await axios.get(`api/complaints/${id}`);
         setComplaint(res.data);
         setMessage(res.data.message || "");
         if (res.data.imageAfter) setImageAfterUrls([res.data.imageAfter]);
@@ -57,7 +57,7 @@ export default function ComplaintReportPage() {
         form.append("images", file);
       });
 
-      await api.post(`/webhook/line/complaints/${id}/image-after`, form, {
+      await axios.post(`/webhook/line/complaints/${id}/image-after`, form, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

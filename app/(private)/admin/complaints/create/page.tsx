@@ -2,7 +2,6 @@
 
 import { useState, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import api from "@/lib/axios";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ import {
     SelectContent,
     SelectItem,
 } from "@/components/ui/select";
+import axios from "axios";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });
@@ -75,8 +75,11 @@ export default function AdminComplaintCreatePage() {
             });
             imageFiles.imageBefore.forEach((file) => form.append("imageBeforeFiles", file));
 
-            const res = await api.post(`/complaints`, form, {
-                headers: { "Content-Type": "multipart/form-data" },
+            const res = await axios.post(`/api/complaints`, form, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                    "x-api-key": process.env.NEXT_PUBLIC_API_KEY || "",
+                },
                 onUploadProgress: (e) => {
                     if (e.total) {
                         const percent = Math.round((e.loaded * 100) / e.total);

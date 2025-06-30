@@ -1,9 +1,9 @@
 "use client";
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
-import api from '@/lib/axios';
 import { useTheme } from "next-themes"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import axios from 'axios';
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 interface StatusPie {
@@ -18,7 +18,7 @@ export default function StatusPieChart() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await api.get('/dashboard/status-distribution');
+                const res = await axios.get('api/dashboard/status-distribution');
                 setData(res.data);
             } catch (err) {
                 console.error("Error fetching StatusPieChart:", err);

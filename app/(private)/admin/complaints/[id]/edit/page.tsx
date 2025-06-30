@@ -2,7 +2,6 @@
 
 import { useState, useEffect, ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
-import api from "@/lib/axios";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import dynamic from "next/dynamic";
 import DropzoneUploader from "@/components/DropzoneUploader";
 import ImageCropperModal from "@/components/ImageCropperModal";
 import ImageGalleryModal from "@/components/ImageGalleryModal";
+import axios from "axios";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });
@@ -53,7 +53,7 @@ export default function ComplaintEditPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await api.get(`/complaints/${id}`);
+                const res = await axios.get(`api/complaints/${id}`);
                 setFormData(res.data);
                 setImageBeforeUrls(
                     res.data.imageBefore ? res.data.imageBefore.split(',').map((s: string) => s.trim()).filter(Boolean) : []
@@ -113,7 +113,7 @@ export default function ComplaintEditPage() {
             );
 
             // ส่ง PUT request
-            await api.put(`/complaints/${id}`, form, {
+            await axios.put(`api/complaints/${id}`, form, {
                 headers: { "Content-Type": "multipart/form-data" },
                 onUploadProgress: (e) => {
                     if (e.total) {
