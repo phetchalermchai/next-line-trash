@@ -1,6 +1,6 @@
 "use client";
 
-import ManageUsersPage from "../manage/page";
+import ManageUsersPage from "@/components/users/ManageUsers";
 
 const ApprovedUsersPage = () => {
 

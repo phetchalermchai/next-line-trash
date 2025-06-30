@@ -4,7 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { UserStatus } from "@prisma/client";
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
 
   if (!session || session.user.status !== "APPROVED") {
@@ -14,8 +15,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (session.user.role === "ADMIN") {
     return NextResponse.json({ error: "Permission denied" }, { status: 403 });
   }
-
-  const { id } = await params
 
   try {
     const user = await prisma.user.update({

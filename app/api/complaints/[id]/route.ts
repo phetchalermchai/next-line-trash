@@ -2,14 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { apiKeyAuth } from "@/lib/middleware/api-key-auth";
 import { findComplaintById, updateComplaint, deleteComplaint } from "@/lib/complaint/service";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
 
-export async function GET(req: NextRequest, { params }: RouteParams) {
-  const id = params.id;
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const authResult = await apiKeyAuth(req);
   if (authResult instanceof NextResponse) return authResult;
 
@@ -22,8 +17,8 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   return NextResponse.json(complaint);
 }
 
-export async function PATCH(req: NextRequest, { params }: RouteParams) {
-  const id = params.id;
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const authResult = await apiKeyAuth(req);
   if (authResult instanceof NextResponse) return authResult;
 
@@ -48,8 +43,8 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: RouteParams) {
-  const id = params.id;
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const authResult = await apiKeyAuth(req);
   if (authResult instanceof NextResponse) return authResult;
 

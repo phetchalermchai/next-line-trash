@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   const { id } = await params
@@ -14,7 +14,7 @@ export async function DELETE(
   }
 
   const apiKey = await prisma.apiKey.findUnique({
-    where: { id: params.id },
+    where: { id: id },
   });
 
   if (!apiKey || apiKey.userId !== session.user.id) {

@@ -1,5 +1,5 @@
 // file: app/(private)/admin/users/banned/page.tsx
-import ManageUsersPage from "../manage/page";
+import ManageUsersPage from "@/components/users/ManageUsers";
 
 
 export default function BannedUsersPage() {
