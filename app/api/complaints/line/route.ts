@@ -8,9 +8,11 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
 
+    const reporterName = formData.get("reporterName")?.toString();
+    const phone = formData.get("phone")?.toString();
     const description = formData.get("description")?.toString();
     const lineUserId = formData.get("lineUserId")?.toString();
-
+    const location = formData.get("location")?.toString();
     const imageFilesRaw = formData.getAll("imageBeforeFiles");
     const imageFiles = imageFilesRaw.filter((f): f is File => f instanceof File);
 
@@ -34,6 +36,9 @@ export async function POST(req: NextRequest) {
       source: "LINE",
       description,
       lineUserId,
+      reporterName,
+      location,
+      phone,
       imageBefore: imageUrls.join(","),
     });
 
