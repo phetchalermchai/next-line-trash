@@ -18,7 +18,7 @@ export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
 
     const fetchComplaint = async (id: string) => {
         try {
-            const res = await axios.get(`api/complaints/${id}`);
+            const res = await axios.get(`/api/complaints/${id}`);
             setComplaint(res.data);
         } catch (err) {
             console.error("เกิดข้อผิดพลาดในการโหลดข้อมูล:", err);

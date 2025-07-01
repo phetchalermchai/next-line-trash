@@ -5,8 +5,8 @@ import { findComplaintById, updateComplaint, deleteComplaint } from "@/lib/compl
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const authResult = await apiKeyAuth(req);
-  if (authResult instanceof NextResponse) return authResult;
+  // const authResult = await apiKeyAuth(req);
+  // if (authResult instanceof NextResponse) return authResult;
 
   const complaint = await findComplaintById(id);
 
