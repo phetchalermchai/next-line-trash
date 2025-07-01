@@ -13,6 +13,8 @@ export async function notifyUserAndGroup(id: string) {
     const tokenSetting = await getSettingByKey("LINE_ACCESS_TOKEN");
 
     if (!groupSetting || !tokenSetting) throw new Error("LINE_GROUP_ID หรือ LINE_ACCESS_TOKEN ไม่พบใน DB");
+    console.log(groupSetting);
+    console.log(tokenSetting);
 
     const flexGroup = buildGroupFlex(complaint, "ใหม่");
     const flexUser = buildUserFlex(complaint);

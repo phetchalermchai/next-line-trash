@@ -5,6 +5,8 @@ import { createComplaint } from "@/lib/complaint/service";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { ComplaintSource } from "@prisma/client";
+import { uploadImageToSupabase } from "@/lib/storage/upload-image";
+import { randomUUID } from "crypto";
 
 export async function POST(req: NextRequest) {
     try {
@@ -18,16 +20,36 @@ export async function POST(req: NextRequest) {
         }
 
         const formData = await req.formData();
-
         const description = formData.get("description")?.toString();
         const receivedBy = formData.get("receivedBy")?.toString();
         const reporterName = formData.get("reporterName")?.toString();
         const phone = formData.get("phone")?.toString();
         const location = formData.get("location")?.toString();
-        const source = formData.get("source") as ComplaintSource;
+        const sourceParam = formData.get("source")?.toString() || "PHONE";
+
+        const validSources: ComplaintSource[] = ["LINE", "FACEBOOK", "PHONE", "COUNTER", "OTHER"];
+        if (!validSources.includes(sourceParam as ComplaintSource)) {
+            return NextResponse.json({ error: "source ไม่ถูกต้อง" }, { status: 400 });
+        }
+
+        const source = sourceParam as ComplaintSource;
 
         if (!description || !receivedBy || !reporterName) {
             return NextResponse.json({ error: "ต้องมี description, receivedBy, และ reporterName" }, { status: 400 });
+        }
+
+        // ✅ รองรับการอัปโหลดรูป
+        const imageFiles = formData.getAll("imageBeforeFiles") as File[];
+        let imageBeforeUrls: string[] = [];
+
+        if (imageFiles && imageFiles.length > 0) {
+            imageBeforeUrls = await Promise.all(
+                imageFiles.map(async (file) => {
+                    const buffer = Buffer.from(await file.arrayBuffer());
+                    const filename = `complaint-${randomUUID()}.jpg`;
+                    return await uploadImageToSupabase(buffer, filename);
+                })
+            );
         }
 
         const complaint = await createComplaint({
@@ -37,6 +59,7 @@ export async function POST(req: NextRequest) {
             reporterName,
             phone,
             location,
+            imageBefore: imageBeforeUrls.join(","),
         });
 
         await notifyGroupOnly(complaint.id);

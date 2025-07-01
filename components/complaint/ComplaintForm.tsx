@@ -117,10 +117,9 @@ export default function ComplaintCreatePage() {
 
       setLoading(true);
 
-      const res = await axios.post(`/api/complaints`, form, {
+      const res = await axios.post(`/api/complaints/line`, form, {
         headers: {
           "Content-Type": "multipart/form-data",
-          "x-api-key": process.env.NEXT_PUBLIC_API_KEY || "",
         },
         onUploadProgress: (e) => {
           if (e.total) {
