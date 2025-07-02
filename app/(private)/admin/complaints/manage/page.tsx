@@ -454,7 +454,7 @@ export default function ManageComplaintsPage() {
                                 </Badge>
                             </DrawerDescription>
                         </DrawerHeader>
-                        <div className="px-4 py-2 space-y-4 text-sm overflow-y-auto max-h-screen">
+                        <div className="px-4 pt-2 pb-4 space-y-4 text-sm overflow-y-auto max-h-screen">
                             <div><strong>ID:</strong> #{viewComplaint.id.slice(-6).toUpperCase()}</div>
                             <div><strong>ชื่อผู้แจ้ง:</strong> {viewComplaint.reporterName || viewComplaint.lineUserId || "-"}</div>
                             {viewComplaint.receivedBy && (
