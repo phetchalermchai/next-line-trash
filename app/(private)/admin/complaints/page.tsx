@@ -104,7 +104,7 @@ export default function ComplaintSearchPage() {
         params.append("page", String(page));
         params.append("limit", String(limit));
         try {
-            const res = await axios.get(`api/complaints?${params.toString()}`);
+            const res = await axios.get(`/api/complaints?${params.toString()}`);
             setComplaints(res.data.items);
             setTotalPages(res.data.totalPages);
         } catch (err) {
@@ -133,7 +133,7 @@ export default function ComplaintSearchPage() {
             params.append("page", String(currentPage));
             params.append("limit", String(limit));
 
-            const res = await axios.get(`api/complaints?${params.toString()}`);
+            const res = await axios.get(`/api/complaints?${params.toString()}`);
             allItems.push(...res.data.items);
 
             if (currentPage >= res.data.totalPages) break;
@@ -164,14 +164,14 @@ export default function ComplaintSearchPage() {
         const itemToDelete = complaints.find((c) => c.id === id);
         if (!itemToDelete) return;
         try {
-            await axios.delete(`api/complaints/${id}`);
+            await axios.delete(`/api/complaints/${id}`);
             toast.success("ลบสำเร็จ", {
                 description: "รูปภาพจะไม่สามารถเรียกคืนได้",
                 action: {
                     label: "เลิกทำ",
                     onClick: async () => {
                         try {
-                            await axios.post("api/complaints/undo-delete", itemToDelete);
+                            await axios.post("/api/complaints/undo-delete", itemToDelete);
                             toast.success("เรียกคืนรายการสำเร็จ");
                             fetchData();
                         } catch (err) {
@@ -191,7 +191,7 @@ export default function ComplaintSearchPage() {
         if (!selectedIds.length) return;
         const deletedItems = complaints.filter((c) => selectedIds.includes(c.id));
         try {
-            await axios.post(`api/complaints/bulk`, {
+            await axios.post(`/api/complaints/bulk`, {
                 ids: selectedIds,
             });
 
@@ -202,7 +202,7 @@ export default function ComplaintSearchPage() {
                     onClick: async () => {
                         try {
                             for (const item of deletedItems) {
-                                await axios.post("api/complaints/undo-delete", item);
+                                await axios.post("/api/complaints/undo-delete", item);
                             }
                             toast.success("เรียกคืนข้อมูลสำเร็จ");
                             await fetchData();
@@ -245,7 +245,7 @@ export default function ComplaintSearchPage() {
         setConfirmDialogId(null);
         setLoadingNotifyId(complaint.id);
         try {
-            await axios.put(`api/webhook/line/${complaint.id}/notify-group`);
+            await axios.put(`/api/webhook/line/${complaint.id}/notify-group`);
             toast.success("แจ้งเตือนไปยังกลุ่มไลน์แล้ว");
             await fetchData();
         } catch (err) {
@@ -341,7 +341,7 @@ export default function ComplaintSearchPage() {
                     fontSize: 10,
                 },
             });
-            doc.save(getExportFilename({type: "pdf", status, dateRange, prefix: "เรื่องร้องเรียน"}));
+            doc.save(getExportFilename({ type: "pdf", status, dateRange, prefix: "เรื่องร้องเรียน" }));
             toast.success("ส่งออก PDF สำเร็จ");
         } catch (error) {
             toast.error("ส่งออก PDF ไม่สำเร็จ");

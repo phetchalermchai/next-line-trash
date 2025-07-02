@@ -2,11 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiKeyAuth } from "@/lib/middleware/api-key-auth";
 import { isValidComplaintStatus, isValidComplaintSource } from "@/lib/enum-utils";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 
 export async function GET(req: NextRequest) {
-  const authResult = await apiKeyAuth(req);
-  if (authResult instanceof NextResponse) return authResult;
+  const session = await getServerSession(authOptions);
+
+  // ✅ ถ้ามี session และ role เป็น ADMIN หรือ SUPERADMIN ให้ผ่านได้ ไม่ต้องใช้ x-api-key
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPERADMIN")) {
+    // ถ้าไม่มี session → ใช้ apiKeyAuth ตรวจสอบ
+    const authResult = await apiKeyAuth(req);
+    if (authResult instanceof NextResponse) return authResult;
+  }
   const { searchParams } = req.nextUrl;
 
   const search = searchParams.get("search") || undefined;

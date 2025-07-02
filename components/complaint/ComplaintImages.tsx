@@ -24,20 +24,22 @@ export const ComplaintImages = ({
         <div>
             <p className="text-sm font-semibold mb-2">{label}</p>
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                {images.map((url, idx) => (
-                    <div
-                        key={url}
-                        className="relative border rounded overflow-hidden aspect-square cursor-pointer group"
-                        onClick={() => openGallery(images, idx)}
-                    >
-                        <Image
-                            src={url}
-                            alt={`${label}-${idx}`}
-                            fill
-                            className="object-cover"
-                        />
-                    </div>
-                ))}
+                {images
+                    .filter((url) => url && url.trim() !== "")
+                    .map((url, idx) => (
+                        <div
+                            key={url}
+                            className="relative border rounded overflow-hidden aspect-square cursor-pointer group"
+                            onClick={() => openGallery(images, idx)}
+                        >
+                            <Image
+                                src={url}
+                                alt={`${label}-${idx}`}
+                                fill
+                                className="object-cover"
+                            />
+                        </div>
+                    ))}
             </div>
         </div>
     );
