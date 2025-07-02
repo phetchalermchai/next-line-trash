@@ -30,6 +30,7 @@ import ActionsDropdown from "@/components/complaint/ActionsDropdown";
 import { ComplaintImages } from "@/components/complaint/ComplaintImages";
 import { Label } from "@/components/ui/label";
 import dynamic from "next/dynamic";
+import EditComplaintDrawer from "@/components/complaint/EditComplaintDrawer";
 
 const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });
 
@@ -491,6 +492,18 @@ export default function ManageComplaintsPage() {
                         </div>
                     </DrawerContent>
                 </Drawer>
+            )}
+            {editComplaint && (
+                <EditComplaintDrawer
+                    complaint={editComplaint}
+                    open={!!editComplaint}
+                    onClose={() => setEditComplaint(null)}
+                    onSave={(data) => {
+                        // TODO: เรียก API แก้ไข (เช่น axios.patch(`/api/complaints/${editComplaint?.id}`, data))
+                        // จากนั้น refresh ข้อมูล หรือแก้ state ตามต้องการ
+                        setEditComplaint(null);
+                    }}
+                />
             )}
             {deleteComplaint && (
                 <Dialog open={!!deleteComplaint} onOpenChange={() => setDeleteComplaint(null)}>
