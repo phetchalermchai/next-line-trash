@@ -457,16 +457,18 @@ export default function ManageComplaintsPage() {
                         </DrawerHeader>
                         <div className="px-4 pt-2 pb-4 space-y-4 text-sm overflow-y-auto max-h-screen">
                             <div><strong>ID:</strong> #{viewComplaint.id.slice(-6).toUpperCase()}</div>
-                            <div><strong>ชื่อผู้แจ้ง:</strong> {viewComplaint.reporterName || viewComplaint.lineUserId || "-"}</div>
-                            {viewComplaint.receivedBy && (
-                                <div><strong>รับเรื่องโดย:</strong> {viewComplaint.receivedBy}</div>
-                            )}
-                            <div><strong>เบอร์โทร:</strong> {viewComplaint.phone || "-"}</div>
                             <div><strong>วันที่แจ้ง:</strong> {format(new Date(viewComplaint.createdAt), "dd/MM/yyyy HH:mm")}</div>
                             <div><strong>วันที่อัปเดต:</strong> {format(new Date(viewComplaint.updatedAt), "dd/MM/yyyy HH:mm")}</div>
                             {viewComplaint.notifiedAt && (
                                 <div><strong>วันที่แจ้งเตือน:</strong> {format(new Date(viewComplaint.notifiedAt), "dd/MM/yyyy HH:mm")}</div>
                             )}
+                            <div><strong>ชื่อผู้แจ้ง:</strong> {viewComplaint.reporterName || viewComplaint.lineUserId || "-"}</div>
+                            {viewComplaint.receivedBy && (
+                                <div><strong>รับเรื่องโดย:</strong> {viewComplaint.receivedBy}</div>
+                            )}
+                            <div><strong>เบอร์โทร:</strong> {viewComplaint.phone || "-"}</div>
+
+                            <div><strong>รายละเอียด:</strong> {viewComplaint.description}</div>
                             <div>
                                 <Label className="text-sm font-semibold mb-2">ตำแหน่งที่ตั้ง</Label>
                                 {viewComplaint.location ? (
@@ -481,7 +483,7 @@ export default function ManageComplaintsPage() {
                                     <p className="text-sm text-muted-foreground">ไม่มีพิกัดที่ตั้ง</p>
                                 )}
                             </div>
-                            <div><strong>รายละเอียด:</strong> {viewComplaint.description}</div>
+
                             {viewComplaint.message && (
                                 <div><strong>ข้อความตอบกลับ:</strong> {viewComplaint.message}</div>
                             )}
@@ -498,11 +500,41 @@ export default function ManageComplaintsPage() {
                     complaint={editComplaint}
                     open={!!editComplaint}
                     onClose={() => setEditComplaint(null)}
-                    onSave={(data) => {
-                        // TODO: เรียก API แก้ไข (เช่น axios.patch(`/api/complaints/${editComplaint?.id}`, data))
-                        // จากนั้น refresh ข้อมูล หรือแก้ state ตามต้องการ
-                        setEditComplaint(null);
+                    onSave={async (data: Record<string, any>) => {
+                        if (!editComplaint) return;
+                        const formData = new FormData();
+
+                        // รวมข้อมูลไฟล์และ URL
+                        Object.entries(data).forEach(([key, value]) => {
+                            if (key === "imageBeforeFiles" || key === "imageAfterFiles") {
+                                (value as File[]).forEach((file) => {
+                                    formData.append(key, file);
+                                });
+                            } else if (value !== undefined && value !== null) {
+                                formData.append(key, String(value));
+                            }
+                        });
+
+                        // imageBefore และ imageAfter จะมาจาก data.imageBeforeUrls.join(',') และ data.imageAfterUrls.join(',') ที่จัดการแล้วใน handleSubmit()
+                        const logFormData = (formData: FormData) => {
+                            for (const [key, value] of formData.entries()) {
+                                console.log(`🟢 formData: ${key}`, value);
+                            }
+                        };
+
+                        logFormData(formData);
+
+                        try {
+                            await axios.patch(`/api/complaints/${editComplaint.id}`, formData);
+                            toast.success("อัปเดตข้อมูลสำเร็จ");
+                            refreshComplaints();
+                            setEditComplaint(null);
+                        } catch (error) {
+                            console.error("[PATCH Complaint] Error:", error);
+                            toast.error("เกิดข้อผิดพลาดในการอัปเดตข้อมูล");
+                        }
                     }}
+
                 />
             )}
             {deleteComplaint && (

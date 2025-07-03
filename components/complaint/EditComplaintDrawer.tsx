@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
@@ -29,9 +29,10 @@ export default function EditComplaintDrawer({ complaint, open, onClose, onSave }
         reporterName: complaint?.reporterName || "",
         receivedBy: complaint?.receivedBy || "",
         phone: complaint?.phone || "",
+        source: (complaint?.source ?? "") as Complaint["source"],
         description: complaint?.description || "",
         message: complaint?.message || "",
-        status: complaint?.status || "PENDING",
+        status: (complaint?.status ?? "PENDING") as Complaint["status"],
         location: complaint?.location || "",
     });
 
@@ -50,45 +51,90 @@ export default function EditComplaintDrawer({ complaint, open, onClose, onSave }
     };
 
     const handleSubmit = () => {
-        onSave(formData);
-        toast.success("อัปเดตข้อมูลสำเร็จ");
+        if (!formData.phone?.trim()) {
+            toast.error("กรุณากรอกเบอร์โทร");
+            return;
+        }
+
+        if (!formData.description?.trim()) {
+            toast.error("กรุณากรอกรายละเอียด");
+            return;
+        }
+
+        if (!formData.status) {
+            toast.error("กรุณาเลือกสถานะ");
+            return;
+        }
+        onSave({
+            ...formData,
+            imageBefore: imageBeforeUrls.join(","),
+            imageAfter: imageAfterUrls.join(","),
+            imageBeforeFiles: imageFiles.imageBefore,
+            imageAfterFiles: imageFiles.imageAfter,
+        } as Partial<Record<string, any>>);
         onClose();
     };
 
+    useEffect(() => {
+        if (complaint) {
+            const before = complaint.imageBefore ? complaint.imageBefore.split(",").map(u => u.trim()) : [];
+            const after = complaint.imageAfter ? complaint.imageAfter.split(",").map(u => u.trim()) : [];
+
+            setImageBeforeUrls(before);
+            setImageAfterUrls(after);
+        }
+    }, [complaint]);
+
     return (
         <Drawer open={open} onOpenChange={onClose} direction={isMobile ? "bottom" : "right"}>
-            <DrawerContent className="overflow-y-auto max-h-screen p-4 space-y-4">
+            <DrawerContent>
                 <DrawerHeader>
                     <DrawerTitle>แก้ไขเรื่องร้องเรียน</DrawerTitle>
                 </DrawerHeader>
 
-                <div className="space-y-4">
-                    <div>
+                <div className="px-4 pt-2 pb-4 space-y-4 text-sm overflow-y-auto max-h-screen">
+                    <div className="flex flex-col gap-2" >
                         <Label>ชื่อผู้ร้องเรียน</Label>
                         <Input name="reporterName" value={formData.reporterName as string} onChange={handleChange} placeholder="ชื่อผู้ร้องเรียน" />
                     </div>
 
-                    <div>
+                    <div className="flex flex-col gap-2" >
                         <Label>รับเรื่องโดย</Label>
                         <Input name="receivedBy" value={formData.receivedBy} onChange={handleChange} placeholder="เจ้าหน้าที่รับเรื่อง" />
                     </div>
 
-                    <div>
+                    <div className="flex flex-col gap-2" >
                         <Label>เบอร์โทร</Label>
                         <Input name="phone" value={formData.phone} onChange={handleChange} placeholder="เบอร์โทร" />
                     </div>
 
-                    <div>
+                    <div className="flex flex-col gap-2">
+                        <Label>ช่องทาง</Label>
+                        <Select value={formData.source} onValueChange={(v) => setFormData((prev) => ({ ...prev, source: v as Complaint["source"] }))}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="เลือกช่องทาง" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="LINE">LINE</SelectItem>
+                                <SelectItem value="FACEBOOK">FACEBOOK</SelectItem>
+                                <SelectItem value="PHONE">PHONE</SelectItem>
+                                <SelectItem value="COUNTER">COUNTER</SelectItem>
+                                <SelectItem value="OTHER">OTHER</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="flex flex-col gap-2" >
                         <Label>รายละเอียด</Label>
                         <Textarea name="description" value={formData.description} onChange={handleChange} placeholder="รายละเอียดเรื่องร้องเรียน" />
                     </div>
 
-                    <div>
+                    <div className="flex flex-col gap-2" >
                         <Label>สรุปผล</Label>
                         <Textarea name="message" value={formData.message} onChange={handleChange} placeholder="ข้อความตอบกลับ / สรุปผล" />
                     </div>
 
-                    <div>
+                    <div className="flex flex-col gap-2" >
                         <Label>สถานะ</Label>
                         <Select value={formData.status} onValueChange={(v) => setFormData((prev) => ({ ...prev, status: v as "PENDING" | "DONE" }))}>
                             <SelectTrigger>
@@ -169,16 +215,16 @@ export default function EditComplaintDrawer({ complaint, open, onClose, onSave }
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-2 mt-4">
-                    <Button variant="outline" onClick={onClose}>ยกเลิก</Button>
-                    <Button onClick={handleSubmit}>บันทึก</Button>
+                <div className="flex justify-end gap-2 mt-4 p-4">
+                    <Button className="cursor-pointer" variant="outline" onClick={onClose}>ยกเลิก</Button>
+                    <Button className="cursor-pointer" onClick={handleSubmit}>บันทึก</Button>
                 </div>
 
                 {cropImage && onCropDone && (
                     <ImageCropperModal
-                        imageFile={cropImage}
+                        file={cropImage}
                         onClose={() => setCropImage(null)}
-                        onCrop={(file) => {
+                        onDone={(file) => {
                             onCropDone(file);
                             setCropImage(null);
                         }}

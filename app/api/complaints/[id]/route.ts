@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiKeyAuth } from "@/lib/middleware/api-key-auth";
 import { findComplaintById, updateComplaint, deleteComplaint } from "@/lib/complaint/service";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+
 
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  // const authResult = await apiKeyAuth(req);
-  // if (authResult instanceof NextResponse) return authResult;
-
   const complaint = await findComplaintById(id);
 
   if (!complaint) {
@@ -19,8 +19,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const authResult = await apiKeyAuth(req);
-  if (authResult instanceof NextResponse) return authResult;
+  const session = await getServerSession(authOptions);
+
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPERADMIN")) {
+    const authResult = await apiKeyAuth(req);
+    if (authResult instanceof NextResponse) return authResult;
+  }
 
   const formData = await req.formData();
   const data: Record<string, FormDataEntryValue> = {};
@@ -30,6 +34,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const imageBeforeFiles = formData.getAll("imageBeforeFiles") as File[];
   const imageAfterFiles = formData.getAll("imageAfterFiles") as File[];
+
+  if (imageBeforeFiles.length > 5) {
+    return NextResponse.json({ error: "อัปโหลดภาพก่อนสูงสุดได้ไม่เกิน 5 ไฟล์" }, { status: 400 });
+  }
+  if (imageAfterFiles.length > 5) {
+    return NextResponse.json({ error: "อัปโหลดภาพหลังสูงสุดได้ไม่เกิน 5 ไฟล์" }, { status: 400 });
+  }
 
   try {
     const updated = await updateComplaint(id, data, {
@@ -45,8 +56,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const authResult = await apiKeyAuth(req);
-  if (authResult instanceof NextResponse) return authResult;
+  const session = await getServerSession(authOptions);
+
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPERADMIN")) {
+    const authResult = await apiKeyAuth(req);
+    if (authResult instanceof NextResponse) return authResult;
+  }
 
   try {
     const success = await deleteComplaint(id);

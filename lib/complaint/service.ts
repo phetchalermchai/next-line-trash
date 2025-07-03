@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ComplaintStatus, ComplaintSource } from "@prisma/client";
 import { uploadImageToSupabase } from "@/lib/storage/upload-image";
+import { deleteImageFromSupabase } from "../storage/deleted-image";
 
 export async function createComplaint(data: {
   source: ComplaintSource;
@@ -35,27 +36,15 @@ export async function findComplaintById(id: string) {
 
 export async function updateComplaint(id: string, data: any, files: { imageBeforeFiles?: File[]; imageAfterFiles?: File[] }) {
   const found = await prisma.complaint.findUnique({ where: { id } });
-  if (!found) throw new Error(`ไม่พบรายการร้องเรียนที่มี ID: ${id}`);
+  if (!found) throw new Error("Complaint not found");
 
-  const updateData: any = {
-    source: data.source as ComplaintSource,
-    receivedBy: (data.receivedBy ?? "").trim(),
-    reporterName: (data.reporterName ?? "").trim(),
-    phone: data.phone,
-    description: data.description,
-    message: (data.message ?? "").trim(),
-    status: data.status as ComplaintStatus,
-    location: data.location,
-    updatedAt: new Date(),
-  };
-
-  async function handleImageUpdate(field: "imageBefore" | "imageAfter", uploadFiles?: File[], oldValue?: string | null) {
+  const handleImageUpdate = async (field: "imageBefore" | "imageAfter", files?: File[], oldValue?: string | null) => {
     const oldUrls = oldValue?.split(",") ?? [];
-    const keepUrls = (data[field]?.split(",") ?? []).map((s: string) => s.trim()).filter((url: string) => url && oldUrls.includes(url));
+    const keepUrls = (data[field]?.toString().split(",") ?? []).map((s:string) => s.trim()).filter((url:string) => url && oldUrls.includes(url));
 
     const uploadedUrls: string[] = [];
-    if (uploadFiles?.length) {
-      for (const file of uploadFiles) {
+    if (files?.length) {
+      for (const file of files) {
         const buffer = Buffer.from(await file.arrayBuffer());
         const filename = `${field}-${id}-${crypto.randomUUID()}.jpg`;
         const url = await uploadImageToSupabase(buffer, filename);
@@ -65,14 +54,29 @@ export async function updateComplaint(id: string, data: any, files: { imageBefor
 
     const deleteUrls = oldUrls.filter((url) => !keepUrls.includes(url));
     for (const url of deleteUrls) {
-      // TODO: ลบไฟล์จาก Supabase ถ้ามี logic
+      try {
+        if (url) await deleteImageFromSupabase(url);
+      } catch (err) {
+        console.warn(`[deleteImageFromSupabase] Warning: Could not delete ${url}`, err);
+      }
     }
 
     return [...keepUrls, ...uploadedUrls].filter(Boolean).join(",");
-  }
+  };
 
-  updateData.imageBefore = await handleImageUpdate("imageBefore", files.imageBeforeFiles, found.imageBefore);
-  updateData.imageAfter = await handleImageUpdate("imageAfter", files.imageAfterFiles, found.imageAfter);
+  const updateData = {
+    source: data.source,
+    receivedBy: data.receivedBy,
+    reporterName: data.reporterName,
+    phone: data.phone,
+    description: data.description,
+    message: data.message,
+    status: data.status,
+    location: data.location,
+    updatedAt: new Date(),
+    imageBefore: await handleImageUpdate("imageBefore", files.imageBeforeFiles, found.imageBefore),
+    imageAfter: await handleImageUpdate("imageAfter", files.imageAfterFiles, found.imageAfter),
+  };
 
   return prisma.complaint.update({ where: { id }, data: updateData });
 }
@@ -88,7 +92,7 @@ export async function deleteComplaint(id: string): Promise<boolean> {
 
   for (const url of allImageUrls) {
     try {
-      // TODO: ลบไฟล์จาก Supabase ถ้ามี logic
+      await deleteImageFromSupabase(url);
     } catch (err) {
       console.error("ลบภาพล้มเหลว:", url, err);
     }

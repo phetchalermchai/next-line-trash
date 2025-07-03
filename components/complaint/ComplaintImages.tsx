@@ -20,17 +20,18 @@ export const ComplaintImages = ({
         setModalOpen(true);
     };
 
-    const renderImageGrid = (images: string[], label: string) => (
-        <div>
-            <p className="text-sm font-semibold mb-2">{label}</p>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                {images
-                    .filter((url) => url && url.trim() !== "")
-                    .map((url, idx) => (
+    const renderImageGrid = (images: string[], label: string) => {
+        const validImages = images.filter((url) => url && url.trim() !== "");
+        if (validImages.length === 0) return null;
+        return (
+            <div>
+                <p className="text-sm font-semibold mb-2">{label}</p>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                    {validImages.map((url, idx) => (
                         <div
                             key={url}
                             className="relative border rounded overflow-hidden aspect-square cursor-pointer group"
-                            onClick={() => openGallery(images, idx)}
+                            onClick={() => openGallery(validImages, idx)}
                         >
                             <Image
                                 src={url}
@@ -40,18 +41,15 @@ export const ComplaintImages = ({
                             />
                         </div>
                     ))}
+                </div>
             </div>
-        </div>
-    );
+        )
+    };
 
     return (
         <div className="space-y-6">
-            {/* BEFORE Images */}
-            {imageBefore.length > 0 && renderImageGrid(imageBefore, "ภาพก่อน")}
-
-            {/* AFTER Images */}
-            {imageAfter.length > 0 && renderImageGrid(imageAfter, "ภาพหลัง")}
-
+            {renderImageGrid(imageBefore, "ภาพก่อน")}
+            {renderImageGrid(imageAfter, "ภาพหลัง")}
             {/* Modal */}
             {modalOpen && (
                 <ImageGalleryModal
