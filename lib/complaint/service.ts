@@ -40,7 +40,7 @@ export async function updateComplaint(id: string, data: any, files: { imageBefor
 
   const handleImageUpdate = async (field: "imageBefore" | "imageAfter", files?: File[], oldValue?: string | null) => {
     const oldUrls = oldValue?.split(",") ?? [];
-    const keepUrls = (data[field]?.toString().split(",") ?? []).map((s:string) => s.trim()).filter((url:string) => url && oldUrls.includes(url));
+    const keepUrls = (data[field]?.toString().split(",") ?? []).map((s: string) => s.trim()).filter((url: string) => url && oldUrls.includes(url));
 
     const uploadedUrls: string[] = [];
     if (files?.length) {
@@ -91,6 +91,7 @@ export async function deleteComplaint(id: string): Promise<boolean> {
   ];
 
   for (const url of allImageUrls) {
+    if (!url) continue;
     try {
       await deleteImageFromSupabase(url);
     } catch (err) {

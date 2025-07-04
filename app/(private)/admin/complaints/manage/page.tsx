@@ -53,6 +53,7 @@ export default function ManageComplaintsPage() {
     const [viewComplaint, setViewComplaint] = React.useState<Complaint | null>(null);
     const [deleteComplaint, setDeleteComplaint] = React.useState<Complaint | null>(null);
     const [editComplaint, setEditComplaint] = React.useState<Complaint | null>(null);
+    const [openDeleteAllDialog, setOpenDeleteAllDialog] = React.useState<boolean>(false);
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [loadingFetch, setLoadingFetch] = React.useState(false);
     const [loadingExport, setLoadingExport] = React.useState(false);
@@ -97,8 +98,22 @@ export default function ManageComplaintsPage() {
 
         setIsDeleting(true);
         try {
+            const deletedItems = complaints.filter(c => selectedIds.includes(c.id));
             await Promise.all(selectedIds.map(id => axios.delete(`/api/complaints/${id}`)));
-            toast.success("ลบเรื่องร้องเรียนที่เลือกสำเร็จ");
+            toast.success("ลบเรื่องร้องเรียนที่เลือกสำเร็จ", {
+                action: {
+                    label: "เลิกทำ",
+                    onClick: async () => {
+                        try {
+                            await axios.post("/api/complaints/undo-delete", deletedItems);
+                            toast.success("กู้คืนสำเร็จ");
+                            refreshComplaints();
+                        } catch {
+                            toast.error("ไม่สามารถเลิกทำได้");
+                        }
+                    },
+                },
+            });
             setSelectedIds([]);
             refreshComplaints();
         } catch (error) {
@@ -207,11 +222,27 @@ export default function ManageComplaintsPage() {
         if (!deleteComplaint || isDeleting) return;
         setIsDeleting(true);
         try {
+            const backup = { ...deleteComplaint };
             await axios.delete(`/api/complaints/${deleteComplaint.id}`);
-            toast.success("ลบเรื่องร้องเรียนสำเร็จ");
+            toast.success("ลบสำเร็จ", {
+                description: "รูปภาพจะไม่สามารถเรียกคืนได้",
+                action: {
+                    label: "เลิกทำ",
+                    onClick: async () => {
+                        try {
+                            await axios.post("/api/complaints/undo-delete", backup);
+                            toast.success("เรียกคืนสำเร็จ");
+                            refreshComplaints();
+                        } catch (err) {
+                            console.error("[UNDO DELETE] Error:", err);
+                            toast.error("ไม่สามารถเลิกทำได้");
+                        }
+                    },
+                },
+            });
             refreshComplaints();
         } catch (error) {
-            console.error(error);
+            console.error("[DELETE Complaint] Error:", error);
             toast.error("เกิดข้อผิดพลาดในการลบ");
         } finally {
             setIsDeleting(false);
@@ -344,9 +375,21 @@ export default function ManageComplaintsPage() {
                 </div>
             </div>
             <div className="flex flex-wrap gap-2 items-center">
-                <Button className="cursor-pointer" variant="destructive" disabled={selectedIds.length === 0 || isDeleting} onClick={handleDeleteSelected}>
+                <Button className="cursor-pointer" variant="destructive" disabled={selectedIds.length === 0 || isDeleting} onClick={() => setOpenDeleteAllDialog(true)}>
                     {isDeleting && <Loader2 className="w-4 h-4 animate-spin mr-2" />} ลบทั้งหมด
                 </Button>
+                <Dialog open={openDeleteAllDialog} onOpenChange={setOpenDeleteAllDialog}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>ยืนยันการลบหลายรายการ</DialogTitle>
+                            <p>คุณแน่ใจหรือไม่ว่าต้องการลบรายการที่เลือกทั้งหมด? การกระทำนี้ไม่สามารถย้อนกลับได้</p>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setOpenDeleteAllDialog(false)}>ยกเลิก</Button>
+                            <Button variant="destructive" onClick={handleDeleteSelected}>ยืนยันลบ</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
                 <Button className="cursor-pointer" onClick={handleExportExcel} disabled={loadingExport}>
                     {loadingExport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}Excel
                 </Button>
@@ -545,8 +588,8 @@ export default function ManageComplaintsPage() {
                             <p>คุณต้องการลบเรื่องร้องเรียน <strong>#{deleteComplaint.id.slice(-6).toUpperCase()}</strong> หรือไม่?</p>
                         </DialogHeader>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setDeleteComplaint(null)}>ยกเลิก</Button>
-                            <Button variant="destructive" disabled={isDeleting} onClick={handleConfirmDeleteComplaint}>
+                            <Button className="cursor-pointer" variant="outline" onClick={() => setDeleteComplaint(null)}>ยกเลิก</Button>
+                            <Button className="cursor-pointer" variant="destructive" disabled={isDeleting} onClick={handleConfirmDeleteComplaint}>
                                 {isDeleting && <Loader2 className="w-4 h-4 animate-spin mr-2" />} ลบ
                             </Button>
                         </DialogFooter>
