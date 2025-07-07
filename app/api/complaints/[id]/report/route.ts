@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { apiKeyAuth } from "@/lib/middleware/api-key-auth";
 import { uploadImageToSupabase } from "@/lib/storage/upload-image";
+import { notifyReportResultToGroup, notifyReportResultToUser } from "@/lib/line/notify";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -29,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const uploadedUrls: string[] = [];
     for (const file of imageAfterFiles) {
       const buffer = Buffer.from(await file.arrayBuffer());
-      const filename = `after-${id}-${Date.now()}-${file.name}`;
+      const filename = `after-${id}-${Date.now()}`;
       const url = await uploadImageToSupabase(buffer, filename);
       uploadedUrls.push(url);
     }
@@ -44,7 +45,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       updateData.imageAfter = [...(found.imageAfter?.split(",") || []), ...uploadedUrls].join(",");
     }
 
+    const cleanedUrls = [...(found.imageAfter?.split(",") || []), ...uploadedUrls]
+      .map((url) => url.trim())
+      .filter((url) => url && url !== "")
+      .join(",");
+
+    updateData.imageAfter = cleanedUrls;
+
     const updated = await prisma.complaint.update({ where: { id }, data: updateData });
+
+    await notifyReportResultToGroup(id, message);
+    if (updated.lineUserId) {
+      await notifyReportResultToUser(id, message);
+    }
     return NextResponse.json(updated);
   } catch (error: any) {
     console.error("[REPORT Complaint] Error:", error);

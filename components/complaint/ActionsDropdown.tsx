@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Trash2, MoreVertical } from "lucide-react";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { Complaint } from "@/types/complaint";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 interface ActionsDropdownProps {
     complaint: Complaint;
@@ -25,28 +26,48 @@ export default function ActionsDropdown({ complaint, onView, onEdit, onDelete }:
     if (isMobile) {
         return (
             <div className="flex gap-2">
-                <Button className="cursor-pointer" size="icon" variant="outline" onClick={() => onView(complaint)}>
-                    <Eye className="w-4 h-4" />
-                </Button>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button className="cursor-pointer" size="icon" variant="ghost" onClick={() => onView(complaint)}>
+                            <Eye className="w-4 h-4  text-violet-600 dark:text-violet-400" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>ดูรายละเอียด</TooltipContent>
+                </Tooltip>
                 {onEdit && (
-                    <Button className="cursor-pointer" size="icon" variant="outline" onClick={() => onEdit(complaint)}>
-                        <Pencil className="w-4 h-4" />
-                    </Button>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button className="cursor-pointer" size="icon" variant="ghost" onClick={() => onEdit(complaint)}>
+                                <Pencil className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>แก้ไขเรื่องร้องเรียน</TooltipContent>
+                    </Tooltip>
                 )}
-                <Button className="cursor-pointer" size="icon" variant="destructive" onClick={() => onDelete(complaint)}>
-                    <Trash2 className="w-4 h-4" />
-                </Button>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button className="cursor-pointer" size="icon" variant="ghost" onClick={() => onDelete(complaint)}>
+                            <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>ลบเรื่องร้องเรียน</TooltipContent>
+                </Tooltip>
             </div>
         );
     }
 
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button className="cursor-pointer" size="icon" variant="outline">
-                    <MoreVertical className="w-4 h-4" />
-                </Button>
-            </DropdownMenuTrigger>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                        <Button className="cursor-pointer" size="icon" variant="ghost">
+                            <MoreVertical className="w-4 h-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent>เมนูเพิ่มเติม</TooltipContent>
+            </Tooltip>
             <DropdownMenuContent align="end">
                 <DropdownMenuItem className="cursor-pointer" onClick={() => onView(complaint)}>
                     รายละเอียด

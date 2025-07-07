@@ -45,6 +45,40 @@ export async function notifyGroupOnly(id: string) {
   }
 }
 
+export async function notifyReportResultToGroup(id: string, message: string) {
+  try {
+    const complaint = await prisma.complaint.findUnique({ where: { id } });
+    if (!complaint) throw new Error("Complaint not found");
+
+    const groupSetting = await getSettingByKey("LINE_GROUP_ID");
+    const tokenSetting = await getSettingByKey("LINE_ACCESS_TOKEN");
+    if (!groupSetting || !tokenSetting) throw new Error("LINE_GROUP_ID หรือ LINE_ACCESS_TOKEN ไม่พบใน DB");
+
+    const flexGroup = buildGroupFlexReport(complaint, message);
+    await pushMessageToGroup(groupSetting.value, [flexGroup], tokenSetting.value);
+  } catch (error) {
+    console.error("[notifyReportResultToGroup] Error:", error);
+    throw error;
+  }
+}
+
+export async function notifyReportResultToUser(id: string, message: string) {
+  try {
+    const complaint = await prisma.complaint.findUnique({ where: { id } });
+    if (!complaint) throw new Error("Complaint not found");
+    if (!complaint.lineUserId) throw new Error("Missing lineUserId");
+
+    const tokenSetting = await getSettingByKey("LINE_ACCESS_TOKEN");
+    if (!tokenSetting) throw new Error("LINE_ACCESS_TOKEN ไม่พบใน DB");
+
+    const flexUser = buildUserFlexReport(complaint, message);
+    await pushMessageToUser(complaint.lineUserId, [flexUser], tokenSetting.value);
+  } catch (error) {
+    console.error("[notifyReportResultToUser] Error:", error);
+    throw error;
+  }
+}
+
 async function pushMessageToGroup(groupId: string, messages: any[], token: string) {
   await axios.post(
     "https://api.line.me/v2/bot/message/push",
@@ -567,4 +601,408 @@ function buildUserFlex(c: Complaint) {
       }
     }
   };
+}
+
+function buildUserFlexReport(c: Complaint, message: string) {
+  const mapUrl = c.location
+    ? `https://www.google.com/maps/search/?api=1&query=${c.location}`
+    : "https://www.google.com/maps";
+  return {
+    type: "flex",
+    altText: "📮 ผลการดำเนินงานของคุณ",
+    contents: {
+      type: "bubble",
+      body: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "image",
+            url: "https://upload.wikimedia.org/wikipedia/commons/f/f6/Seal_of_Nonthaburi.jpg",
+            size: "sm"
+          },
+          {
+            type: "text",
+            text: "เรื่องร้องเรียน (เสร็จสิ้น)",
+            weight: "bold",
+            size: "lg",
+            align: "center",
+            margin: "lg"
+          },
+          {
+            type: "text",
+            text: `รหัสอ้างอิง: #${c.id.slice(-6).toUpperCase()}`,
+            size: "sm",
+            weight: "bold",
+            align: "center",
+            margin: "lg"
+          },
+          {
+            type: "text",
+            text: `${new Date(c.updatedAt || c.createdAt).toLocaleString("th-TH", {
+              timeZone: "Asia/Bangkok",
+              year: "numeric",
+              month: "long",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false
+            })} น.`,
+            size: "xs",
+            align: "center",
+            color: "#aaaaaa"
+          },
+          {
+            type: "separator",
+            margin: "lg"
+          },
+          {
+            type: "box",
+            layout: "vertical",
+            margin: "lg",
+            spacing: "sm",
+            contents: [
+              {
+                type: "box",
+                layout: "baseline",
+                spacing: "sm",
+                contents: [
+                  { type: "text", text: "ผู้แจ้ง", color: "#aaaaaa", size: "sm", flex: 2 },
+                  { type: "text", text: c.reporterName, color: "#666666", size: "sm", wrap: true, flex: 5 }
+                ]
+              },
+              {
+                type: "box",
+                layout: "baseline",
+                spacing: "sm",
+                contents: [
+                  { type: "text", text: "เบอร์", color: "#aaaaaa", size: "sm", flex: 2 },
+                  { type: "text", text: c.phone || "ไม่ระบุ", color: "#666666", size: "sm", wrap: true, flex: 5 }
+                ]
+              },
+              {
+                type: "box",
+                layout: "baseline",
+                spacing: "sm",
+                contents: [
+                  { type: "text", text: "รายละเอียด", color: "#aaaaaa", size: "sm", flex: 2 },
+                  { type: "text", text: c.description, color: "#666666", size: "sm", wrap: true, flex: 5 }
+                ]
+              },
+              {
+                type: "box",
+                layout: "baseline",
+                contents: [
+                  { type: "text", text: "พิกัด", size: "sm", color: "#aaaaaa", flex: 2 },
+                  {
+                    type: "text",
+                    text: "เปิดใน Google Maps",
+                    size: "sm",
+                    color: "#155dfc",
+                    flex: 5,
+                    action: {
+                      type: "uri",
+                      label: "map",
+                      uri: mapUrl,
+                      altUri: {
+                        desktop: mapUrl
+                      }
+                    },
+                    decoration: "underline"
+                  }
+                ]
+              },
+              {
+                type: "box",
+                layout: "baseline",
+                contents: [
+                  { type: "text", text: "สถานะ", size: "sm", color: "#aaaaaa", flex: 2 },
+                  {
+                    type: "text",
+                    text: "เสร็จสิ้น",
+                    size: "sm",
+                    color: "#3bb273",
+                    weight: "bold",
+                    flex: 5
+                  }
+                ]
+              },
+              {
+                type: "box",
+                layout: "baseline",
+                contents: [
+                  { type: "text", text: "สรุปผล", size: "sm", color: "#aaaaaa", flex: 2 },
+                  {
+                    type: "text",
+                    text: message || "ไม่ระบุ",
+                    size: "sm",
+                    color: "#666666",
+                    wrap: true,
+                    flex: 5
+                  }
+                ]
+              }
+            ]
+          },
+          { type: "separator", margin: "md" },
+          {
+            type: "text",
+            text: "เรื่องร้องเรียนของคุณได้รับการดำเนินการแล้ว",
+            weight: "bold",
+            align: "center",
+            wrap: true,
+            margin: "lg"
+          }
+        ]
+      },
+      footer: {
+        type: "box",
+        layout: "vertical",
+        spacing: "sm",
+        contents: [
+          {
+            type: "button",
+            style: "primary",
+            height: "sm",
+            action: {
+              type: "uri",
+              label: "ดูรายละเอียด",
+              uri: `${process.env.WEB_BASE_URL}/complaints/${c.id}`
+            }
+          }
+        ],
+        flex: 0
+      }
+    }
+  }
+}
+
+function buildGroupFlexReport(c: Complaint, message: string) {
+  const mapUrl = c.location
+    ? `https://www.google.com/maps/search/?api=1&query=${c.location}`
+    : "https://www.google.com/maps";
+
+  const sourceColor: Record<ComplaintSource, string> = {
+    LINE: "#00c300",
+    FACEBOOK: "#1877f2",
+    PHONE: "#f59e0b",
+    COUNTER: "#9333ea",
+    OTHER: "#6b7280",
+  };
+
+  const isLine = c.source === "LINE";
+
+  return {
+    type: "flex",
+    altText: `📌 เรื่อง ID ${c.id.slice(0, 8)}... ดำเนินการเสร็จแล้ว`,
+    contents: {
+      type: "bubble",
+      body: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "image",
+            url: "https://upload.wikimedia.org/wikipedia/commons/f/f6/Seal_of_Nonthaburi.jpg",
+            size: "sm"
+          },
+          {
+            type: "text",
+            text: "เรื่องร้องเรียน (เสร็จสิ้น)",
+            weight: "bold",
+            size: "lg",
+            align: "center",
+            margin: "lg"
+          },
+          {
+            type: "box",
+            layout: "baseline",
+            spacing: "sm",
+            contents: [
+              {
+                type: "text",
+                text: "ช่องทาง:",
+                color: "#aaaaaa",
+                size: "sm",
+                flex: 0
+              },
+              {
+                type: "text",
+                text: c.source,
+                color: sourceColor[c.source],
+                size: "sm",
+                margin: "sm",
+                flex: 0,
+                weight: "bold"
+              }
+            ],
+            justifyContent: "center",
+            alignItems: "center"
+          },
+          {
+            type: "text",
+            text: `รหัสอ้างอิง: #${c.id.slice(-6).toUpperCase()}`,
+            size: "sm",
+            weight: "bold",
+            align: "center",
+            margin: "lg"
+          },
+          {
+            type: "text",
+            text: `${new Date(c.updatedAt || c.createdAt).toLocaleString("th-TH", {
+              timeZone: "Asia/Bangkok",
+              year: "numeric",
+              month: "long",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false
+            })} น.`,
+            size: "xs",
+            align: "center",
+            color: "#aaaaaa"
+          },
+          {
+            type: "separator",
+            margin: "lg"
+          },
+          {
+            type: "box",
+            layout: "vertical",
+            margin: "lg",
+            spacing: "sm",
+            contents: [
+              {
+                type: "box",
+                layout: "baseline",
+                spacing: "sm",
+                contents: [
+                  { type: "text", text: "ผู้แจ้ง", color: "#aaaaaa", size: "sm", flex: 2 },
+                  { type: "text", text: c.reporterName || c.lineUserId, color: "#666666", size: "sm", wrap: true, flex: 5 }
+                ]
+              },
+              !isLine && c.receivedBy && {
+                type: "box",
+                layout: "baseline",
+                spacing: "sm",
+                contents: [
+                  {
+                    type: "text",
+                    text: "ผู้รับแจ้ง",
+                    color: "#aaaaaa",
+                    size: "sm",
+                    flex: 2
+                  },
+                  {
+                    type: "text",
+                    text: c.receivedBy,
+                    wrap: true,
+                    color: "#666666",
+                    size: "sm",
+                    flex: 5
+                  }
+                ]
+              },
+              {
+                type: "box",
+                layout: "baseline",
+                spacing: "sm",
+                contents: [
+                  { type: "text", text: "เบอร์", color: "#aaaaaa", size: "sm", flex: 2 },
+                  { type: "text", text: c.phone || "ไม่ระบุ", color: "#666666", size: "sm", wrap: true, flex: 5 }
+                ]
+              },
+              {
+                type: "box",
+                layout: "baseline",
+                spacing: "sm",
+                contents: [
+                  { type: "text", text: "รายละเอียด", color: "#aaaaaa", size: "sm", flex: 2 },
+                  { type: "text", text: c.description, color: "#666666", size: "sm", wrap: true, flex: 5 }
+                ]
+              },
+              {
+                type: "box",
+                layout: "baseline",
+                contents: [
+                  { type: "text", text: "พิกัด", size: "sm", color: "#aaaaaa", flex: 2 },
+                  {
+                    type: "text",
+                    text: "เปิดใน Google Maps",
+                    size: "sm",
+                    color: "#155dfc",
+                    flex: 5,
+                    action: {
+                      type: "uri",
+                      label: "action",
+                      uri: mapUrl,
+                      altUri: { desktop: mapUrl }
+                    },
+                    decoration: "underline"
+                  }
+                ]
+              },
+              {
+                type: "box",
+                layout: "baseline",
+                contents: [
+                  { type: "text", text: "สถานะ", size: "sm", color: "#aaaaaa", flex: 2 },
+                  {
+                    type: "text",
+                    text: "เสร็จสิ้น",
+                    size: "sm",
+                    color: "#3bb273",
+                    weight: "bold",
+                    flex: 5
+                  }
+                ]
+              },
+              {
+                type: "box",
+                layout: "baseline",
+                contents: [
+                  { type: "text", text: "สรุปผล", size: "sm", color: "#aaaaaa", flex: 2 },
+                  {
+                    type: "text",
+                    text: message || "ไม่ระบุ",
+                    size: "sm",
+                    color: "#666666",
+                    wrap: true,
+                    flex: 5
+                  }
+                ]
+              },
+            ]
+          },
+          { type: "separator", margin: "md" },
+          {
+            type: "text",
+            text: "เรื่องร้องเรียนนี้ได้รับการดำเนินการแล้ว",
+            wrap: true,
+            weight: "bold",
+            align: "center",
+            margin: "xl"
+          }
+        ]
+      },
+      footer: {
+        type: "box",
+        layout: "vertical",
+        spacing: "sm",
+        contents: [
+          {
+            type: "button",
+            style: "primary",
+            height: "sm",
+            action: {
+              type: "uri",
+              label: "ดูรายละเอียด",
+              uri: `${process.env.WEB_BASE_URL}/complaints/${c.id}`
+            }
+          }
+        ],
+        flex: 0
+      }
+    }
+  }
 }

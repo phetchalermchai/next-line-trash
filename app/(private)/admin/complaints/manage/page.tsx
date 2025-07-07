@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Complaint } from "@/types/complaint";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
-import { Loader2, Download } from "lucide-react";
+import { Loader2, Download, ClipboardCheck } from "lucide-react";
 import { DatePickerWithRange } from "@/components/complaint/DatePickerWithRange";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import dynamic from "next/dynamic";
 import EditComplaintDrawer from "@/components/complaint/EditComplaintDrawer";
 import ReportComplaintDrawer from "@/components/complaint/ReportComplaintDrawer";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });
 
@@ -166,19 +167,42 @@ export default function ManageComplaintsPage() {
                 header: "การจัดการ",
                 cell: ({ row }) => (
                     <div className="flex gap-2">
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <span className={row.original.status === "DONE" ? "cursor-not-allowed" : "cursor-pointer"}>
+                                    {row.original.status === "DONE" ? (
+                                        <Button
+                                            className="cursor-not-allowed"
+                                            variant="ghost"
+                                            size="icon"
+                                            disabled
+                                        >
+                                            <ClipboardCheck className="w-4 h-4 text-green-600 dark:text-green-300" />
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            className="cursor-pointer"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => setReportComplaint(row.original)}
+                                        >
+                                            <ClipboardCheck className="w-4 h-4 text-green-600 dark:text-green-300" />
+                                        </Button>
+                                    )}
+                                </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {row.original.status === "DONE"
+                                    ? "รายงานผลเสร็จสิ้นแล้ว"
+                                    : "รายงานผล"}
+                            </TooltipContent>
+                        </Tooltip>
                         <ActionsDropdown
                             complaint={row.original}
                             onView={setViewComplaint}
                             onEdit={setEditComplaint}
                             onDelete={setDeleteComplaint}
                         />
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => setReportComplaint(row.original)}
-                        >
-                            รายงานผล
-                        </Button>
                     </div>
                 ),
             },
@@ -505,7 +529,7 @@ export default function ManageComplaintsPage() {
                             </DrawerDescription>
                         </DrawerHeader>
                         <div className="px-4 pt-2 pb-4 space-y-4 text-sm overflow-y-auto max-h-screen">
-                            <div><strong>เลขอ้างอิง:</strong> #{viewComplaint.id.slice(-6).toUpperCase()}</div>
+                            <div><strong>รหัสอ้างอิง:</strong> #{viewComplaint.id.slice(-6).toUpperCase()}</div>
                             <div><strong>วันที่แจ้ง:</strong> {format(new Date(viewComplaint.createdAt), "dd/MM/yyyy HH:mm")}</div>
                             <div><strong>วันที่อัปเดต:</strong> {format(new Date(viewComplaint.updatedAt), "dd/MM/yyyy HH:mm")}</div>
                             {viewComplaint.notifiedAt && (

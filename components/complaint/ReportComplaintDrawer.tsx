@@ -74,7 +74,7 @@ export default function ReportComplaintDrawer({ complaint, open, onClose, onRefr
                 </DrawerHeader>
 
                 <div className="px-4 py-2 space-y-4 text-sm">
-                    <div><strong>เลขอ้างอิง:</strong> #{complaint.id.slice(-6).toUpperCase() || "-"}</div>
+                    <div><strong>รหัสอ้างอิง:</strong> #{complaint.id.slice(-6).toUpperCase() || "-"}</div>
                     <div><strong>วันที่แจ้ง:</strong> {formatThaiDatetime(complaint.createdAt) || "-"}</div>
                     <div><strong>วันที่อัปเดต:</strong> {formatThaiDatetime(complaint.updatedAt) || "-"}</div>
                     {complaint.notifiedAt && (
