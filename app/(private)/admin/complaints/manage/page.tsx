@@ -1,4 +1,3 @@
-// file: app/(private)/admin/complaints/manage/page.tsx
 "use client";
 
 import * as React from "react";
@@ -13,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -31,6 +30,7 @@ import { ComplaintImages } from "@/components/complaint/ComplaintImages";
 import { Label } from "@/components/ui/label";
 import dynamic from "next/dynamic";
 import EditComplaintDrawer from "@/components/complaint/EditComplaintDrawer";
+import ReportComplaintDrawer from "@/components/complaint/ReportComplaintDrawer";
 
 const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });
 
@@ -54,6 +54,7 @@ export default function ManageComplaintsPage() {
     const [deleteComplaint, setDeleteComplaint] = React.useState<Complaint | null>(null);
     const [editComplaint, setEditComplaint] = React.useState<Complaint | null>(null);
     const [openDeleteAllDialog, setOpenDeleteAllDialog] = React.useState<boolean>(false);
+    const [reportComplaint, setReportComplaint] = React.useState<Complaint | null>(null);
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [loadingFetch, setLoadingFetch] = React.useState(false);
     const [loadingExport, setLoadingExport] = React.useState(false);
@@ -77,10 +78,6 @@ export default function ManageComplaintsPage() {
             const res = await axios.get(url);
             const complaintsData = res.data?.items || [];
             setComplaints(complaintsData);
-            console.log("✅ Complaints:", complaintsData);
-            if (complaintsData.length === 0) {
-                toast.info("ไม่พบเรื่องร้องเรียนตามเงื่อนไข");
-            }
         } catch (error) {
             console.error(error);
             toast.error("เกิดข้อผิดพลาดในการโหลดข้อมูลร้องเรียน");
@@ -93,36 +90,7 @@ export default function ManageComplaintsPage() {
         refreshComplaints();
     }, [globalFilter, dateRange, status]);
 
-    const handleDeleteSelected = async () => {
-        if (selectedIds.length === 0) return toast.warning("กรุณาเลือกเรื่องร้องเรียนก่อน");
 
-        setIsDeleting(true);
-        try {
-            const deletedItems = complaints.filter(c => selectedIds.includes(c.id));
-            await Promise.all(selectedIds.map(id => axios.delete(`/api/complaints/${id}`)));
-            toast.success("ลบเรื่องร้องเรียนที่เลือกสำเร็จ", {
-                action: {
-                    label: "เลิกทำ",
-                    onClick: async () => {
-                        try {
-                            await axios.post("/api/complaints/undo-delete", deletedItems);
-                            toast.success("กู้คืนสำเร็จ");
-                            refreshComplaints();
-                        } catch {
-                            toast.error("ไม่สามารถเลิกทำได้");
-                        }
-                    },
-                },
-            });
-            setSelectedIds([]);
-            refreshComplaints();
-        } catch (error) {
-            console.error(error);
-            toast.error("เกิดข้อผิดพลาดในการลบหลายรายการ");
-        } finally {
-            setIsDeleting(false);
-        }
-    };
 
     const renderSelectHeader = () => (
         <Checkbox
@@ -197,12 +165,21 @@ export default function ManageComplaintsPage() {
                 id: "actions",
                 header: "การจัดการ",
                 cell: ({ row }) => (
-                    <ActionsDropdown
-                        complaint={row.original}
-                        onView={setViewComplaint}
-                        onEdit={setEditComplaint}
-                        onDelete={setDeleteComplaint}
-                    />
+                    <div className="flex gap-2">
+                        <ActionsDropdown
+                            complaint={row.original}
+                            onView={setViewComplaint}
+                            onEdit={setEditComplaint}
+                            onDelete={setDeleteComplaint}
+                        />
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setReportComplaint(row.original)}
+                        >
+                            รายงานผล
+                        </Button>
+                    </div>
                 ),
             },
         ],
@@ -247,6 +224,39 @@ export default function ManageComplaintsPage() {
         } finally {
             setIsDeleting(false);
             setDeleteComplaint(null);
+        }
+    };
+
+    const handleDeleteSelected = async () => {
+        if (selectedIds.length === 0) return toast.warning("กรุณาเลือกเรื่องร้องเรียนก่อน");
+
+        setIsDeleting(true);
+        try {
+            const deletedItems = complaints.filter(c => selectedIds.includes(c.id));
+            await Promise.all(selectedIds.map(id => axios.delete(`/api/complaints/${id}`)));
+            toast.success("ลบเรื่องร้องเรียนที่เลือกสำเร็จ", {
+                description: "รูปภาพจะไม่สามารถเรียกคืนได้",
+                action: {
+                    label: "เลิกทำ",
+                    onClick: async () => {
+                        try {
+                            await axios.post("/api/complaints/undo-delete", deletedItems);
+                            toast.success("กู้คืนสำเร็จ");
+                            refreshComplaints();
+                        } catch {
+                            toast.error("ไม่สามารถเลิกทำได้");
+                        }
+                    },
+                },
+            });
+            setSelectedIds([]);
+            refreshComplaints();
+        } catch (error) {
+            console.error(error);
+            toast.error("เกิดข้อผิดพลาดในการลบหลายรายการ");
+        } finally {
+            setIsDeleting(false);
+            setOpenDeleteAllDialog(false);
         }
     };
 
@@ -378,18 +388,6 @@ export default function ManageComplaintsPage() {
                 <Button className="cursor-pointer" variant="destructive" disabled={selectedIds.length === 0 || isDeleting} onClick={() => setOpenDeleteAllDialog(true)}>
                     {isDeleting && <Loader2 className="w-4 h-4 animate-spin mr-2" />} ลบทั้งหมด
                 </Button>
-                <Dialog open={openDeleteAllDialog} onOpenChange={setOpenDeleteAllDialog}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>ยืนยันการลบหลายรายการ</DialogTitle>
-                            <p>คุณแน่ใจหรือไม่ว่าต้องการลบรายการที่เลือกทั้งหมด? การกระทำนี้ไม่สามารถย้อนกลับได้</p>
-                        </DialogHeader>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={() => setOpenDeleteAllDialog(false)}>ยกเลิก</Button>
-                            <Button variant="destructive" onClick={handleDeleteSelected}>ยืนยันลบ</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
                 <Button className="cursor-pointer" onClick={handleExportExcel} disabled={loadingExport}>
                     {loadingExport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}Excel
                 </Button>
@@ -484,6 +482,14 @@ export default function ManageComplaintsPage() {
                 </Button>
             </div>
             {/* Drawer & Dialog ดูรายละเอียด/ลบ */}
+            {reportComplaint && (
+                <ReportComplaintDrawer
+                    complaint={reportComplaint}
+                    open={!!reportComplaint}
+                    onClose={() => setReportComplaint(null)}
+                    onRefresh={() => refreshComplaints()}
+                />
+            )}
             {viewComplaint && (
                 <Drawer direction={isMobile ? "bottom" : "right"} open={!!viewComplaint} onOpenChange={() => setViewComplaint(null)}>
                     <DrawerContent>
@@ -499,7 +505,7 @@ export default function ManageComplaintsPage() {
                             </DrawerDescription>
                         </DrawerHeader>
                         <div className="px-4 pt-2 pb-4 space-y-4 text-sm overflow-y-auto max-h-screen">
-                            <div><strong>ID:</strong> #{viewComplaint.id.slice(-6).toUpperCase()}</div>
+                            <div><strong>เลขอ้างอิง:</strong> #{viewComplaint.id.slice(-6).toUpperCase()}</div>
                             <div><strong>วันที่แจ้ง:</strong> {format(new Date(viewComplaint.createdAt), "dd/MM/yyyy HH:mm")}</div>
                             <div><strong>วันที่อัปเดต:</strong> {format(new Date(viewComplaint.updatedAt), "dd/MM/yyyy HH:mm")}</div>
                             {viewComplaint.notifiedAt && (
@@ -585,17 +591,35 @@ export default function ManageComplaintsPage() {
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>ยืนยันการลบเรื่องร้องเรียน</DialogTitle>
-                            <p>คุณต้องการลบเรื่องร้องเรียน <strong>#{deleteComplaint.id.slice(-6).toUpperCase()}</strong> หรือไม่?</p>
+                            <DialogDescription>คุณต้องการลบเรื่องร้องเรียน <strong>#{deleteComplaint.id.slice(-6).toUpperCase()}</strong> หรือไม่?</DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
                             <Button className="cursor-pointer" variant="outline" onClick={() => setDeleteComplaint(null)}>ยกเลิก</Button>
                             <Button className="cursor-pointer" variant="destructive" disabled={isDeleting} onClick={handleConfirmDeleteComplaint}>
-                                {isDeleting && <Loader2 className="w-4 h-4 animate-spin mr-2" />} ลบ
+                                {isDeleting && <Loader2 className="w-4 h-4 animate-spin mr-2" />} ยืนยันลบ
                             </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
             )}
+            {
+                openDeleteAllDialog && (
+                    <Dialog open={!!openDeleteAllDialog} onOpenChange={setOpenDeleteAllDialog}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>ยืนยันการลบหลายรายการ</DialogTitle>
+                                <DialogDescription>คุณแน่ใจหรือไม่ว่าต้องการลบรายการที่เลือกทั้งหมด? การกระทำนี้ไม่สามารถย้อนกลับได้</DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                                <Button className="cursor-pointer" variant="outline" onClick={() => setOpenDeleteAllDialog(false)}>ยกเลิก</Button>
+                                <Button className="cursor-pointer" variant="destructive" disabled={isDeleting} onClick={handleDeleteSelected}>
+                                    {isDeleting && <Loader2 className="w-4 h-4 animate-spin mr-2" />} ยืนยันลบ
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                )
+            }
         </div>
     );
 }

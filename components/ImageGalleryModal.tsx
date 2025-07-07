@@ -29,9 +29,7 @@ export default function ImageGalleryModal({ images, initialIndex, onClose }: Pro
             <DialogContent className="w-full max-w-5xl p-0 overflow-hidden bg-black">
                 <DialogHeader>
                     <DialogTitle className="sr-only">ดูรูปภาพ</DialogTitle>
-                    <span className="sr-only">
-                        <DialogDescription>คุณสามารถเลื่อนดูรูปทั้งหมด และปิดเมื่อไม่ต้องการดูแล้ว</DialogDescription>
-                    </span>
+                    <DialogDescription className="sr-only">คุณสามารถเลื่อนดูรูปทั้งหมด และปิดเมื่อไม่ต้องการดูแล้ว</DialogDescription>
                 </DialogHeader>
 
                 <div className="relative w-full h-[80vh] flex items-center justify-center">

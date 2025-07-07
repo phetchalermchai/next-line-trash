@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -90,6 +90,7 @@ export default function EditComplaintDrawer({ complaint, open, onClose, onSave }
             <DrawerContent>
                 <DrawerHeader>
                     <DrawerTitle>แก้ไขเรื่องร้องเรียน</DrawerTitle>
+                    <DrawerDescription>กรุณาตรวจสอบและแก้ไขข้อมูลก่อนบันทึก</DrawerDescription>
                 </DrawerHeader>
 
                 <div className="px-4 pt-2 pb-4 space-y-4 text-sm overflow-y-auto max-h-screen">
