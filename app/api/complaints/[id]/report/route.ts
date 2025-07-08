@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { apiKeyAuth } from "@/lib/middleware/api-key-auth";
 import { uploadImageToSupabase } from "@/lib/storage/upload-image";
 import { notifyReportResultToGroup, notifyReportResultToUser } from "@/lib/line/notify";
+import { randomUUID } from "crypto";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -30,7 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const uploadedUrls: string[] = [];
     for (const file of imageAfterFiles) {
       const buffer = Buffer.from(await file.arrayBuffer());
-      const filename = `after-${id}-${Date.now()}`;
+      const filename = `imageAfter-${randomUUID()}.jpg`;
       const url = await uploadImageToSupabase(buffer, filename);
       uploadedUrls.push(url);
     }

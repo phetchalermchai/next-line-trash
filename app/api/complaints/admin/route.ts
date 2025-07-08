@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
             imageBeforeUrls = await Promise.all(
                 imageFiles.map(async (file) => {
                     const buffer = Buffer.from(await file.arrayBuffer());
-                    const filename = `complaint-${randomUUID()}.jpg`;
+                    const filename = `imageBefore-${randomUUID()}.jpg`;
                     return await uploadImageToSupabase(buffer, filename);
                 })
             );

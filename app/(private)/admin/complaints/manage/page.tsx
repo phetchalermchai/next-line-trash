@@ -1,12 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, SortingState, useReactTable, } from "@tanstack/react-table";
+import { ColumnDef, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, SortingState, useReactTable, } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Complaint } from "@/types/complaint";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
-import { Loader2, Download, ClipboardCheck } from "lucide-react";
+import { Loader2, Download, ClipboardCheck, Bell } from "lucide-react";
 import { DatePickerWithRange } from "@/components/complaint/DatePickerWithRange";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +32,9 @@ import dynamic from "next/dynamic";
 import EditComplaintDrawer from "@/components/complaint/EditComplaintDrawer";
 import ReportComplaintDrawer from "@/components/complaint/ReportComplaintDrawer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { formatThaiDatetime } from "@/utils/date";
+import { PendingUserSkeleton, TableSkeleton } from "./skeleton";
 
 const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });
 
@@ -89,7 +92,7 @@ export default function ManageComplaintsPage() {
 
     React.useEffect(() => {
         refreshComplaints();
-    }, [globalFilter, dateRange, status]);
+    }, [globalFilter, dateRange, status, source]);
 
 
 
@@ -115,109 +118,46 @@ export default function ManageComplaintsPage() {
         />
     );
 
-    const table = useReactTable({
-        data: complaints,
-        columns: [
-            {
-                id: "select",
-                header: renderSelectHeader,
-                cell: renderSelectCell,
-                enableSorting: false,
-                enableHiding: false,
-            },
-            {
-                accessorKey: "reporterName",
-                header: "ชื่อผู้ร้องเรียน",
-                cell: ({ row }) => row.original.reporterName || row.original.lineUserId || "-",
-            },
-            {
-                accessorKey: "description",
-                header: "รายละเอียด",
-            },
-            {
-                accessorKey: "source",
-                header: "ช่องทาง",
-                cell: ({ row }) => (
-                    <Badge className={`${colorMap[row.original.source] || "bg-gray-100 text-gray-800 border-gray-300"}`}>
-                        {sourceLabel[row.original.source] || row.original.source}
-                    </Badge>
-                ),
-            },
-            {
-                accessorKey: "status",
-                header: "สถานะ",
-                cell: ({ row }) => (
-                    <Badge className={`${statusMap[row.original.status]?.color || "bg-gray-100 text-gray-800"}`}>
-                        {statusMap[row.original.status]?.label}
-                    </Badge>
-                ),
-            },
-            {
-                accessorKey: "createdAt",
-                header: "วันที่บันทึก",
-                cell: ({ row }) => format(new Date(row.original.createdAt), "dd/MM/yyyy HH:mm"),
-            },
-            {
-                accessorKey: "updatedAt",
-                header: "อัปเดตล่าสุด",
-                cell: ({ row }) => format(new Date(row.original.updatedAt), "dd/MM/yyyy HH:mm"),
-            },
-            {
-                id: "actions",
-                header: "การจัดการ",
-                cell: ({ row }) => (
-                    <div className="flex gap-2">
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <span className={row.original.status === "DONE" ? "cursor-not-allowed" : "cursor-pointer"}>
-                                    {row.original.status === "DONE" ? (
-                                        <Button
-                                            className="cursor-not-allowed"
-                                            variant="ghost"
-                                            size="icon"
-                                            disabled
-                                        >
-                                            <ClipboardCheck className="w-4 h-4 text-green-600 dark:text-green-300" />
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            className="cursor-pointer"
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => setReportComplaint(row.original)}
-                                        >
-                                            <ClipboardCheck className="w-4 h-4 text-green-600 dark:text-green-300" />
-                                        </Button>
-                                    )}
-                                </span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                {row.original.status === "DONE"
-                                    ? "รายงานผลเสร็จสิ้นแล้ว"
-                                    : "รายงานผล"}
-                            </TooltipContent>
-                        </Tooltip>
-                        <ActionsDropdown
-                            complaint={row.original}
-                            onView={setViewComplaint}
-                            onEdit={setEditComplaint}
-                            onDelete={setDeleteComplaint}
-                        />
-                    </div>
-                ),
-            },
-        ],
-        state: {
-            globalFilter,
-            sorting,
-        },
-        onGlobalFilterChange: setGlobalFilter,
-        onSortingChange: setSorting,
-        getCoreRowModel: getCoreRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-    });
+    const handleNotifyGroup = async (complaint: Complaint) => {
+        const createdAt = new Date(complaint.createdAt);
+        const now = new Date();
+        const diffTime = now.getTime() - createdAt.getTime();
+        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+        if (complaint.status === "DONE") {
+            return toast.warning("ไม่สามารถแจ้งเตือนได้ เนื่องจากเรื่องดำเนินการเสร็จสิ้นแล้ว");
+        }
+
+        if (diffDays < 1) {
+            return toast.warning("สามารถแจ้งเตือนได้หลังครบ 1 วัน");
+        }
+
+        if (complaint.notifiedAt && new Date(complaint.notifiedAt).toDateString() === now.toDateString()) {
+            return toast.warning("แจ้งเตือนได้เพียงครั้งเดียวต่อวัน");
+        }
+
+        try {
+            await axios.post(`/api/complaints/${complaint.id}/line/notify-group`, { complaintId: complaint.id });
+            toast.success("แจ้งเตือนกลุ่มเจ้าหน้าที่สำเร็จ");
+            refreshComplaints();
+        } catch (error) {
+            console.error("[Notify Group] Error:", error);
+            toast.error("เกิดข้อผิดพลาดในการแจ้งเตือนกลุ่ม");
+        }
+    };
+
+    function canNotify(complaint: Complaint): boolean {
+        if (complaint.status === "DONE") return false;
+
+        const notifiedAt = complaint.notifiedAt ? new Date(complaint.notifiedAt) : null;
+        if (!notifiedAt) return true;
+
+        const now = new Date();
+        const diffInMs = now.getTime() - notifiedAt.getTime();
+        const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+
+        return diffInDays >= 1;
+    }
 
     const handleConfirmDeleteComplaint = async () => {
         if (!deleteComplaint || isDeleting) return;
@@ -369,6 +309,155 @@ export default function ManageComplaintsPage() {
         }
     };
 
+    const columns: ColumnDef<Complaint>[] = [
+        {
+            id: "select",
+            header: renderSelectHeader,
+            cell: renderSelectCell,
+            enableSorting: false,
+            enableHiding: false,
+        },
+        {
+            accessorKey: "reporterName",
+            header: "ชื่อผู้ร้องเรียน",
+            cell: ({ row }) => row.original.reporterName || row.original.lineUserId || "-",
+        },
+        {
+            accessorKey: "description",
+            header: "รายละเอียด",
+        },
+        {
+            accessorKey: "source",
+            header: "ช่องทาง",
+            cell: ({ row }) => (
+                <Badge className={`${colorMap[row.original.source] || "bg-gray-100 text-gray-800 border-gray-300"}`}>
+                    {sourceLabel[row.original.source] || row.original.source}
+                </Badge>
+            ),
+        },
+        {
+            accessorKey: "status",
+            header: "สถานะ",
+            cell: ({ row }) => (
+                <Badge className={`${statusMap[row.original.status]?.color || "bg-gray-100 text-gray-800"}`}>
+                    {statusMap[row.original.status]?.label}
+                </Badge>
+            ),
+        },
+        {
+            accessorKey: "createdAt",
+            header: "วันที่บันทึก",
+            cell: ({ row }) => formatThaiDatetime(row.original.createdAt),
+        },
+        {
+            accessorKey: "updatedAt",
+            header: "อัปเดตล่าสุด",
+            cell: ({ row }) => formatThaiDatetime(row.original.updatedAt),
+        },
+        {
+            id: "actions",
+            header: "การจัดการ",
+            cell: ({ row }) => (
+                <div className="flex gap-2">
+                    <AlertDialog>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <AlertDialogTrigger asChild>
+                                    <span
+                                        className={
+                                            row.original.status === "DONE" || !canNotify(row.original)
+                                                ? "cursor-not-allowed"
+                                                : "cursor-pointer"
+                                        }
+                                    >
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="cursor-pointer"
+                                            disabled={row.original.status === "DONE" || !canNotify(row.original)}
+                                        >
+                                            <Bell className="w-4 h-4 text-blue-600 dark:text-blue-300" />
+                                        </Button>
+                                    </span>
+                                </AlertDialogTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {row.original.status === "DONE"
+                                    ? "เรื่องนี้เสร็จสิ้นแล้ว"
+                                    : !canNotify(row.original)
+                                        ? "สามารถแจ้งเตือนได้อีกครั้งในวันถัดไป"
+                                        : "แจ้งเตือนไปยังกลุ่มไลน์"}
+                            </TooltipContent>
+                        </Tooltip>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>ยืนยันการแจ้งเตือน</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    คุณต้องการแจ้งเตือนไปยังกลุ่มไลน์เจ้าหน้าที่ใช่หรือไม่?
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel className="cursor-pointer">ยกเลิก</AlertDialogCancel>
+                                <AlertDialogAction className="cursor-pointer" onClick={() => handleNotifyGroup(row.original)}>ยืนยัน</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <span className={row.original.status === "DONE" ? "cursor-not-allowed" : "cursor-pointer"}>
+                                {row.original.status === "DONE" ? (
+                                    <Button
+                                        className="cursor-not-allowed"
+                                        variant="ghost"
+                                        size="icon"
+                                        disabled
+                                    >
+                                        <ClipboardCheck className="w-4 h-4 text-green-600 dark:text-green-300" />
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        className="cursor-pointer"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => setReportComplaint(row.original)}
+                                    >
+                                        <ClipboardCheck className="w-4 h-4 text-green-600 dark:text-green-300" />
+                                    </Button>
+                                )}
+                            </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            {row.original.status === "DONE"
+                                ? "รายงานผลเสร็จสิ้นแล้ว"
+                                : "รายงานผล"}
+                        </TooltipContent>
+                    </Tooltip>
+                    <ActionsDropdown
+                        complaint={row.original}
+                        onView={setViewComplaint}
+                        onEdit={setEditComplaint}
+                        onDelete={setDeleteComplaint}
+                    />
+                </div>
+            ),
+        },
+    ]
+
+    const table = useReactTable({
+        data: complaints,
+        columns,
+        state: {
+            globalFilter,
+            sorting,
+        },
+        onGlobalFilterChange: setGlobalFilter,
+        onSortingChange: setSorting,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+    });
+
     return (
         <div className="space-y-4 m-6">
             <h2 className="text-xl font-bold">ค้นหาเรื่องร้องเรียน</h2>
@@ -433,7 +522,7 @@ export default function ManageComplaintsPage() {
             )}
             {/* Table View */}
             {loadingFetch ? (
-                <div>Loading...</div>
+                isMobile ? <PendingUserSkeleton /> : <TableSkeleton columns={columns.length-1} />
             ) : !isMobile ? (
                 <div className="rounded-md border">
                     <Table>
@@ -530,10 +619,10 @@ export default function ManageComplaintsPage() {
                         </DrawerHeader>
                         <div className="px-4 pt-2 pb-4 space-y-4 text-sm overflow-y-auto max-h-screen">
                             <div><strong>รหัสอ้างอิง:</strong> #{viewComplaint.id.slice(-6).toUpperCase()}</div>
-                            <div><strong>วันที่แจ้ง:</strong> {format(new Date(viewComplaint.createdAt), "dd/MM/yyyy HH:mm")}</div>
-                            <div><strong>วันที่อัปเดต:</strong> {format(new Date(viewComplaint.updatedAt), "dd/MM/yyyy HH:mm")}</div>
+                            <div><strong>วันที่แจ้ง:</strong> {formatThaiDatetime(viewComplaint.createdAt)}</div>
+                            <div><strong>วันที่อัปเดต:</strong> {formatThaiDatetime(viewComplaint.updatedAt)}</div>
                             {viewComplaint.notifiedAt && (
-                                <div><strong>วันที่แจ้งเตือน:</strong> {format(new Date(viewComplaint.notifiedAt), "dd/MM/yyyy HH:mm")}</div>
+                                <div><strong>วันที่แจ้งเตือน:</strong> {formatThaiDatetime(viewComplaint.notifiedAt)}</div>
                             )}
                             <div><strong>ชื่อผู้แจ้ง:</strong> {viewComplaint.reporterName || viewComplaint.lineUserId || "-"}</div>
                             {viewComplaint.receivedBy && (

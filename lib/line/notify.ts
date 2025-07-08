@@ -79,6 +79,48 @@ export async function notifyReportResultToUser(id: string, message: string) {
   }
 }
 
+export async function notifyManualGroupReminder(id: string) {
+  try {
+    const complaint = await prisma.complaint.findUnique({ where: { id } });
+    if (!complaint) throw new Error("Complaint not found");
+
+    const now = new Date();
+
+    if (complaint.notifiedAt) {
+      const diff = now.getTime() - new Date(complaint.notifiedAt).getTime();
+      const diffDays = diff / (1000 * 60 * 60 * 24);
+
+      if (diffDays < 1) {
+        throw new Error("แจ้งเตือนได้วันละครั้งเท่านั้น");
+      }
+    }
+
+    if (complaint.status === "DONE") {
+      throw new Error("ไม่สามารถแจ้งเตือนได้ เนื่องจากเรื่องนี้ดำเนินการเสร็จแล้ว");
+    }
+
+    const created = new Date(complaint.createdAt);
+    const diffCreatedDays = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+
+    const groupSetting = await getSettingByKey("LINE_GROUP_ID");
+    const tokenSetting = await getSettingByKey("LINE_ACCESS_TOKEN");
+    if (!groupSetting || !tokenSetting) throw new Error("LINE_GROUP_ID หรือ LINE_ACCESS_TOKEN ไม่พบใน DB");
+
+    const flex = buildGroupFlex(complaint, `${diffCreatedDays} วัน`);
+    await pushMessageToGroup(groupSetting.value, [flex], tokenSetting.value);
+
+    await prisma.complaint.update({
+      where: { id },
+      data: { notifiedAt: now },
+    });
+
+    return { message: "แจ้งเตือนสำเร็จ" };
+  } catch (error) {
+    console.error("[notifyManualGroupReminder] Error:", error);
+    throw error;
+  }
+}
+
 async function pushMessageToGroup(groupId: string, messages: any[], token: string) {
   await axios.post(
     "https://api.line.me/v2/bot/message/push",
