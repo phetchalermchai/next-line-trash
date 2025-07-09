@@ -29,7 +29,7 @@ export default function RecentComplaintList() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get("api/dashboard/recent?limit=5");
+        const res = await axios.get("/api/complaints/dashboard/recent?limit=5");
         setItems(res.data);
       } catch (err) {
         console.error("Error fetching recent complaints:", err);

@@ -22,7 +22,7 @@ const MonthlyStatusChart = () => {
         const fetchData = async () => {
             try {
                 const year = new Date().getFullYear();
-                const res = await axios.get(`api/dashboard/monthly-status?year=${year}`);
+                const res = await axios.get(`/api/complaints/dashboard/monthly-status?year=${year}`);
                 setData(res.data);
             } catch (err) {
                 console.error("Error fetching MonthlyStatusChart:", err);

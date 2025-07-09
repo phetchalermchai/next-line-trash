@@ -21,7 +21,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get("api/dashboard/summary");
+        const res = await axios.get("/api/complaints/dashboard/summary");
         setData(res.data);
       } catch (error) {
         console.error("Error fetching summary data:", error);

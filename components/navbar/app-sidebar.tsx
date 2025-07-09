@@ -33,7 +33,8 @@ import clsx from "clsx";
 
 const applicationMenu = [
     { title: "แดชบอร์ด", href: "/admin/dashboard", icon: GaugeCircle },
-    { title: "ค้นหาร้องเรียนย้อนหลัง", href: "/admin/complaints", icon: Search },
+    { title: "จัดการเรื่องร้องเรียน", href: "/admin/complaints/manage", icon: Search },
+    { title: "สร้างเรื่องร้องเรียน", href: "/admin/complaints/create", icon: Search },
 ];
 
 const documentMenu = [

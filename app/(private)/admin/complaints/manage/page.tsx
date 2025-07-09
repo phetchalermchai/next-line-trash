@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Complaint } from "@/types/complaint";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
-import { Loader2, Download, ClipboardCheck, Bell } from "lucide-react";
+import { Loader2, Download, ClipboardCheck, Bell, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
 import { DatePickerWithRange } from "@/components/complaint/DatePickerWithRange";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -522,7 +522,7 @@ export default function ManageComplaintsPage() {
             )}
             {/* Table View */}
             {loadingFetch ? (
-                isMobile ? <PendingUserSkeleton /> : <TableSkeleton columns={columns.length-1} />
+                isMobile ? <PendingUserSkeleton /> : <TableSkeleton columns={columns.length - 1} />
             ) : !isMobile ? (
                 <div className="rounded-md border">
                     <Table>
@@ -530,7 +530,7 @@ export default function ManageComplaintsPage() {
                             {table.getHeaderGroups().map(headerGroup => (
                                 <TableRow key={headerGroup.id}>
                                     {headerGroup.headers.map(header => (
-                                        <TableHead key={header.id} className="ps-5">
+                                        <TableHead key={header.id} className="ps-5 last:ps-12">
                                             {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                                         </TableHead>
                                     ))}
@@ -586,13 +586,46 @@ export default function ManageComplaintsPage() {
                     )}
                 </div>
             )}
-            <div className="flex justify-end gap-2">
-                <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-                    ก่อนหน้า
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-                    ถัดไป
-                </Button>
+            <div className="flex flex-col md:flex-row justify-between items-center gap-2 mt-4">
+                <div className="hidden lg:block text-sm text-muted-foreground">
+                    {selectedIds.length} จาก {complaints.length} รายการถูกเลือก
+                </div>
+
+                <div className="flex flex-row lg:items-center gap-2 lg:gap-4 w-full lg:w-auto justify-between">
+                    <div className="hidden lg:flex justify-center items-center gap-2">
+                        <span className="text-sm">แสดง:</span>
+                        <Select value={table.getState().pagination.pageSize.toString()} onValueChange={(val) => {
+                            table.setPageSize(Number(val));
+                        }}>
+                            <SelectTrigger className="w-[80px]">
+                                <SelectValue placeholder={table.getState().pagination.pageSize.toString()} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {[10, 20, 50, 100].map(val => (
+                                    <SelectItem key={val} value={val.toString()}>{val}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <span className="text-sm">รายการ</span>
+                    </div>
+                    <div className="flex justify-center items-center gap-2">
+                        <span className="text-sm mx-2 whitespace-nowrap">หน้า {table.getState().pagination.pageIndex + 1} จาก {table.getPageCount()}</span>
+                    </div>
+                    <div className="inline-flex justify-center gap-1">
+                        <Button variant="outline" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
+                            <ChevronsLeft className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+                            <ChevronLeft className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+                            <ChevronRight className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
+                            <ChevronsRight className="w-4 h-4" />
+                        </Button>
+                    </div>
+                </div>
             </div>
             {/* Drawer & Dialog ดูรายละเอียด/ลบ */}
             {reportComplaint && (

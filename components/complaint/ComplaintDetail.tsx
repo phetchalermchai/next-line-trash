@@ -8,11 +8,15 @@ import dynamic from "next/dynamic";
 import { ComplaintImages } from "./ComplaintImages";
 import { Label } from "@/components/ui/label";
 import { AlertCircle } from "lucide-react";
+import { useSession } from "next-auth/react";
 import axios from "axios";
+import { Button } from "../ui/button";
+import Link from "next/link";
 
 const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });
 
 export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
+    const { data: session } = useSession();
     const [complaint, setComplaint] = useState<Complaint | null>(null);
     const [error, setError] = useState<string | null>(null);
 
@@ -64,6 +68,14 @@ export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
                 imageBefore={complaint.imageBefore ? complaint.imageBefore.split(",").map(u => u.trim()) : []}
                 imageAfter={complaint.imageAfter ? complaint.imageAfter.split(",").map(u => u.trim()) : []}
             />
+
+            {session?.user?.role && (
+                <div className="flex justify-end gap-2">
+                    <Link href="/admin/complaints/manage">
+                        <Button className="cursor-pointer" variant="default" >ย้อนกลับ</Button>
+                    </Link>
+                </div>
+            )}
         </div>
     );
 };

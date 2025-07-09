@@ -99,7 +99,6 @@ export default function AdminComplaintCreatePage() {
     return (
         <div className="w-full flex justify-center">
             <div className="max-w-4xl w-full grid grid-cols-1 sm:grid-cols-2 gap-6 p-6">
-                {/* <h1 className="text-2xl font-bold">สร้างรายการร้องเรียนโดยเจ้าหน้าที่</h1> */}
                 <div className="space-y-3">
                     <Label htmlFor="receivedBy">ผู้รับแจ้ง</Label>
                     <Input id="receivedBy" name="receivedBy" value={formData.receivedBy} placeholder="ชื่อผู้รับแจ้ง" onChange={handleChange} className={errors.receivedBy ? "border-red-500" : ""} />

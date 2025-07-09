@@ -9,7 +9,8 @@ export function SiteHeader() {
     // Static path to title map
     const staticPages: { path: string; title: string }[] = [
         { path: "/admin/dashboard", title: "แดชบอร์ดเรื่องร้องเรียน" },
-        { path: "/admin/complaints", title: "ค้นหาร้องเรียนย้อนหลัง" },
+        { path: "/admin/complaints/manage", title: "จัดการเรื่องร้องเรียน" },
+        { path: "/admin/complaints/create", title: "สร้างเรื่องร้องเรียน" },
         { path: "/admin/users/dashboard", title: "แดชบอร์ดผู้ใช้งาน" },
         { path: "/admin/users/pending", title: "อนุมัติผู้ใช้งาน" },
         { path: "/admin/users/manage", title: "จัดการผู้ใช้งาน" },
@@ -35,8 +36,6 @@ export function SiteHeader() {
     } else if (/^\/admin\/complaints\/.+\/report$/.test(pathname)) {
         const id = pathname.split("/")[3]?.slice(-6).toUpperCase() || "...";
         pageTitle = `รายงานผลการดำเนินงาน #${id}`;
-    } else if (/^\/admin\/complaints\/create/.test(pathname)) {
-        pageTitle = `สร้างรายการร้องเรียนโดยเจ้าหน้าที่`;
     }
 
     return (
