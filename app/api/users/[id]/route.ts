@@ -44,6 +44,13 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   }
 
   try {
+
+    await prisma.account.deleteMany({
+      where: {
+        userId: id,
+      },
+    });
+
     await prisma.user.delete({
       where: { id: id },
     });

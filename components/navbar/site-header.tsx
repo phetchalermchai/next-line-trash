@@ -8,7 +8,7 @@ export function SiteHeader() {
 
     // Static path to title map
     const staticPages: { path: string; title: string }[] = [
-        { path: "/admin/dashboard", title: "แดชบอร์ดเรื่องร้องเรียน" },
+        { path: "/admin/complaints/dashboard", title: "แดชบอร์ดเรื่องร้องเรียน" },
         { path: "/admin/complaints/manage", title: "จัดการเรื่องร้องเรียน" },
         { path: "/admin/complaints/create", title: "สร้างเรื่องร้องเรียน" },
         { path: "/admin/users/dashboard", title: "แดชบอร์ดผู้ใช้งาน" },
@@ -18,6 +18,8 @@ export function SiteHeader() {
         { path: "/admin/users/banned", title: "ผู้ใช้งานที่ถูกระงับ" },
         { path: "/admin/assistant", title: "ตัวช่วยจัดทำเอกสาร" },
         { path: "/admin/settings/profile", title: "ตั้งค่าบัญชีผู้ใช้งาน" },
+        { path: "/admin/settings/line", title: "ตั้งค่า LINE Notification" },
+        { path: "/admin/settings/zones", title: "ตั้งค่าพื้นที่โซน" },
     ];
 
     // Dynamic matcher logic

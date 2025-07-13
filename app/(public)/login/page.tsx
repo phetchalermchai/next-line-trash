@@ -1,15 +1,25 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/admin/users/pending";
+  const callbackUrl = searchParams.get("callbackUrl") || "/admin/complaints/dashboard";
+  const router = useRouter();
 
   const handleLogin = (provider: string) => {
     signIn(provider, { callbackUrl });
   };
+
+  useEffect(() => {
+    if (searchParams.get("error") === "OAuthAccountNotLinked") {
+      toast.error("บัญชีนี้ถูกผูกกับผู้ใช้อื่นแล้ว กรุณาตรวจสอบ");
+      router.replace("/admin/settings/profile?error=OAuthAccountNotLinked");
+    }
+  }, [searchParams, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">

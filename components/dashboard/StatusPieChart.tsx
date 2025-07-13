@@ -3,31 +3,46 @@ import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import { useTheme } from "next-themes"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import axios from 'axios';
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
+import { Skeleton } from '../ui/skeleton';
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
+type StatusType = 'PENDING' | 'DONE';
+
 interface StatusPie {
-    status: string;
+    status: StatusType;
     count: number;
 }
 
 export default function StatusPieChart() {
     const [data, setData] = useState<StatusPie[]>([]);
-    const [source, setSource] = useState('ALL');
-    const { resolvedTheme } = useTheme()
+    const [year, setYear] = useState<number>(new Date().getFullYear());
+    const [quarter, setQuarter] = useState<string>('ALL');
+    const [source, setSource] = useState<string>('ALL');
+    const [loading, setLoading] = useState<boolean>(true);
+    const { resolvedTheme } = useTheme();
+
+    const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
+    const quarters = ['ALL', 'Q1', 'Q2', 'Q3', 'Q4'];
 
     useEffect(() => {
         const fetchData = async () => {
+            setLoading(true);
             try {
-                const res = await axios.get(`/api/complaints/dashboard/status-summary?source=${source}`);
+                const qParam = quarter === 'ALL' ? '' : `&quarter=${quarter}`;
+                const srcParam = source === 'ALL' ? '' : `&source=${source}`;
+                const res = await axios.get(`/api/complaints/dashboard/status-summary?year=${year}${qParam}${srcParam}`);
                 setData(res.data);
             } catch (err) {
                 console.error("Error fetching StatusPieChart:", err);
+            } finally {
+                setLoading(false);
             }
         };
         fetchData();
-    }, [source]);
+    }, [year, quarter, source]);
 
     const options = {
         chart: {
@@ -85,25 +100,53 @@ export default function StatusPieChart() {
                     <CardTitle className="text-base font-semibold">สัดส่วนสถานะเรื่องร้องเรียน</CardTitle>
                     <Tabs defaultValue="ALL" onValueChange={setSource} className="w-full lg:w-auto">
                         <TabsList className="flex items-center justify-start flex-wrap h-auto">
-                            <TabsTrigger value="ALL">ALL</TabsTrigger>
-                            <TabsTrigger value="LINE">LINE</TabsTrigger>
-                            <TabsTrigger value="FACEBOOK">FACEBOOK</TabsTrigger>
-                            <TabsTrigger value="PHONE">PHONE</TabsTrigger>
-                            <TabsTrigger value="COUNTER">COUNTER</TabsTrigger>
-                            <TabsTrigger value="OTHER">OTHER</TabsTrigger>
+                            <TabsTrigger className='cursor-pointer' value="ALL">ALL</TabsTrigger>
+                            <TabsTrigger className='cursor-pointer' value="LINE">LINE</TabsTrigger>
+                            <TabsTrigger className='cursor-pointer' value="FACEBOOK">FACEBOOK</TabsTrigger>
+                            <TabsTrigger className='cursor-pointer' value="PHONE">PHONE</TabsTrigger>
+                            <TabsTrigger className='cursor-pointer' value="COUNTER">COUNTER</TabsTrigger>
+                            <TabsTrigger className='cursor-pointer' value="OTHER">OTHER</TabsTrigger>
                         </TabsList>
                     </Tabs>
+                    <div className="flex flex-wrap gap-2">
+                        <Select value={year.toString()} onValueChange={(val) => setYear(parseInt(val))}>
+                            <SelectTrigger className="w-[80px]">
+                                <SelectValue placeholder="ปี" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {years.map((y) => (
+                                    <SelectItem key={y} value={y.toString()}>{y + 543}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={quarter} onValueChange={setQuarter}>
+                            <SelectTrigger className="w-[80px]">
+                                <SelectValue placeholder="ไตรมาส" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {quarters.map((q) => (
+                                    <SelectItem key={q} value={q}>{q}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent className="min-h-[300px]">
-                {data.length > 0 && (
-                    <Chart
-                        key={JSON.stringify(data) + resolvedTheme}
-                        options={options}
-                        series={series}
-                        type="donut"
-                        height={300}
-                    />
+                {loading ? (
+                    <Skeleton className="w-full h-[300px] rounded-xl" />
+                ) : (
+                    data.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-4">ไม่มีข้อมูล</p>
+                    ) : (
+                        <Chart
+                            key={JSON.stringify(data) + resolvedTheme}
+                            options={options}
+                            series={series}
+                            type="donut"
+                            height={300}
+                        />
+                    )
                 )}
             </CardContent>
         </Card>

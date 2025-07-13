@@ -24,13 +24,7 @@ import { DatePickerWithRange } from "@/components/complaint/DatePickerWithRange"
 import { Card, CardContent } from "@/components/ui/card";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
@@ -44,6 +38,8 @@ import { formatThaiDatetime } from "@/utils/date";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { UserSearchSkeleton, UserTableSkeleton } from "@/app/(private)/admin/users/manage/Skeleton";
+import { useSession } from "next-auth/react"
+import axios from "axios";
 
 export interface User {
     id: string;
@@ -62,7 +58,8 @@ interface ManageUsersPageProps {
     initialStatus?: "ALL" | "APPROVED" | "PENDING" | "BANNED";
 }
 
-export default function ManageUsersPage({ initialStatus= "ALL" }: ManageUsersPageProps) {
+export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPageProps) {
+    const { update } = useSession();
     const [users, setUsers] = React.useState<User[]>([]);
     const [globalFilter, setGlobalFilter] = React.useState("");
     const [dateRange, setDateRange] = React.useState<DateRange | undefined>();
@@ -75,7 +72,6 @@ export default function ManageUsersPage({ initialStatus= "ALL" }: ManageUsersPag
     const [pendingName, setPendingName] = React.useState<string>("");
     const [pendingRole, setPendingRole] = React.useState<string | null>(null);
     const [pendingStatus, setPendingStatus] = React.useState<string | null>(null);
-    const [nameError, setNameError] = React.useState<string>("");
     const [openDialogProviderId, setOpenDialogProviderId] = React.useState<string | null>(null);
     const [loadingExport, setLoadingExport] = React.useState(false);
     const [loadingFetch, setLoadingFetch] = React.useState(false);
@@ -114,7 +110,6 @@ export default function ManageUsersPage({ initialStatus= "ALL" }: ManageUsersPag
     React.useEffect(() => {
         if (editUser) {
             setPendingName(editUser.name);
-            setNameError("");
         }
     }, [editUser]);
 
@@ -264,22 +259,21 @@ export default function ManageUsersPage({ initialStatus= "ALL" }: ManageUsersPag
         }
 
         try {
-            const res = await fetch(`/api/users/${editUser.id}/update`, {
-                method: "PATCH",
-                body: JSON.stringify({
-                    name: updatedName,
-                    role: updatedRole,
-                    status: updatedStatus,
-                }),
+
+            const res = await axios.patch(`/api/users/${editUser.id}/update`, {
+                name: updatedName,
+                role: updatedRole,
+                status: updatedStatus,
             });
 
-            if (!res.ok) {
+            if (res.status !== 200) {
                 toast.error("อัปเดตข้อมูลไม่สำเร็จ");
                 return;
             }
 
             toast.success("อัปเดตข้อมูลสำเร็จ");
             refreshUsers();
+            await update();
         } catch (error) {
             console.error(error);
             toast.error("เกิดข้อผิดพลาดในการอัปเดตข้อมูล");
@@ -289,7 +283,6 @@ export default function ManageUsersPage({ initialStatus= "ALL" }: ManageUsersPag
             setPendingName("");
             setPendingRole(null);
             setPendingStatus(null);
-            setNameError("");
         }
     };
 
@@ -569,7 +562,6 @@ export default function ManageUsersPage({ initialStatus= "ALL" }: ManageUsersPag
                                         value={pendingName ?? editUser.name}
                                         onChange={(e) => {
                                             setPendingName(e.target.value);
-                                            setNameError("");
                                         }}
                                         maxLength={100}
                                         required

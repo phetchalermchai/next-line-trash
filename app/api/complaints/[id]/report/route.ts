@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { apiKeyAuth } from "@/lib/middleware/api-key-auth";
 import { uploadImageToSupabase } from "@/lib/storage/upload-image";
-import { notifyReportResultToGroup, notifyReportResultToUser } from "@/lib/line/notify";
+import { notifyReportResultToLineGroup, notifyReportResultToLineUser } from "@/lib/line/notify";
 import { randomUUID } from "crypto";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -20,6 +20,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const message = formData.get("message")?.toString() || "";
   const imageAfterFiles = formData.getAll("imageAfterFiles") as File[];
 
+  if (imageAfterFiles.length > 5) {
+    return NextResponse.json({ error: "แนบรูปได้ไม่เกิน 5 รูป" }, { status: 400 });
+  }
+  
+  for (const file of imageAfterFiles) {
+    if (!file.type.startsWith("image/")) {
+      return NextResponse.json({ error: "แนบได้เฉพาะไฟล์ภาพเท่านั้น" }, { status: 400 });
+    }
+    if (file.size > 3 * 1024 * 1024) { // 3MB
+      return NextResponse.json({ error: "แต่ละไฟล์ต้องไม่เกิน 3MB" }, { status: 400 });
+    }
+  }
+
   if (!message.trim()) {
     return NextResponse.json({ error: "กรุณากรอกสรุปผล" }, { status: 400 });
   }
@@ -27,6 +40,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const found = await prisma.complaint.findUnique({ where: { id } });
     if (!found) return NextResponse.json({ error: "Complaint not found" }, { status: 404 });
+
+    if (found.status === "DONE") {
+      return NextResponse.json({ error: "รายการนี้ถูกรายงานผลไปแล้ว" }, { status: 400 });
+    }
+
+    let groupId: string | null = null;
+    if (found.zoneId) {
+      const zone = await prisma.zone.findUnique({ where: { id: found.zoneId } });
+      groupId = zone?.lineGroupId ?? null;
+    }
+
+    if (!groupId) {
+      const middleZone = await prisma.zone.findFirst({ where: { name: "โซนกลาง" } });
+      groupId = middleZone?.lineGroupId ?? null;
+    }
 
     const uploadedUrls: string[] = [];
     for (const file of imageAfterFiles) {
@@ -36,29 +64,28 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       uploadedUrls.push(url);
     }
 
-    const updateData: any = {
-      message,
-      status: "DONE",
-      updatedAt: new Date(),
-    };
-
-    if (uploadedUrls.length > 0) {
-      updateData.imageAfter = [...(found.imageAfter?.split(",") || []), ...uploadedUrls].join(",");
-    }
-
     const cleanedUrls = [...(found.imageAfter?.split(",") || []), ...uploadedUrls]
       .map((url) => url.trim())
       .filter((url) => url && url !== "")
       .join(",");
 
-    updateData.imageAfter = cleanedUrls;
+    const updated = await prisma.complaint.update({
+      where: { id },
+      data: {
+        message,
+        status: "DONE",
+        updatedAt: new Date(),
+        imageAfter: cleanedUrls,
+      },
+    });
 
-    const updated = await prisma.complaint.update({ where: { id }, data: updateData });
-
-    await notifyReportResultToGroup(id, message);
-    if (updated.lineUserId) {
-      await notifyReportResultToUser(id, message);
+    if (groupId) {
+      await notifyReportResultToLineGroup(id, message, groupId);
     }
+    if (updated.lineUserId && updated.source === "LINE") {
+      await notifyReportResultToLineUser(id, message, updated.lineUserId);
+    }
+
     return NextResponse.json(updated);
   } catch (error: any) {
     console.error("[REPORT Complaint] Error:", error);

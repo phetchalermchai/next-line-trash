@@ -11,6 +11,8 @@ export async function createComplaint(data: {
   reporterName?: string;
   phone?: string;
   location?: string;
+  zoneId?: string;
+  zoneName?: string;
   message?: string;
   imageBefore?: string;
 }) {
@@ -18,13 +20,15 @@ export async function createComplaint(data: {
     data: {
       source: data.source,
       description: data.description,
-      lineUserId: data.lineUserId ?? "",
-      receivedBy: data.receivedBy ?? "",
-      reporterName: data.reporterName ?? "",
-      phone: data.phone ?? "",
-      location: data.location ?? "",
-      message: data.message ?? "",
-      imageBefore: data.imageBefore ?? "",
+      lineUserId: data.lineUserId,
+      receivedBy: data.receivedBy,
+      reporterName: data.reporterName,
+      phone: data.phone,
+      location: data.location,
+      zoneId: data.zoneId,
+      zoneName: data.zoneName,
+      message: data.message,
+      imageBefore: data.imageBefore,
       status: ComplaintStatus.PENDING,
     },
   });

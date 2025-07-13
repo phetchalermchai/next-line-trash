@@ -26,6 +26,8 @@ export default withAuth(
       "/admin/users/manage",
       "/admin/users/approved",
       "/admin/users/banned",
+      "/admin/users/pending",
+      "/admin/settings/line",
     ];
 
     if (superadminOnlyPaths.some((path) => req.nextUrl.pathname.startsWith(path))) {
@@ -33,6 +35,7 @@ export default withAuth(
         return NextResponse.redirect(new URL("/unauthorized", req.url));
       }
     }
+    
   },
   {
     callbacks: {

@@ -51,6 +51,16 @@ export default function EditComplaintDrawer({ complaint, open, onClose, onSave }
     };
 
     const handleSubmit = () => {
+        if (!formData.reporterName?.trim()) {
+            toast.error("กรุณากรอกชื่อผู้ร้องเรียน");
+            return;
+        }
+
+        if (!formData.receivedBy?.trim() && formData.source !== "LINE") {
+            toast.error("กรุณากรอกชื่อเจ้าหน้าที่รับเรื่อง");
+            return;
+        }
+
         if (!formData.phone?.trim()) {
             toast.error("กรุณากรอกเบอร์โทร");
             return;

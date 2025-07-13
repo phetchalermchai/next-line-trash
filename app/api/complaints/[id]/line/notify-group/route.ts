@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { apiKeyAuth } from "@/lib/middleware/api-key-auth";
-import { notifyManualGroupReminder } from "@/lib/line/notify";
+import { notifyManualLineGroupReminder } from "@/lib/line/notify";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const complaint = await prisma.complaint.findUnique({ where: { id } });
     if (!complaint) return NextResponse.json({ error: "Complaint not found" }, { status: 404 });
 
-    await notifyManualGroupReminder(id);
+    await notifyManualLineGroupReminder(id);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

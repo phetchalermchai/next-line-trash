@@ -18,6 +18,8 @@ model Complaint {
   imageBefore  String?
   imageAfter   String?
   location     String?
+  zoneId       String?
+  zoneName     String? 
   status       ComplaintStatus @default(PENDING)
   message      String?
   notifiedAt   DateTime?
@@ -116,8 +118,18 @@ enum UserStatus {
 
 model Setting {
   id            String @id @default(uuid())
-  key           String @unique // ชื่อคีย์ เช่น 'LINE_GROUP_ID', 'LINE_ACCESS_TOKEN'
-  value         String        // ค่าจริง เช่น รหัสกลุ่มหรือ access token
-  createdAt     DateTime @default(now()) // วันเวลาที่สร้าง
-  updatedAt     DateTime @updatedAt      // วันเวลาที่แก้ไขล่าสุด
+  key           String @unique
+  value         String 
+  createdAt     DateTime @default(now()) 
+  updatedAt     DateTime @updatedAt 
+}
+
+model Zone {
+  id              String   @id @default(uuid())
+  name            String
+  lineGroupId     String?
+  telegramGroupId String?
+  polygon         Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt 
 }

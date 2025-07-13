@@ -106,10 +106,20 @@ export const authOptions: AuthOptions = {
     },
     async session({ session, token }) {
       if (session.user && token) {
-        session.user.id = token.id;
-        session.user.role = token.role as Role;
-        session.user.status = token.status as UserStatus;
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id },
+          select: { id: true, name: true, email: true, role: true, status: true },
+        });
+
+        if (dbUser) {
+          session.user.id = dbUser.id;
+          session.user.name = dbUser.name;
+          session.user.email = dbUser.email;
+          session.user.role = dbUser.role;
+          session.user.status = dbUser.status;
+        }
       }
+
       return session;
     },
     async jwt({ token, user }) {
@@ -136,6 +146,9 @@ export const authOptions: AuthOptions = {
   },
   session: {
     strategy: "jwt",
+  },
+  pages: {
+    signIn: "/login",
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
