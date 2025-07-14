@@ -137,7 +137,7 @@ export default function MonthlyTrendChart() {
         </Tabs>
         <div className="flex gap-2">
           <Select value={year.toString()} onValueChange={(val) => setYear(parseInt(val))}>
-            <SelectTrigger className="w-[80px]">
+            <SelectTrigger className="w-[85px]">
               <SelectValue placeholder="ปี" />
             </SelectTrigger>
             <SelectContent>

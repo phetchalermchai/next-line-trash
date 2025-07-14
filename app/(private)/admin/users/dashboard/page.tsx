@@ -211,6 +211,7 @@ export default function UserDashboardPage() {
                                     }
                                 },
                                 foreColor,
+                                background: resolvedTheme === 'dark' ? 'dark' : 'light'
                             },
                             xaxis: {
                                 categories: data.signupTrend.map((d: any) => d.month),
@@ -260,7 +261,8 @@ export default function UserDashboardPage() {
                                         },
                                     }
                                 },
-                                foreColor
+                                foreColor,
+                                background: resolvedTheme === 'dark' ? 'dark' : 'light'
                             },
                             xaxis: { categories: ["ADMIN", "SUPERADMIN"] },
                             colors: ["#16a34a", "#2563eb"],
@@ -295,6 +297,7 @@ export default function UserDashboardPage() {
                             },
                             chart: {
                                 foreColor,
+                                background: resolvedTheme === 'dark' ? 'dark' : 'light',
                                 toolbar: {
                                     show: true,
                                     tools: {
@@ -360,11 +363,11 @@ export default function UserDashboardPage() {
                         <div className="flex items-center gap-2">
                             <Button className="cursor-pointer" onClick={handleExportExcel} disabled={exporting}>
                                 <Download className="w-4 h-4 mr-2" />
-                                {exporting ? "กำลัง Export..." : "Export Excel"}
+                                {exporting ? "กำลัง Export..." : "Excel"}
                             </Button>
                             <Button className="cursor-pointer" onClick={handleExportPDF} disabled={exporting} variant="outline">
                                 <Download className="w-4 h-4 mr-2" />
-                                {exporting ? "กำลัง Export..." : "Export PDF"}
+                                {exporting ? "กำลัง Export..." : "PDF"}
                             </Button>
                         </div>
                     </div>

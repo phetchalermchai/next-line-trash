@@ -110,7 +110,7 @@ export default function StatusPieChart() {
                     </Tabs>
                     <div className="flex flex-wrap gap-2">
                         <Select value={year.toString()} onValueChange={(val) => setYear(parseInt(val))}>
-                            <SelectTrigger className="w-[80px]">
+                            <SelectTrigger className="w-[85px]">
                                 <SelectValue placeholder="ปี" />
                             </SelectTrigger>
                             <SelectContent>

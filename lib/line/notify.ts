@@ -528,7 +528,7 @@ function buildGroupFlex(c: Complaint, type: string = "ใหม่") {
             action: {
               type: "uri",
               label: "แจ้งผลดำเนินงาน",
-              uri: `${process.env.WEB_BASE_URL}/admin/complaints/${c.id}/report`
+              uri: `${process.env.WEB_BASE_URL}/admin/complaints/manage?reportId=${c.id}`
             }
           }
         ],

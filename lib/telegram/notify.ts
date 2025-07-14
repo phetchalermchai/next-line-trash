@@ -27,9 +27,9 @@ function buildTelegramMessage(complaint: Complaint, zoneName?: string, type: str
     const sourceLabel = {
         LINE: "LINE",
         FACEBOOK: "Facebook",
-        PHONE: "โทรศัพท์",
-        COUNTER: "จุดบริการ",
-        OTHER: "อื่นๆ",
+        PHONE: "PHONE",
+        COUNTER: "COUNTER",
+        OTHER: "OTHER",
     };
     const mapUrl = complaint.location
         ? `https://www.google.com/maps/search/?api=1&query=${complaint.location}`
