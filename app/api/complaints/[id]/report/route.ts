@@ -6,6 +6,7 @@ import { apiKeyAuth } from "@/lib/middleware/api-key-auth";
 import { uploadImageToSupabase } from "@/lib/storage/upload-image";
 import { notifyReportResultToLineGroup, notifyReportResultToLineUser } from "@/lib/line/notify";
 import { randomUUID } from "crypto";
+import { notifyTelegramGroupReport } from "@/lib/telegram/notify";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -85,6 +86,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (updated.lineUserId && updated.source === "LINE") {
       await notifyReportResultToLineUser(id, message, updated.lineUserId);
     }
+
+    await notifyTelegramGroupReport(updated, message);
 
     return NextResponse.json(updated);
   } catch (error: any) {

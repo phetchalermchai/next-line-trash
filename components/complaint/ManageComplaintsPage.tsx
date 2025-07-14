@@ -152,12 +152,15 @@ export default function ManageComplaintsPage() {
         }
 
         try {
-            await axios.post(`/api/complaints/${complaint.id}/line/notify-group`, { complaintId: complaint.id });
-            toast.success("แจ้งเตือนกลุ่มเจ้าหน้าที่สำเร็จ");
+            await Promise.all([
+                axios.post(`/api/complaints/${complaint.id}/line/notify-group`),
+                axios.post(`/api/complaints/${complaint.id}/telegram/notify-group`)
+            ]);
+            toast.success("แจ้งเตือนกลุ่มเจ้าหน้าที่ LINE & Telegram สำเร็จ");
             refreshComplaints();
         } catch (error) {
             console.error("[Notify Group] Error:", error);
-            toast.error("เกิดข้อผิดพลาดในการแจ้งเตือนกลุ่ม");
+            toast.error("เกิดข้อผิดพลาดในการแจ้งเตือนกลุ่ม LINE & Telegram");
         }
     };
 

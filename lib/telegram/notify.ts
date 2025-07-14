@@ -4,8 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { Complaint } from "@prisma/client";
 
 // messageTemplate สามารถปรับแต่งได้
-function buildTelegramMessage(complaint: Complaint, zoneName?: string, type: string = "ใหม่") {
-    const thaiDate = new Date(complaint.createdAt).toLocaleString("th-TH", {
+function buildTelegramMessage(complaint: Complaint, zoneName?: string, type: string = "ใหม่", resultMessage?: string) {
+    const date = type === "เสร็จสิ้น"
+        ? complaint.updatedAt
+        : complaint.createdAt;
+
+    const thaiDate = new Date(date).toLocaleString("th-TH", {
         timeZone: "Asia/Bangkok",
         year: "numeric",
         month: "long",
@@ -14,6 +18,7 @@ function buildTelegramMessage(complaint: Complaint, zoneName?: string, type: str
         minute: "2-digit",
         hour12: false
     });
+
     const statusLabel = {
         PENDING: "รอดำเนินการ",
         DONE: "เสร็จสิ้น",
@@ -34,16 +39,17 @@ function buildTelegramMessage(complaint: Complaint, zoneName?: string, type: str
     const reportUrl = `${process.env.WEB_BASE_URL}/admin/complaints/manage?reportId=${complaint.id}`;
 
     let txt = `
-📌 <b>เรื่องร้องเรียน (${type})</b>
+<b>เรื่องร้องเรียน (${type})</b>
 <b>รหัสอ้างอิง:</b> #${complaint.id.slice(-6).toUpperCase()}
-<b>วันที่แจ้ง:</b> ${thaiDate} น.
+<b>วันที่${type === "เสร็จสิ้น" ? "รายงาน" : "แจ้ง"}:</b> ${thaiDate} น.
 ${zoneName ? `<b>โซน:</b> ${zoneName}` : ""}
 
 <b>ช่องทาง:</b> ${sourceLabel[complaint.source] || complaint.source}
 <b>ผู้แจ้ง:</b> ${complaint.reporterName || complaint.lineUserId || "-"}
 ${complaint.receivedBy && complaint.source !== "LINE" ? `<b>ผู้รับแจ้ง:</b> ${complaint.receivedBy}` : ""}
 <b>เบอร์โทร:</b> ${complaint.phone || "-"}
-<b>รายละเอียด:</b> ${complaint.description}
+<b>รายละเอียด:</b> ${complaint.description || "-"}
+${resultMessage ? `\n<b>สรุปผล:</b> ${resultMessage}` : ""}
 
 <b>สถานะ:</b> ${statusLabel[complaint.status] || complaint.status}
 <b>แผนที่:</b> <a href="${mapUrl}">เปิด Google Maps</a>
@@ -96,8 +102,84 @@ export async function notifyTelegramGroupForComplaint(complaint: Complaint) {
             parse_mode: message.parse_mode,
             reply_markup: message.reply_markup,
         });
-    } catch (error:any) {
+    } catch (error: any) {
         console.error(error?.response?.data || error);
         throw error;
+    }
+}
+
+
+export async function notifyTelegramGroupReport(complaint: Complaint, resultMessage: string) {
+    let zone = null;
+    if (complaint.zoneId) {
+        zone = await prisma.zone.findUnique({ where: { id: complaint.zoneId } });
+    }
+    let chatId = zone?.telegramGroupId || null;
+    let zoneName = zone?.name ?? undefined;
+
+    if (!chatId) {
+        const middleZone = await prisma.zone.findFirst({ where: { name: "โซนกลาง" } });
+        if (middleZone?.telegramGroupId) {
+            chatId = middleZone.telegramGroupId;
+            zoneName = middleZone.name;
+        }
+    }
+    if (!chatId) return;
+
+    let tokenSetting = await getSettingByKey("TELEGRAM_BOT_TOKEN");
+    let telegramToken = tokenSetting?.value ?? process.env.TELEGRAM_BOT_TOKEN;
+    if (!telegramToken) return;
+
+    const telegramMsg = buildTelegramMessage(complaint, zoneName, "เสร็จสิ้น", resultMessage);
+
+    try {
+        await axios.post(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+            chat_id: chatId,
+            text: telegramMsg.text,
+            parse_mode: telegramMsg.parse_mode,
+            reply_markup: telegramMsg.reply_markup,
+        });
+    } catch (error) {
+        console.error("[notifyTelegramGroupReport] ส่ง Telegram ไม่สำเร็จ:", error);
+    }
+}
+
+export async function notifyManualTelegramGroupReminder(complaint: Complaint) {
+    let zone = null;
+    if (complaint.zoneId) {
+        zone = await prisma.zone.findUnique({ where: { id: complaint.zoneId } });
+    }
+    let chatId = zone?.telegramGroupId || null;
+    let zoneName = zone?.name ?? undefined;
+
+    if (!chatId) {
+        const middleZone = await prisma.zone.findFirst({ where: { name: "โซนกลาง" } });
+        if (middleZone?.telegramGroupId) {
+            chatId = middleZone.telegramGroupId;
+            zoneName = middleZone.name;
+        }
+    }
+    if (!chatId) return;
+
+    let tokenSetting = await getSettingByKey("TELEGRAM_BOT_TOKEN");
+    let telegramToken = tokenSetting?.value ?? process.env.TELEGRAM_BOT_TOKEN;
+    if (!telegramToken) return;
+
+    // นับจำนวนวันที่ร้องเรียนรอ (Pending) แล้ว
+    const now = new Date();
+    const created = new Date(complaint.createdAt);
+    const diffCreatedDays = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+    // เพิ่มข้อความระบุ "ร้องเรียนค้างมา X วัน"
+    const telegramMsg = buildTelegramMessage(complaint, zoneName, `ค้าง ${diffCreatedDays} วัน`);
+
+    try {
+        await axios.post(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+            chat_id: chatId,
+            text: telegramMsg.text,
+            parse_mode: telegramMsg.parse_mode,
+            reply_markup: telegramMsg.reply_markup,
+        });
+    } catch (error) {
+        console.error("[notifyManualTelegramGroupReminder] ส่ง Telegram ไม่สำเร็จ:", error);
     }
 }
