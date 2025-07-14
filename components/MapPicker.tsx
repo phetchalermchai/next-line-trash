@@ -77,7 +77,7 @@ export default function MapPicker({
                             </Button>
                         </DialogTrigger>
 
-                        <DialogContent className="max-w-4xl w-full overflow-hidden p-0 z-50">
+                        <DialogContent className="!max-w-7xl w-full overflow-hidden p-0 z-50">
                             <DialogHeader className="p-4">
                                 <DialogTitle>เลือกตำแหน่ง</DialogTitle>
                                 <DialogDescription>
