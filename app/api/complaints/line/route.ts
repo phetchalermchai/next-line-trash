@@ -6,6 +6,7 @@ import { uploadImageToSupabase } from "@/lib/storage/upload-image";
 import { randomUUID } from "crypto";
 import { findZoneByLatLng } from "@/lib/zone/service";
 import { getSettingByKey } from "@/lib/settings/service";
+import { notifyTelegramGroupForComplaint } from "@/lib/telegram/notify";
 
 function extractLatLng(location?: string): [number, number] | null {
   if (!location) return null;
@@ -98,6 +99,8 @@ export async function POST(req: NextRequest) {
     if (lineGroupId && token) {
       await notifyLineUserAndLineGroup(complaint, lineGroupId, token);
     }
+
+    await notifyTelegramGroupForComplaint(complaint);
 
     return NextResponse.json(complaint);
   } catch (error) {

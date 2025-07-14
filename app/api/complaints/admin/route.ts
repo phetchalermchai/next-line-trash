@@ -9,6 +9,7 @@ import { randomUUID } from "crypto";
 import { ComplaintSource } from "@prisma/client";
 import { findZoneByLatLng } from "@/lib/zone/service";
 import { notifyLineGroup } from "@/lib/line/notify";
+import { notifyTelegramGroupForComplaint } from "@/lib/telegram/notify";
 import { getSettingByKey } from "@/lib/settings/service";
 
 function extractLatLng(location?: string): [number, number] | null {
@@ -118,6 +119,8 @@ export async function POST(req: NextRequest) {
                 await notifyLineGroup(lineGroupId, complaint, groupToken);
             }
         }
+
+        await notifyTelegramGroupForComplaint(complaint);
 
         return NextResponse.json(complaint);
     } catch (error) {

@@ -7,14 +7,17 @@ export default function SettingPage() {
   const { data: session } = useSession();
   const [groupId, setGroupId] = useState("");
   const [accessToken, setAccessToken] = useState("");
+  const [telegramToken, setTelegramToken] = useState("");
 
   useEffect(() => {
     async function fetchSettings() {
       const groupRes = await axios.get("/api/settings?key=LINE_GROUP_ID");
       const tokenRes = await axios.get("/api/settings?key=LINE_ACCESS_TOKEN");
+      const telegramTokenRes = await axios.get("/api/settings?key=TELEGRAM_BOT_TOKEN");
 
       setGroupId(groupRes.data?.value || "");
       setAccessToken(tokenRes.data?.value || "");
+      setTelegramToken(telegramTokenRes.data?.value || "8038320232:AAFGExbYuHgzB5VlO4Rkd3WHPFHjJlQRGKQ");
     }
     fetchSettings();
   }, []);
@@ -22,6 +25,7 @@ export default function SettingPage() {
   async function handleSave() {
     await axios.put("/api/settings", { key: "LINE_GROUP_ID", value: groupId });
     await axios.put("/api/settings", { key: "LINE_ACCESS_TOKEN", value: accessToken });
+    await axios.put("/api/settings", { key: "TELEGRAM_BOT_TOKEN", value: telegramToken });
     alert("บันทึกสำเร็จ");
   }
 
@@ -46,6 +50,14 @@ export default function SettingPage() {
         type="text"
         value={accessToken}
         onChange={(e) => setAccessToken(e.target.value)}
+        className="border p-2 w-full mb-4"
+      />
+
+      <label className="block mb-2">TELEGRAM_BOT_TOKEN</label>
+      <input
+        type="text"
+        value={telegramToken}
+        onChange={(e) => setTelegramToken(e.target.value)}
         className="border p-2 w-full mb-4"
       />
 
