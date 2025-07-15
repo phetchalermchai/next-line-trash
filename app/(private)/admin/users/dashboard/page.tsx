@@ -219,6 +219,7 @@ export default function UserDashboardPage() {
                             },
                             colors: ["#4f46e5"],
                             tooltip: { theme: tooltipTheme },
+                            theme: { mode: (resolvedTheme === 'dark' ? 'dark' : 'light') as 'dark' | 'light' }
                         }}
                         series={[{ name: "ผู้ใช้ใหม่", data: data.signupTrend.map((d: any) => d.count) }]}
                     />
@@ -273,6 +274,7 @@ export default function UserDashboardPage() {
                                 },
                             },
                             tooltip: { theme: tooltipTheme },
+                            theme: { mode: (resolvedTheme === 'dark' ? 'dark' : 'light') as 'dark' | 'light' }
                         }}
                         series={[{ name: "จำนวน", data: [data.adminUsers, data.superadminUsers] }]}
                     />
@@ -325,6 +327,7 @@ export default function UserDashboardPage() {
                                 }
                             },
                             tooltip: { theme: tooltipTheme },
+                            theme: { mode: (resolvedTheme === 'dark' ? 'dark' : 'light') as 'dark' | 'light' }
                         }}
                         series={data.providers.map((p: any) => p.count)}
                     />
@@ -375,8 +378,11 @@ export default function UserDashboardPage() {
                 <CardContent className="space-y-2">
                     {data.recentUsers.map((user: any) => (
                         <div key={user.id} className="flex justify-between items-center">
-                            <div>
-                                <p className="font-semibold">ชื่อ: {user.name || "ไม่มีชื่อ"}</p>
+                            <div className="w-full">
+                                <div className="flex justify-between items-center">
+                                    <p className="font-semibold">ชื่อ: {user.name || "ไม่มีชื่อ"}</p>
+                                    <Badge>{formatThaiDateWithBE(user.createdAt)}</Badge>
+                                </div>
                                 <p className="text-sm text-muted-foreground">อีเมล: {user.email || "ไม่มีอีเมล"}</p>
                                 <div className="flex gap-2 mt-1">
                                     <Badge variant={roleVariants[user.role as keyof typeof roleVariants]}>
@@ -387,7 +393,7 @@ export default function UserDashboardPage() {
                                     </Badge>
                                 </div>
                             </div>
-                            <Badge>{formatThaiDateWithBE(user.createdAt)}</Badge>
+                            {/* <Badge>{formatThaiDateWithBE(user.createdAt)}</Badge> */}
                         </div>
                     ))}
                 </CardContent>

@@ -2,38 +2,19 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-import {
-  ColumnDef,
-  getCoreRowModel,
-  useReactTable,
-  flexRender,
-} from "@tanstack/react-table";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { ColumnDef, getCoreRowModel, useReactTable, flexRender, } from "@tanstack/react-table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { X, Check, Trash2 } from "lucide-react";
 import { roleVariants, statusColors } from "@/utils/userLabels";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { PendingUserSkeleton, TableSkeleton } from "./Skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface User {
   id: string;
@@ -139,9 +120,14 @@ const PendingUsersPage = () => {
         return (
           <div className="flex  gap-2">
             <Dialog>
-              <DialogTrigger asChild>
-                <Button className="cursor-pointer" size="sm" variant="default">อนุมัติ</Button>
-              </DialogTrigger>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DialogTrigger asChild>
+                    <Button className="cursor-pointer" size="icon" variant="ghost"><Check className="w-5 h-5 text-green-600 dark:text-green-300" /></Button>
+                  </DialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent>อนุมัติ</TooltipContent>
+              </Tooltip>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>ยืนยันการอนุมัติ</DialogTitle>
@@ -155,9 +141,16 @@ const PendingUsersPage = () => {
               </DialogContent>
             </Dialog>
             <Dialog>
-              <DialogTrigger asChild>
-                <Button className="cursor-pointer" size="sm" variant="destructive">ยกเลิก</Button>
-              </DialogTrigger>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DialogTrigger asChild>
+                    <Button className="cursor-pointer" size="icon" variant="ghost">
+                      <X className="w-5 h-5 text-red-600 dark:text-red-400" />
+                    </Button>
+                  </DialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent>ยกเลิก</TooltipContent>
+              </Tooltip>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>ยืนยันการยกเลิก</DialogTitle>
@@ -244,9 +237,14 @@ const PendingUsersPage = () => {
                     </div>
                     <div className="flex gap-2 pt-2">
                       <Dialog>
-                        <DialogTrigger asChild>
-                          <Button className="cursor-pointer" size="sm" variant="default" disabled={isApproving}>อนุมัติ</Button>
-                        </DialogTrigger>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DialogTrigger asChild>
+                              <Button className="cursor-pointer" size="icon" variant="ghost"><Check className="w-5 h-5 text-green-600 dark:text-green-300" /></Button>
+                            </DialogTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent>อนุมัติ</TooltipContent>
+                        </Tooltip>
                         <DialogContent>
                           <DialogHeader>
                             <DialogTitle>ยืนยันการอนุมัติ</DialogTitle>
@@ -258,9 +256,16 @@ const PendingUsersPage = () => {
                         </DialogContent>
                       </Dialog>
                       <Dialog>
-                        <DialogTrigger asChild>
-                          <Button className="cursor-pointer" size="sm" variant="destructive" disabled={isBanning}>ยกเลิก</Button>
-                        </DialogTrigger>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DialogTrigger asChild>
+                              <Button className="cursor-pointer" size="icon" variant="ghost">
+                                <X className="w-5 h-5 text-red-600 dark:text-red-400" />
+                              </Button>
+                            </DialogTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent>ยกเลิก</TooltipContent>
+                        </Tooltip>
                         <DialogContent>
                           <DialogHeader>
                             <DialogTitle>ยืนยันการยกเลิก</DialogTitle>

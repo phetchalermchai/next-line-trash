@@ -26,7 +26,7 @@ export default function ImageGalleryModal({ images, initialIndex, onClose }: Pro
 
     return (
         <Dialog open onOpenChange={onClose}>
-            <DialogContent className="w-full max-w-5xl p-0 overflow-hidden bg-black">
+            <DialogContent showCloseButton={false} className="w-full max-w-5xl p-0 overflow-hidden bg-black">
                 <DialogHeader>
                     <DialogTitle className="sr-only">ดูรูปภาพ</DialogTitle>
                     <DialogDescription className="sr-only">คุณสามารถเลื่อนดูรูปทั้งหมด และปิดเมื่อไม่ต้องการดูแล้ว</DialogDescription>

@@ -157,8 +157,8 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button className="cursor-pointer" size="icon" variant="outline" onClick={() => setViewUser(row.original)}>
-                                        <Eye className="w-4 h-4" />
+                                    <Button className="cursor-pointer" size="icon" variant="ghost" onClick={() => setViewUser(row.original)}>
+                                        <Eye className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">ดูรายละเอียด</TooltipContent>
@@ -167,7 +167,7 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button className="cursor-pointer" size="icon" variant="outline" onClick={() => setEditUser(row.original)}><Pencil className="w-4 h-4" /></Button>
+                                    <Button className="cursor-pointer" size="icon" variant="ghost" onClick={() => setEditUser(row.original)}><Pencil className="w-4 h-4 text-yellow-600 dark:text-yellow-400" /></Button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">แก้ไขผู้ใช้งาน</TooltipContent>
                             </Tooltip>
@@ -175,7 +175,7 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button className="cursor-pointer" size="icon" variant="destructive" onClick={() => setDeleteUser(row.original)}><Trash2 className="w-4 h-4" /></Button>
+                                    <Button className="cursor-pointer" size="icon" variant="ghost" onClick={() => setDeleteUser(row.original)}><Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" /></Button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">ลบผู้ใช้งาน</TooltipContent>
                             </Tooltip>
@@ -400,7 +400,7 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
                             </div>
                             <div className="flex gap-2 items-center">
                                 <Select onValueChange={(v) => setStatus(v as "ALL" | "APPROVED" | "PENDING" | "BANNED")} value={status}>
-                                    <SelectTrigger className="w-[160px]">
+                                    <SelectTrigger className="max-w-[160px]">
                                         <SelectValue placeholder="สถานะ" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -411,7 +411,7 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
                                     </SelectContent>
                                 </Select>
                                 <Select onValueChange={setRole} value={role}>
-                                    <SelectTrigger className="w-[160px]">
+                                    <SelectTrigger className="max-w-[160px]">
                                         <SelectValue placeholder="สิทธิ์" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -423,8 +423,8 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
                             </div>
                         </div>
                         <div className="flex flex-wrap gap-2 items-center">
-                            <Button className="cursor-pointer" onClick={handleExportExcel} disabled={loadingExport}>{loadingExport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}Export Excel</Button>
-                            <Button className="cursor-pointer" onClick={handleExportPDF} disabled={loadingExport} variant="outline">{loadingExport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}Export PDF</Button>
+                            <Button className="cursor-pointer" onClick={handleExportExcel} disabled={loadingExport}>{loadingExport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}Excel</Button>
+                            <Button className="cursor-pointer" onClick={handleExportPDF} disabled={loadingExport} variant="outline">{loadingExport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}PDF</Button>
                         </div>
                     </>
                 )

@@ -139,6 +139,18 @@ export default function ComplaintCreatePage() {
     }
   };
 
+  function parseLocation(str: string | null | undefined): { lat: number, lng: number } | null {
+    if (!str) return null;
+    const [lat, lng] = str.split(",").map(Number);
+    if (isNaN(lat) || isNaN(lng)) return null;
+    return { lat, lng };
+  }
+
+  function locationToString(loc: { lat: number, lng: number } | null | undefined): string {
+    if (!loc) return "";
+    return `${loc.lat},${loc.lng}`;
+  }
+
   return (
     <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold">สร้างรายการร้องเรียน</h1>
@@ -213,7 +225,7 @@ export default function ComplaintCreatePage() {
             ตำแหน่งปัจจุบัน
           </Button>
           {formData.location && (
-            <MapPicker location={formData.location} onChange={(loc) => setFormData((p) => ({ ...p, location: loc }))} />
+            <MapPicker location={parseLocation(formData.location) || undefined} onChange={(loc) => setFormData((p) => ({ ...p, location: locationToString(loc) }))} />
           )}
         </div>
         {formData.location && <MiniMapPreview location={formData.location} />}

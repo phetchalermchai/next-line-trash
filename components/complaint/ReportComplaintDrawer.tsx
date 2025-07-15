@@ -73,7 +73,7 @@ export default function ReportComplaintDrawer({ complaint, open, onClose, onRefr
                     <DrawerDescription>กรุณากรอกผลการดำเนินการและแนบภาพหลัง</DrawerDescription>
                 </DrawerHeader>
 
-                <div className="px-4 py-2 space-y-4 text-sm">
+                <div className="px-4 py-2 pb-4 space-y-4 text-sm overflow-y-auto max-h-screen">
                     <div><strong>รหัสอ้างอิง:</strong> #{complaint.id.slice(-6).toUpperCase() || "-"}</div>
                     <div><strong>วันที่แจ้ง:</strong> {formatThaiDatetime(complaint.createdAt) || "-"}</div>
                     <div><strong>วันที่อัปเดต:</strong> {formatThaiDatetime(complaint.updatedAt) || "-"}</div>

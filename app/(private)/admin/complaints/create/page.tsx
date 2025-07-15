@@ -23,7 +23,6 @@ import {
 import axios from "axios";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
-const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });
 
 export default function AdminComplaintCreatePage() {
     const router = useRouter();
@@ -95,6 +94,18 @@ export default function AdminComplaintCreatePage() {
             setLoading(false);
         }
     };
+
+    function parseLocation(str: string | null | undefined): { lat: number, lng: number } | null {
+        if (!str) return null;
+        const [lat, lng] = str.split(",").map(Number);
+        if (isNaN(lat) || isNaN(lng)) return null;
+        return { lat, lng };
+    }
+
+    function locationToString(loc: { lat: number, lng: number } | null | undefined): string {
+        if (!loc) return "";
+        return `${loc.lat},${loc.lng}`;
+    }
 
     return (
         <div className="w-full flex justify-center">
@@ -174,31 +185,8 @@ export default function AdminComplaintCreatePage() {
                 <div className="col-span-full space-y-3">
                     <Label htmlFor="location">ระบุตำแหน่งจาก GPS</Label>
                     <div className="flex flex-col sm:flex-row gap-2">
-                        <Input id="location" name="location" value={formData.location || ""} onChange={handleChange} className="flex-1" />
-                        <Button
-                            type="button"
-                            className="cursor-pointer"
-                            onClick={() => {
-                                if (!navigator.geolocation) return;
-                                navigator.geolocation.getCurrentPosition(
-                                    (pos) => {
-                                        const { latitude, longitude } = pos.coords;
-                                        setFormData((p) => ({ ...p, location: `${latitude},${longitude}` }));
-                                    },
-                                    (err) => {
-                                        toast.error("ไม่สามารถดึงตำแหน่งปัจจุบันได้");
-                                        console.error("GPS error:", err);
-                                    }
-                                );
-                            }}
-                        >
-                            ตำแหน่งปัจจุบัน
-                        </Button>
-                        {formData.location && (
-                            <MapPicker location={formData.location} onChange={(loc) => setFormData((p) => ({ ...p, location: loc }))} />
-                        )}
+                        <MapPicker location={parseLocation(formData.location) || undefined} onChange={(loc) => setFormData((p) => ({ ...p, location: locationToString(loc) }))} />
                     </div>
-                    {formData.location && <MiniMapPreview location={formData.location} />}
                 </div>
                 {uploadProgress.total !== undefined && (
                     <div className="col-span-full">

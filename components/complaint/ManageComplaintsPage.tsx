@@ -63,6 +63,9 @@ export default function ManageComplaintsPage() {
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [loadingFetch, setLoadingFetch] = React.useState(false);
     const [loadingExport, setLoadingExport] = React.useState(false);
+    const [pageIndex, setPageIndex] = React.useState(0);
+    const [pageSize, setPageSize] = React.useState(10);
+    const [totalCount, setTotalCount] = React.useState(0);
     const searchParams = useSearchParams();
     const router = useRouter();
     const isMobile = useMediaQuery("(max-width: 768px)");
@@ -77,14 +80,15 @@ export default function ManageComplaintsPage() {
             if (source && source !== "ALL") params.set("source", source);
             if (dateRange?.from) params.set("startDate", dateRange.from.toISOString());
             if (dateRange?.to) params.set("endDate", dateRange.to.toISOString());
-            params.set("page", "1");
-            params.set("limit", "10");
+            params.set("page", (pageIndex + 1).toString());
+            params.set("limit", pageSize.toString());
 
             const url = params.toString() ? `/api/complaints?${params.toString()}` : "/api/complaints";
 
             const res = await axios.get(url);
             const complaintsData = res.data?.items || [];
             setComplaints(complaintsData);
+            setTotalCount(res.data?.total || 0);
         } catch (error) {
             console.error(error);
             toast.error("เกิดข้อผิดพลาดในการโหลดข้อมูลร้องเรียน");
@@ -95,7 +99,7 @@ export default function ManageComplaintsPage() {
 
     React.useEffect(() => {
         refreshComplaints();
-    }, [globalFilter, dateRange, status, source]);
+    }, [globalFilter, dateRange, status, source, pageIndex, pageSize]);
 
     React.useEffect(() => {
         const reportId = searchParams.get("reportId");
@@ -464,10 +468,18 @@ export default function ManageComplaintsPage() {
     const table = useReactTable({
         data: complaints,
         columns,
+        pageCount: Math.ceil(totalCount / pageSize),
         state: {
             globalFilter,
             sorting,
+            pagination: { pageIndex, pageSize },
         },
+        onPaginationChange: (updater) => {
+            const next = typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
+            setPageIndex(next.pageIndex);
+            setPageSize(next.pageSize);
+        },
+        manualPagination: true,
         onGlobalFilterChange: setGlobalFilter,
         onSortingChange: setSorting,
         getCoreRowModel: getCoreRowModel(),
@@ -491,7 +503,7 @@ export default function ManageComplaintsPage() {
                 </div>
                 <div className="flex gap-2 items-center">
                     <Select onValueChange={v => setStatus(v as any)} value={status}>
-                        <SelectTrigger className="w-[140px]">
+                        <SelectTrigger className="max-w-[140px]">
                             <SelectValue placeholder="ทุกสถานะ" />
                         </SelectTrigger>
                         <SelectContent>
@@ -501,7 +513,7 @@ export default function ManageComplaintsPage() {
                         </SelectContent>
                     </Select>
                     <Select onValueChange={v => setSource(v as any)} value={source}>
-                        <SelectTrigger className="w-[140px]">
+                        <SelectTrigger className="max-w-[140px]">
                             <SelectValue placeholder="ทุกช่องทาง" />
                         </SelectTrigger>
                         <SelectContent>
@@ -630,16 +642,16 @@ export default function ManageComplaintsPage() {
                         <span className="text-sm mx-2 whitespace-nowrap">หน้า {table.getState().pagination.pageIndex + 1} จาก {table.getPageCount()}</span>
                     </div>
                     <div className="inline-flex justify-center gap-1">
-                        <Button variant="outline" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
+                        <Button variant="outline" onClick={() => table.setPageIndex(0)} disabled={pageIndex === 0}>
                             <ChevronsLeft className="w-4 h-4" />
                         </Button>
-                        <Button variant="outline" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+                        <Button variant="outline" onClick={() => table.previousPage()} disabled={pageIndex === 0}>
                             <ChevronLeft className="w-4 h-4" />
                         </Button>
-                        <Button variant="outline" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+                        <Button variant="outline" onClick={() => table.nextPage()} disabled={pageIndex + 1 >= table.getPageCount()}>
                             <ChevronRight className="w-4 h-4" />
                         </Button>
-                        <Button variant="outline" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
+                        <Button variant="outline" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={pageIndex + 1 >= table.getPageCount()}>
                             <ChevronsRight className="w-4 h-4" />
                         </Button>
                     </div>
