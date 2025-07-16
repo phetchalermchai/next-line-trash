@@ -73,10 +73,11 @@ export default function ProfileSection({ user }: Props) {
 
     const handleRequestBan = async () => {
         try {
-            await axios.post("/api/user/request-ban");
+            await axios.post("/api/user/close-account");
             toast.success("ส่งคำขอปิดบัญชีเรียบร้อยแล้ว กรุณารอการอนุมัติ");
             // เพิ่ม logic logout ถ้าต้องการ
         } catch (err: any) {
+            console.log(err);
             toast.error(err.response?.data?.error || "ส่งคำขอไม่สำเร็จ");
         }
     };
@@ -109,7 +110,7 @@ export default function ProfileSection({ user }: Props) {
 
     return (
         <Card className="mb-6">
-            <CardContent className="flex flex-col gap-4">
+            <CardContent className="flex flex-col gap-4 p-6">
                 {/* Profile */}
                 <div className="flex items-center justify-center gap-4">
                     <div className="flex flex-col items-center w-full gap-3">
@@ -159,7 +160,7 @@ export default function ProfileSection({ user }: Props) {
                         </div>
                     </div>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-4 mx-auto w-full max-w-2xl">
                     <div className="font-semibold text-sm mb-2">ผูกบัญชีเพิ่มเติม</div>
                     {Object.values(providers).map((provider) => (
                         <div
@@ -218,7 +219,7 @@ export default function ProfileSection({ user }: Props) {
                         </div>
                     ))}
                 </div>
-                <div className="mt-8">
+                <div className="mt-8 mx-auto w-full max-w-2xl">
                     <div className="font-semibold text-sm text-red-500 mb-2">ปิดบัญชี/ลบบัญชี</div>
                     <div className="space-y-2">
                         <p className="text-xs text-muted-foreground">
