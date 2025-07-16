@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { signIn, getProviders } from "next-auth/react";
 import { useEffect, useState, ReactNode } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   CheckCircle,
@@ -27,7 +27,7 @@ interface LinkedProvider {
   providerAccountId: string;
 }
 
-export default function AccountLinkingPage() {
+export default function AccountLinkingSection() {
   const { data: session } = useSession();
   const [linked, setLinked] = useState<LinkedProvider[]>([]);
   const [providers, setProviders] = useState<Record<string, any>>({});
@@ -93,9 +93,12 @@ export default function AccountLinkingPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10">
-      <h2 className="text-xl font-semibold mb-4">ผูกบัญชีเพิ่มเติม</h2>
-      <Card className="shadow-xl">
+    <div className="m-6 space-y-4">
+      <h2 className="text-xl font-bold mb-4">ผูกบัญชีเพิ่มเติม</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>ผูกบัญชีเพิ่มเติม</CardTitle>
+        </CardHeader>
         <CardContent className="space-y-4 p-6">
           {Object.values(providers).map((provider) => (
             <div

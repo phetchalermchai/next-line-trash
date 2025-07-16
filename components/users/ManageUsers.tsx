@@ -503,7 +503,7 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
                             <DrawerTitle>ข้อมูลผู้ใช้งาน</DrawerTitle>
                             <DrawerDescription>แสดงรายละเอียดบัญชีผู้ใช้งาน</DrawerDescription>
                         </DrawerHeader>
-                        <div className="px-4 py-2 space-y-4 text-sm">
+                        <div className="px-4 py-2 space-y-4 text-sm overflow-y-auto max-h-screen">
                             <div><strong>ชื่อ:</strong> {viewUser.name}</div>
                             <div><strong>อีเมล:</strong> {viewUser.email}</div>
                             <div className="flex items-center gap-2">

@@ -26,7 +26,7 @@ interface ApiKey {
 
 const MAX_KEYS = 5;
 
-const AccountApiKey = () => {
+const AccountApiKeySection = () => {
     const { data: session } = useSession();
     const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
     const [apiKeyName, setApiKeyName] = useState("");
@@ -112,8 +112,8 @@ const AccountApiKey = () => {
     };
 
     return (
-        <div>
-            <h2 className="text-xl font-semibold mb-4">API Key ของคุณ</h2>
+        <div className="space-y-4">
+            <h2 className="text-xl font-bold mb-4">API Key ของคุณ</h2>
             {newKey && (
                 <div className="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded mb-4">
                     <p className="font-medium">API Key ที่สร้างใหม่ (แสดงเพียงครั้งเดียว):</p>
@@ -125,7 +125,7 @@ const AccountApiKey = () => {
                     </div>
                 </div>
             )}
-            <Card className="shadow-xl">
+            <Card>
                 <CardContent className="space-y-4 p-6">
                     <div className="flex flex-col md:flex-row gap-2 items-stretch md:items-center">
                         <Input
@@ -254,4 +254,4 @@ const AccountApiKey = () => {
     );
 };
 
-export default AccountApiKey;
+export default AccountApiKeySection;
