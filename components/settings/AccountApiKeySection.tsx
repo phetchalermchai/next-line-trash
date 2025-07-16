@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { th } from "date-fns/locale";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 
 interface ApiKey {
     id: string;
@@ -204,13 +204,15 @@ const AccountApiKeySection = () => {
                                                     </p>
 
                                                     <DialogFooter className="mt-4">
-                                                        <Button className="cursor-pointer" variant="secondary">ยกเลิก</Button>
+                                                        <DialogClose asChild>
+                                                            <Button className="cursor-pointer" variant="secondary">ยกเลิก</Button>
+                                                        </DialogClose>
                                                         <Button
                                                             className="cursor-pointer"
                                                             variant="destructive"
                                                             onClick={() => handlePermanentDelete(key.id)}
                                                         >
-                                                            ยืนยันลบถาวร
+                                                            ยืนยัน
                                                         </Button>
                                                     </DialogFooter>
                                                 </DialogContent>
@@ -234,11 +236,13 @@ const AccountApiKeySection = () => {
                                                 </DialogHeader>
                                                 <p>คุณแน่ใจหรือไม่ว่าต้องการยกเลิก API Key นี้?</p>
                                                 <DialogFooter className="mt-4">
-                                                    <Button className="cursor-pointer" variant="secondary" onClick={() => setConfirmRevokeId(null)}>
-                                                        ยกเลิก
-                                                    </Button>
+                                                    <DialogClose asChild>
+                                                        <Button className="cursor-pointer" variant="secondary" onClick={() => setConfirmRevokeId(null)}>
+                                                            ยกเลิก
+                                                        </Button>
+                                                    </DialogClose>
                                                     <Button className="cursor-pointer" variant="destructive" onClick={handleRevokeApiKey}>
-                                                        ยืนยันการยกเลิก
+                                                        ยืนยัน
                                                     </Button>
                                                 </DialogFooter>
                                             </DialogContent>

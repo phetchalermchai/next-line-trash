@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AlertTriangle, CheckCircle, Link2, XCircle } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { formatThaiDatetime } from "@/utils/date";
+import { roleVariants, statusColors } from "@/utils/userLabels";
 
 interface Props {
     user: {
@@ -18,6 +19,7 @@ interface Props {
         name?: string | null;
         email?: string | null;
         image?: string | null;
+        role: string;
         status: string;
         createdAt: string; // ISO
         accounts: { provider: string }[];
@@ -79,13 +81,6 @@ export default function ProfileSection({ user }: Props) {
         }
     };
 
-    // Helper: แปลง provider → label
-    const providerLabel: { [key: string]: string } = {
-        line: "LINE",
-        google: "Google",
-        facebook: "Facebook",
-    };
-
     const providerIcons: Record<string, ReactNode> = {
         google: (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="25" height="25">
             <path
@@ -110,6 +105,8 @@ export default function ProfileSection({ user }: Props) {
         </svg>)
     };
 
+    const linkedCount = linked.length; // หรือ user.accounts.length ก็ได้ ถ้าแน่ใจว่า synced กัน
+
     return (
         <Card className="mb-6">
             <CardContent className="flex flex-col gap-4">
@@ -117,28 +114,47 @@ export default function ProfileSection({ user }: Props) {
                 <div className="flex items-center justify-center gap-4">
                     <div className="flex flex-col items-center w-full gap-3">
                         <Avatar className="w-16 h-16">
-                            <AvatarImage src={user.image || ""} />
-                            <AvatarFallback>{user.name?.slice(0, 1) || "?"}</AvatarFallback>
+                            <AvatarImage src={user.image as string} alt={user.email || ""} />
+                            <AvatarFallback>{user.name?.slice(0, 1) as string}</AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col gap-2">
                             <div className="self-center text-lg font-bold">{user.name || "-"}</div>
                             <div className="text-sm text-muted-foreground">{user.email || "-"}</div>
                             <div className="text-xs">
+                                สิทธิ์การใช้งาน:{" "}
+                                <Badge variant={roleVariants[user.role as keyof typeof roleVariants]}>
+                                    {user.role}
+                                </Badge>
+                            </div>
+                            <div className="text-xs">
                                 สถานะบัญชี:{" "}
-                                <Badge variant={user.status === "ACTIVE" ? "default" : "secondary"}>
+                                <Badge className={statusColors[user.status as keyof typeof statusColors]}>
                                     {user.status}
                                 </Badge>
                             </div>
-
                             <div className="text-xs">
                                 วันที่สมัคร: {formatThaiDatetime(user.createdAt)}
                             </div>
                             <div className="self-center">
-                                {user.accounts.map(acc => (
-                                    <Badge key={acc.provider} variant="outline" className="mr-1">
-                                        {providerLabel[acc.provider] || acc.provider}
-                                    </Badge>
-                                ))}
+                                {user.accounts.map(acc => {
+                                    const providerLabel: { [key: string]: string } = {
+                                        line: "LINE",
+                                        google: "Google",
+                                        facebook: "Facebook",
+                                    };
+                                    const brandStyles: Record<string, string> = {
+                                        google: "bg-red-100 text-red-800",
+                                        facebook: "bg-blue-100 text-blue-800",
+                                        line: "bg-green-100 text-green-800",
+                                    };
+                                    const defaultStyle = "bg-gray-100 text-gray-800";
+                                    const style = brandStyles[acc.provider] || defaultStyle;
+                                    return (
+                                        <Badge key={acc.provider} variant="outline" className={`mr-1 ${style}`}>
+                                            {providerLabel[acc.provider]}
+                                        </Badge>
+                                    )
+                                })}
                             </div>
                         </div>
                     </div>
@@ -148,7 +164,7 @@ export default function ProfileSection({ user }: Props) {
                     {Object.values(providers).map((provider) => (
                         <div
                             key={provider.id}
-                            className="flex justify-between items-center border rounded-lg p-3 hover:bg-muted/50 transition gap-4"
+                            className="flex justify-between items-center border rounded-lg p-3 hover:bg-muted/50 transition"
                         >
                             <div className="flex items-center gap-3">
                                 {providerIcons[provider.id] || <Link2 className="w-5 h-5" />}
@@ -165,6 +181,7 @@ export default function ProfileSection({ user }: Props) {
                                             size="sm"
                                             onClick={() => setConfirmUnlink(provider.id)}
                                             className="cursor-pointer"
+                                            disabled={linkedCount === 1}
                                         >
                                             <XCircle className="w-4 h-4 mr-1" /> ถอดบัญชี
                                         </Button>
@@ -177,9 +194,11 @@ export default function ProfileSection({ user }: Props) {
                                         </DialogHeader>
                                         <DialogDescription>คุณแน่ใจหรือไม่ว่าต้องการถอดบัญชี {provider.name} ออกจากระบบ?</DialogDescription>
                                         <DialogFooter className="mt-4">
-                                            <Button className="cursor-pointer" variant="secondary" onClick={() => setConfirmUnlink(null)}>
-                                                ยกเลิก
-                                            </Button>
+                                            <DialogClose asChild>
+                                                <Button className="cursor-pointer" variant="secondary" onClick={() => setConfirmUnlink(null)}>
+                                                    ยกเลิก
+                                                </Button>
+                                            </DialogClose>
                                             <Button className="cursor-pointer" variant="destructive" onClick={handleUnlink}>
                                                 ยืนยันการถอด
                                             </Button>
@@ -218,13 +237,15 @@ export default function ProfileSection({ user }: Props) {
                                         <AlertTriangle className="w-5 h-5" /> ยืนยันการขอปิดบัญชี
                                     </DialogTitle>
                                 </DialogHeader>
-                                
+
                                 <DialogDescription>
                                     คุณแน่ใจหรือไม่ว่าต้องการขอปิดบัญชี?<br />
                                     หลังจากนี้บัญชีจะถูกเปลี่ยนเป็นสถานะ <b>BANNED</b> และรออนุมัติจากผู้ดูแล
                                 </DialogDescription>
                                 <DialogFooter className="mt-4">
-                                    <Button className="cursor-pointer" variant="secondary">ยกเลิก</Button>
+                                    <DialogClose asChild>
+                                        <Button className="cursor-pointer" variant="secondary">ยกเลิก</Button>
+                                    </DialogClose>
                                     <Button className="cursor-pointer" variant="destructive" onClick={handleRequestBan}>
                                         ยืนยัน
                                     </Button>

@@ -10,6 +10,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       where: { id: id },
       select: {
         id: true,
+        image: true,
         name: true,
         email: true,
         role: true,
