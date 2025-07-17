@@ -29,7 +29,7 @@ export default function GroupIdLogPage() {
         const res = await fetch("/api/webhook/log-groupid");
         const data = await res.json();
         setLogs(data);
-        setLoading(true);
+        setLoading(false);
     };
 
     useEffect(() => {
