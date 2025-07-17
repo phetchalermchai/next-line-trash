@@ -92,17 +92,9 @@ export default function TelegramWebhookSetter() {
     if (!botToken) return null;
 
     return (
-        <section className="mb-6 w-full max-w-2xl mx-auto">
-            <div
-                className="
-          flex flex-col sm:flex-row items-start gap-3 mb-4 p-4
-          rounded-xl border-l-4
-          bg-yellow-50 border-yellow-400
-          dark:bg-yellow-950 dark:border-yellow-700
-          shadow-sm
-        "
-            >
-                <AlertTriangle className="w-6 h-6 text-yellow-500 mt-0.5 flex-shrink-0" />
+        <section className="w-full max-w-2xl mx-auto">
+            <div className="flex flex-col sm:flex-row items-start gap-3 mb-4 p-4 rounded-xl border-l-4 bg-yellow-50 border-yellow-400 dark:bg-yellow-950 dark:border-yellow-700 shadow-sm">
+                <AlertTriangle className="w-6 h-6 text-yellow-500 mt-0.5 flex-shrink-0 self-center" />
                 <div className="flex-1 min-w-0">
                     <div className="font-bold text-yellow-900 dark:text-yellow-200 mb-1">
                         ต้องตั้งค่า Telegram Webhook ก่อนใช้งาน
@@ -118,13 +110,7 @@ export default function TelegramWebhookSetter() {
                     <div className="flex items-center gap-2 flex-wrap mt-2">
                         <Link2 className="w-4 h-4 text-yellow-500" />
                         <span className="font-semibold text-yellow-900 dark:text-yellow-200">Webhook URL:</span>
-                        <code
-                            className="
-                bg-yellow-100 dark:bg-yellow-900
-                px-2 py-1 rounded
-                text-yellow-900 dark:text-yellow-100
-                text-xs select-all break-all max-w-[70vw] md:max-w-sm
-              "
+                        <code className=" bg-yellow-100 dark:bg-yellow-900 px-2 py-1 rounded text-yellow-900 dark:text-yellow-100 text-xs select-all break-all max-w-[70vw] md:max-w-sm"
                             title={webhookUrl}
                         >
                             {!showFullUrl && webhookUrl.length > 45

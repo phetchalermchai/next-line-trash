@@ -1,10 +1,10 @@
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
-import { GaugeCircle, Search, FileBarChart2, FileText, Settings, LogOut, User2, ShieldAlert, UserCheck, Users, UserX, UserCheck2, BarChart3, Bell, MapPinned} from "lucide-react";
+import { GaugeCircle, Search, FileBarChart2, FileText, Settings, LogOut, User2, ShieldAlert, UserCheck, Users, UserX, UserCheck2, BarChart3, MapPinned, Bot, Group} from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 import clsx from "clsx";
 
 const applicationMenu = [
@@ -42,7 +42,11 @@ export function AppSidebar() {
 
     const finalSettingsMenu = [
         { title: "ตั้งค่าบัญชีผู้ใช้", href: "/admin/settings/profile", icon: Settings },
-        ...(isSuperadmin ? [{ title: "LINE Notification", href: "/admin/settings/line", icon: Bell },{ title: "ตั้งค่าพื้นที่โซน", href: "/admin/settings/zones", icon: MapPinned }] : []),
+        ...(isSuperadmin ? [
+            { title: "ตั้งค่าการแจ้งเตือน (Bot)", href: "/admin/settings/bot&notification", icon: Bot },
+            { title: "Log Group ID", href: "/admin/settings/bot/groupid-log", icon: Group },
+            { title: "ตั้งค่าพื้นที่โซน", href: "/admin/settings/zones", icon: MapPinned }
+        ] : []),
     ];
 
     if (status === "loading") {

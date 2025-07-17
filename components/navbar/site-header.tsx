@@ -18,7 +18,8 @@ export function SiteHeader() {
         { path: "/admin/users/banned", title: "ผู้ใช้งานที่ถูกระงับ" },
         { path: "/admin/assistant", title: "ตัวช่วยจัดทำเอกสาร" },
         { path: "/admin/settings/profile", title: "ตั้งค่าบัญชีผู้ใช้งาน" },
-        { path: "/admin/settings/line", title: "ตั้งค่า LINE Notification" },
+        { path: "/admin/settings/bot&notification", title: "ตั้งค่าการแจ้งเตือน (Bot)" },
+        { path: "/admin/settings/bot/groupid-log", title: "Log Group ID" },
         { path: "/admin/settings/zones", title: "ตั้งค่าพื้นที่โซน" },
     ];
 
