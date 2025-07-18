@@ -7,6 +7,7 @@ import { ClipboardCopy, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import dayjs from "dayjs";
+import "dayjs/locale/th";
 import relativeTime from "dayjs/plugin/relativeTime";
 import TelegramWebhookSetter from "./TelegramWebhookSetter";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -106,15 +107,20 @@ export default function GroupIdLogPage() {
                                     >
                                         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                                             {/* Badge + GroupId */}
-                                            <Badge
-                                                variant={log.source === "line" ? "outline" : "secondary"}
-                                                className={log.source === "line"
-                                                    ? "text-green-700 border-green-400 bg-green-50 dark:text-green-300 dark:border-green-700 dark:bg-green-900/40"
-                                                    : "text-blue-700 border-blue-400 bg-blue-50 dark:text-blue-300 dark:border-blue-700 dark:bg-blue-900/40"
-                                                }
-                                            >
-                                                {log.source === "line" ? "LINE" : "TELEGRAM"}
-                                            </Badge>
+                                            <div className="flex justify-between items-center">
+                                                <Badge
+                                                    variant={log.source === "line" ? "outline" : "secondary"}
+                                                    className={log.source === "line"
+                                                        ? "text-green-700 border-green-400 bg-green-50 dark:text-green-300 dark:border-green-700 dark:bg-green-900/40"
+                                                        : "text-blue-700 border-blue-400 bg-blue-50 dark:text-blue-300 dark:border-blue-700 dark:bg-blue-900/40"
+                                                    }
+                                                >
+                                                    {log.source === "line" ? "LINE" : "TELEGRAM"}
+                                                </Badge>
+                                                <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto sm:ml-0">
+                                                    {dayjs(log.time).fromNow()}
+                                                </span>
+                                            </div>
                                             <span className="font-mono text-xs bg-white dark:bg-zinc-950/60 rounded px-2 py-1 break-all min-w-0 max-w-[60vw] sm:max-w-[240px]">
                                                 {log.groupId}
                                             </span>
@@ -127,9 +133,6 @@ export default function GroupIdLogPage() {
                                             >
                                                 <ClipboardCopy className="w-4 h-4" />
                                             </Button>
-                                            <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto sm:ml-0">
-                                                {dayjs(log.time).fromNow()}
-                                            </span>
                                         </div>
                                         {/* detail log */}
                                         <details className="w-full mt-1 sm:mt-0">

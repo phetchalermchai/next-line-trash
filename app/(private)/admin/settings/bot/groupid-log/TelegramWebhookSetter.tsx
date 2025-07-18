@@ -128,7 +128,6 @@ export default function TelegramWebhookSetter() {
                     </div>
                 </div>
             </div>
-
             <Button
                 onClick={setTelegramWebhook}
                 disabled={loading}
