@@ -107,7 +107,7 @@ export default function GroupIdLogPage() {
                                     >
                                         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                                             {/* Badge + GroupId */}
-                                            <div className="flex justify-between items-center">
+                                            <div className="flex justify-between items-center w-full">
                                                 <Badge
                                                     variant={log.source === "line" ? "outline" : "secondary"}
                                                     className={log.source === "line"
@@ -121,18 +121,20 @@ export default function GroupIdLogPage() {
                                                     {dayjs(log.time).fromNow()}
                                                 </span>
                                             </div>
-                                            <span className="font-mono text-xs bg-white dark:bg-zinc-950/60 rounded px-2 py-1 break-all min-w-0 max-w-[60vw] sm:max-w-[240px]">
-                                                {log.groupId}
-                                            </span>
-                                            <Button
-                                                size="icon"
-                                                variant="ghost"
-                                                onClick={() => copyId(log.groupId)}
-                                                title="Copy"
-                                                className="hover:bg-gray-100 dark:hover:bg-zinc-900 flex-shrink-0"
-                                            >
-                                                <ClipboardCopy className="w-4 h-4" />
-                                            </Button>
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-mono text-xs bg-white dark:bg-zinc-950/60 rounded px-2 py-1 break-all min-w-0 max-w-[60vw] sm:max-w-[240px]">
+                                                    {log.groupId}
+                                                </span>
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    onClick={() => copyId(log.groupId)}
+                                                    title="Copy"
+                                                    className="hover:bg-gray-100 dark:hover:bg-zinc-900 flex-shrink-0"
+                                                >
+                                                    <ClipboardCopy className="w-4 h-4" />
+                                                </Button>
+                                            </div>
                                         </div>
                                         {/* detail log */}
                                         <details className="w-full mt-1 sm:mt-0">
