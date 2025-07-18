@@ -135,16 +135,16 @@ export default function GroupIdLogPage() {
                                                     <ClipboardCopy className="w-4 h-4" />
                                                 </Button>
                                             </div>
+                                            {/* detail log */}
+                                            <details className="w-full mt-1 sm:mt-0">
+                                                <summary className="text-xs cursor-pointer underline text-gray-400 dark:text-gray-500">
+                                                    detail
+                                                </summary>
+                                                <pre className="text-xs bg-gray-100 dark:bg-zinc-900 rounded p-2 max-w-full max-h-32 overflow-x-auto overflow-y-auto mt-1">
+                                                    {JSON.stringify(log.detail, null, 2)}
+                                                </pre>
+                                            </details>
                                         </div>
-                                        {/* detail log */}
-                                        <details className="w-full mt-1 sm:mt-0">
-                                            <summary className="text-xs cursor-pointer underline text-gray-400 dark:text-gray-500">
-                                                detail
-                                            </summary>
-                                            <pre className="text-xs bg-gray-100 dark:bg-zinc-900 rounded p-2 max-w-full max-h-32 overflow-x-auto overflow-y-auto mt-1">
-                                                {JSON.stringify(log.detail, null, 2)}
-                                            </pre>
-                                        </details>
                                     </li>
                                 ))}
                             </ul>
