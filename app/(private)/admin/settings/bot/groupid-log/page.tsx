@@ -140,9 +140,11 @@ export default function GroupIdLogPage() {
                                                 <summary className="text-xs cursor-pointer underline text-gray-400 dark:text-gray-500">
                                                     detail
                                                 </summary>
-                                                <pre className="text-xs bg-gray-100 dark:bg-zinc-900 rounded p-2 max-w-full max-h-32 overflow-x-auto overflow-y-auto mt-1">
-                                                    {JSON.stringify(log.detail, null, 2)}
-                                                </pre>
+                                                <div className="w-full max-w-full">
+                                                    <pre className="text-xs bg-gray-100 dark:bg-zinc-900 rounded p-2 w-full max-w-full max-h-40 sm:max-h-32 overflow-x-auto overflow-y-auto break-words mt-1">
+                                                        {JSON.stringify(log.detail, null, 2)}
+                                                    </pre>
+                                                </div>
                                             </details>
                                         </div>
                                     </li>
