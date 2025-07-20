@@ -62,7 +62,7 @@ export default function ZoneDetailDialog({ open, onOpenChange, zone }: ZoneDetai
                                 </div>
                             )}
                         </div>
-                        <div className="w-full h-[500px] rounded overflow-hidden">
+                        <div className="w-full h-[270px] sm:h-[350px] md:h-[400px] lg:h-[500px] rounded overflow-hidden">
                             <MapContainer
                                 center={zone.polygon.length > 0 ? (zone.polygon[0] as LatLngExpression) : [13.7563, 100.5018]}
                                 zoom={14}

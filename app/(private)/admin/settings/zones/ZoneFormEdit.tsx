@@ -126,7 +126,7 @@ export default function ZoneFormEdit({ onSubmit, initialData }: ZoneFormEditProp
             <Input placeholder="ชื่อพื้นที่โซน" value={name} onChange={e => setName(e.target.value)} />
             <Input placeholder="LINE Group ID" value={lineGroupId} onChange={e => setLineGroupId(e.target.value)} />
             <Input placeholder="Telegram Group ID" value={telegramGroupId} onChange={e => setTelegramGroupId(e.target.value)} />
-            <div className="w-full h-[500px] rounded overflow-hidden">
+            <div className="w-full h-[270px] sm:h-[350px] md:h-[400px] lg:h-[500px] rounded overflow-hidden">
                 <MapContainer
                     center={polygonPoints.length ? polygonPoints[0] as LatLngExpression : [13.7563, 100.5018]}
                     zoom={13}
