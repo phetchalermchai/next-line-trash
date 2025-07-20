@@ -1,7 +1,8 @@
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
-import { GaugeCircle, Search, FileBarChart2, FileText, Settings, LogOut, User2, ShieldAlert, UserCheck, Users, UserX, UserCheck2, BarChart3, MapPinned, Bot, Group} from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { GaugeCircle, Search, FileBarChart2, FileText, Settings, LogOut, User2, ShieldAlert, UserCheck, Users, UserX, UserCheck2, BarChart3, MapPinned, Bot, Group } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -163,10 +164,13 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter className="border-t p-4 flex items-center gap-3 text-sm text-muted-foreground">
-                <User2 className="w-5 h-5" />
+                <Avatar className="w-5 h-5">
+                    <AvatarImage src={session?.user.image as string} alt={session?.user.email || ""} />
+                    <AvatarFallback>{session?.user.name?.slice(0, 1) as string}</AvatarFallback>
+                </Avatar>
                 <div className="flex-1">
-                    <p className="font-medium text-foreground">{session?.user?.name || "ไม่ทราบชื่อ"}</p>
-                    <p className="text-xs">{session?.user?.email || "-"}</p>
+                    <p className="font-medium text-foreground text-center">{session?.user?.name || "ไม่ทราบชื่อ"}</p>
+                    <p className="text-xs text-center">{session?.user?.email || "-"}</p>
                 </div>
                 <LogOut
                     className="w-4 h-4 cursor-pointer hover:text-destructive"

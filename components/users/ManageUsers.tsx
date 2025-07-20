@@ -77,6 +77,7 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
     const [loadingFetch, setLoadingFetch] = React.useState(false);
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [isDeleting, setIsDeleting] = React.useState(false);
+    const [isRemoveProvider, setIsRemoveProvider] = React.useState(false);
     const [deletingAccountId, setDeletingAccountId] = React.useState<string | null>(null);
     const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -217,7 +218,9 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
     };
 
     const removeProvider = async (accountId: string) => {
+        if (isRemoveProvider) return;
         if (!editUser || deletingAccountId === accountId) return;
+        setIsRemoveProvider(true);
         try {
             const res = await fetch(`/api/users/${editUser.id}/accounts/${accountId}`, { method: "DELETE" });
             if (!res.ok) {
@@ -231,6 +234,7 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
             toast.error("เกิดข้อผิดพลาดในการลบบัญชี");
         } finally {
             setDeletingAccountId(null);
+            setIsRemoveProvider(false);
             setEditUser(null);
         }
     };
@@ -622,7 +626,10 @@ export default function ManageUsersPage({ initialStatus = "ALL" }: ManageUsersPa
                                                                 <Button className="cursor-pointer" variant="destructive" onClick={() => {
                                                                     removeProvider(acc.id);
                                                                     setOpenDialogProviderId(null);
-                                                                }}>ลบ</Button>
+                                                                }} disabled={isRemoveProvider}
+                                                                >
+                                                                    {isRemoveProvider && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} ลบ
+                                                                </Button>
                                                             </DialogFooter>
                                                         </DialogContent>
                                                     </Dialog>

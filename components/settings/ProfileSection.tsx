@@ -8,7 +8,7 @@ import { signIn, getProviders } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { AlertTriangle, CheckCircle, Link2, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle, Link2, Loader2, XCircle } from "lucide-react";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { formatThaiDatetime } from "@/utils/date";
 import { roleVariants, statusColors } from "@/utils/userLabels";
@@ -32,9 +32,11 @@ interface LinkedProvider {
 }
 
 export default function ProfileSection({ user }: Props) {
+    console.log(user);
     const [linked, setLinked] = useState<LinkedProvider[]>([]);
     const [providers, setProviders] = useState<Record<string, any>>({});
     const [confirmUnlink, setConfirmUnlink] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
 
     const fetchLinkedAccounts = async () => {
         if (!user.id) return;
@@ -59,7 +61,9 @@ export default function ProfileSection({ user }: Props) {
     };
 
     const handleUnlink = async () => {
+        if (loading) return;
         if (!confirmUnlink) return;
+        setLoading(true);
         try {
             await axios.post("/api/user/unlink-account", { provider: confirmUnlink });
             toast.success("ถอดบัญชีเรียบร้อยแล้ว");
@@ -67,18 +71,22 @@ export default function ProfileSection({ user }: Props) {
         } catch (err: any) {
             toast.error(err.response?.data?.error || "ถอดบัญชีไม่สำเร็จ");
         } finally {
+            setLoading(false);
             setConfirmUnlink(null);
         }
     };
 
     const handleRequestBan = async () => {
+        if (loading) return;
+        setLoading(true);
         try {
             await axios.post("/api/user/close-account");
             toast.success("ส่งคำขอปิดบัญชีเรียบร้อยแล้ว กรุณารอการอนุมัติ");
-            // เพิ่ม logic logout ถ้าต้องการ
         } catch (err: any) {
             console.log(err);
             toast.error(err.response?.data?.error || "ส่งคำขอไม่สำเร็จ");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -200,8 +208,8 @@ export default function ProfileSection({ user }: Props) {
                                                     ยกเลิก
                                                 </Button>
                                             </DialogClose>
-                                            <Button className="cursor-pointer" variant="destructive" onClick={handleUnlink}>
-                                                ยืนยันการถอด
+                                            <Button className="cursor-pointer" variant="destructive" onClick={handleUnlink} disabled={loading}>
+                                                {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} ยืนยันการถอด
                                             </Button>
                                         </DialogFooter>
                                     </DialogContent>
@@ -247,8 +255,8 @@ export default function ProfileSection({ user }: Props) {
                                     <DialogClose asChild>
                                         <Button className="cursor-pointer" variant="secondary">ยกเลิก</Button>
                                     </DialogClose>
-                                    <Button className="cursor-pointer" variant="destructive" onClick={handleRequestBan}>
-                                        ยืนยัน
+                                    <Button className="cursor-pointer" variant="destructive" onClick={handleRequestBan} disabled={loading}>
+                                        {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} ยืนยัน
                                     </Button>
                                 </DialogFooter>
                             </DialogContent>

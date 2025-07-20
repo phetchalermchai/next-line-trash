@@ -3,7 +3,7 @@
 import { Card, CardContent } from "../ui/card"
 import { Input } from "../ui/input"
 import { toast } from "sonner";
-import { AlertTriangle, ClipboardCopy, KeyRound, Plus, Trash2, Undo2 } from "lucide-react"
+import { AlertTriangle, ClipboardCopy, KeyRound, Loader2, Plus, Trash2, Undo2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react";
 import axios from "axios";
@@ -34,6 +34,7 @@ const AccountApiKeySection = () => {
     const [creating, setCreating] = useState(false);
     const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
     const [newKey, setNewKey] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
 
     const fetchApiKeys = async () => {
         if (!session?.user?.id) return;
@@ -79,7 +80,9 @@ const AccountApiKeySection = () => {
     };
 
     const handleRevokeApiKey = async () => {
+        if (loading) return;
         if (!confirmRevokeId) return;
+        setLoading(true);
         try {
             await axios.delete(`/api/user/api-keys/${confirmRevokeId}`);
             toast.success("ยกเลิก API Key สำเร็จ");
@@ -87,6 +90,7 @@ const AccountApiKeySection = () => {
         } catch (err: any) {
             toast.error(err.response?.data?.error || "ยกเลิกไม่สำเร็จ");
         } finally {
+            setLoading(false);
             setConfirmRevokeId(null);
         }
     };
@@ -102,12 +106,16 @@ const AccountApiKeySection = () => {
     };
 
     const handlePermanentDelete = async (id: string) => {
+        if (loading) return;
+        setLoading(true);
         try {
             await axios.delete(`/api/user/api-keys/${id}/permanent`);
             toast.success("ลบถาวรเรียบร้อยแล้ว");
             fetchApiKeys();
         } catch (err: any) {
             toast.error(err.response?.data?.error || "ลบถาวรไม่สำเร็จ");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -178,8 +186,8 @@ const AccountApiKeySection = () => {
                                     </div>
                                     {key.revokedAt && (
                                         <div className="flex gap-2 mt-1">
-                                            <Button variant="outline" size="sm" className="cursor-pointer" onClick={() => handleRestoreApiKey(key.id)}>
-                                                <Undo2 className="w-4 h-4" />
+                                            <Button variant="outline" size="sm" className="cursor-pointer" onClick={() => handleRestoreApiKey(key.id)} disabled={loading}>
+                                                {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Undo2 className="w-4 h-4" />}
                                             </Button>
                                             <Dialog>
                                                 <DialogTrigger asChild>
@@ -211,8 +219,9 @@ const AccountApiKeySection = () => {
                                                             className="cursor-pointer"
                                                             variant="destructive"
                                                             onClick={() => handlePermanentDelete(key.id)}
+                                                            disabled={loading}
                                                         >
-                                                            ยืนยัน
+                                                            {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} ยืนยัน
                                                         </Button>
                                                     </DialogFooter>
                                                 </DialogContent>
@@ -241,8 +250,8 @@ const AccountApiKeySection = () => {
                                                             ยกเลิก
                                                         </Button>
                                                     </DialogClose>
-                                                    <Button className="cursor-pointer" variant="destructive" onClick={handleRevokeApiKey}>
-                                                        ยืนยัน
+                                                    <Button className="cursor-pointer" variant="destructive" onClick={handleRevokeApiKey} disabled={loading}>
+                                                        {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} ยืนยัน
                                                     </Button>
                                                 </DialogFooter>
                                             </DialogContent>

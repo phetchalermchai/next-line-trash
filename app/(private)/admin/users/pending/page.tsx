@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { X, Check, Trash2 } from "lucide-react";
+import { X, Check, Loader2 } from "lucide-react";
 import { roleVariants, statusColors } from "@/utils/userLabels";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { PendingUserSkeleton, TableSkeleton } from "./Skeleton";
@@ -135,7 +135,7 @@ const PendingUsersPage = () => {
                 <DialogDescription>คุณต้องการอนุมัติผู้ใช้นี้ใช่หรือไม่?</DialogDescription>
                 <DialogFooter>
                   <Button className="cursor-pointer" onClick={() => handleApprove(user.id)} disabled={isApproving}>
-                    ยืนยัน
+                    {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} ยืนยัน
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -157,7 +157,9 @@ const PendingUsersPage = () => {
                 </DialogHeader>
                 <DialogDescription>คุณต้องการยกเลิกผู้ใช้นี้ใช่หรือไม่? ผู้ใช้จะถูกแบน</DialogDescription>
                 <DialogFooter>
-                  <Button className="cursor-pointer" variant="destructive" onClick={() => handleBan(user.id)}>ยืนยัน</Button>
+                  <Button className="cursor-pointer" variant="destructive" onClick={() => handleBan(user.id)} disabled={isBanning}>
+                    {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} ยืนยัน
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>

@@ -12,6 +12,7 @@ import ImageCropperModal from "@/components/ImageCropperModal";
 import { toast } from "sonner";
 import type { Complaint } from "@/types/complaint";
 import { useMediaQuery } from "@/lib/use-media-query";
+import { Loader2 } from "lucide-react";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 
@@ -36,6 +37,7 @@ export default function EditComplaintDrawer({ complaint, open, onClose, onSave }
     });
 
     const [imageFiles, setImageFiles] = useState<{ imageBefore: File[]; imageAfter: File[] }>({ imageBefore: [], imageAfter: [] });
+    const [loading, setLoading] = useState(false);
     const [imageBeforeUrls, setImageBeforeUrls] = useState<string[]>([]);
     const [imageAfterUrls, setImageAfterUrls] = useState<string[]>([]);
     const [cropImage, setCropImage] = useState<File | null>(null);
@@ -50,6 +52,7 @@ export default function EditComplaintDrawer({ complaint, open, onClose, onSave }
     };
 
     const handleSubmit = () => {
+        if (loading) return;
         if (!formData.reporterName?.trim()) {
             toast.error("กรุณากรอกชื่อผู้ร้องเรียน");
             return;
@@ -74,14 +77,22 @@ export default function EditComplaintDrawer({ complaint, open, onClose, onSave }
             toast.error("กรุณาเลือกสถานะ");
             return;
         }
-        onSave({
-            ...formData,
-            imageBefore: imageBeforeUrls.join(","),
-            imageAfter: imageAfterUrls.join(","),
-            imageBeforeFiles: imageFiles.imageBefore,
-            imageAfterFiles: imageFiles.imageAfter,
-        } as Partial<Record<string, any>>);
-        onClose();
+        setLoading(true);
+        try {
+            onSave({
+                ...formData,
+                imageBefore: imageBeforeUrls.join(","),
+                imageAfter: imageAfterUrls.join(","),
+                imageBeforeFiles: imageFiles.imageBefore,
+                imageAfterFiles: imageFiles.imageAfter,
+            } as Partial<Record<string, any>>);
+            onClose();
+        } catch (error) {
+            console.error("[Edit Submit] Error:", error);
+            toast.error("เกิดข้อผิดพลาดในการบันทึกผล");
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -212,7 +223,9 @@ export default function EditComplaintDrawer({ complaint, open, onClose, onSave }
 
                 <div className="flex justify-end gap-2 mt-4 p-4">
                     <Button className="cursor-pointer" variant="outline" onClick={onClose}>ยกเลิก</Button>
-                    <Button className="cursor-pointer" onClick={handleSubmit}>บันทึก</Button>
+                    <Button className="cursor-pointer" onClick={handleSubmit} disabled={loading}>
+                        {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} บันทึก
+                    </Button>
                 </div>
 
                 {cropImage && onCropDone && (

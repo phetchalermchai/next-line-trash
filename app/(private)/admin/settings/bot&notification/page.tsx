@@ -81,7 +81,7 @@ export default function BotNotificationSettingsPage() {
                                 <Button
                                     onClick={() => saveToken("LINE_ACCESS_TOKEN", lineToken)}
                                     disabled={loading}
-                                    className="min-w-[80px] mt-2 sm:mt-0"
+                                    className="min-w-[80px] mt-2 sm:mt-0 cursor-pointer"
                                 >
                                     <Save className="w-4 h-4 mr-1" /> บันทึก
                                 </Button>
@@ -132,7 +132,7 @@ export default function BotNotificationSettingsPage() {
                                 <Button
                                     onClick={() => saveToken("TELEGRAM_BOT_TOKEN", telegramToken)}
                                     disabled={loading}
-                                    className="min-w-[80px] mt-2 sm:mt-0"
+                                    className="min-w-[80px] mt-2 sm:mt-0 cursor-pointer"
                                 >
                                     <Save className="w-4 h-4 mr-1" /> บันทึก
                                 </Button>

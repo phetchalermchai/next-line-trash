@@ -14,6 +14,7 @@ declare module "next-auth" {
       status: UserStatus;
       email?: string | null;
       name?: string | null;
+      image?: string | null;
     };
   }
 
@@ -108,11 +109,12 @@ export const authOptions: AuthOptions = {
       if (session.user && token) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id },
-          select: { id: true, name: true, email: true, role: true, status: true },
+          select: { id: true, image: true, name: true, email: true, role: true, status: true },
         });
 
         if (dbUser) {
           session.user.id = dbUser.id;
+          session.user.image = dbUser.image;
           session.user.name = dbUser.name;
           session.user.email = dbUser.email;
           session.user.role = dbUser.role;

@@ -14,6 +14,7 @@ import dynamic from "next/dynamic";
 import DropzoneUploader from "../DropzoneUploader";
 import ImageGalleryModal from "../ImageGalleryModal";
 import ImageCropperModal from "../ImageCropperModal";
+import { Loader2 } from "lucide-react";
 
 const MiniMapPreview = dynamic(() => import("../MiniMapPreview"), { ssr: false });
 
@@ -28,6 +29,7 @@ interface ReportComplaintDrawerProps {
 export default function ReportComplaintDrawer({ complaint, open, onClose, onRefresh }: ReportComplaintDrawerProps) {
     const isMobile = useMediaQuery("(max-width: 768px)");
     const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(false);
     const [imageFiles, setImageFiles] = useState<File[]>([]);
     const [previewUrls, setPreviewUrls] = useState<string[]>([]);
     const [cropImage, setCropImage] = useState<File | null>(null);
@@ -46,7 +48,8 @@ export default function ReportComplaintDrawer({ complaint, open, onClose, onRefr
 
     const handleSubmit = async () => {
         if (!validateForm()) return;
-
+        if (loading) return;
+        setLoading(true);
         try {
             const form = new FormData();
             form.append("message", message);
@@ -62,6 +65,8 @@ export default function ReportComplaintDrawer({ complaint, open, onClose, onRefr
         } catch (error) {
             console.error("[Report Submit] Error:", error);
             toast.error("เกิดข้อผิดพลาดในการบันทึกผล");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -145,7 +150,9 @@ export default function ReportComplaintDrawer({ complaint, open, onClose, onRefr
 
                     <div className="flex justify-end gap-2">
                         <Button className="cursor-pointer" variant="outline" onClick={onClose}>ยกเลิก</Button>
-                        <Button className="cursor-pointer" variant="default" onClick={handleSubmit}>บันทึก</Button>
+                        <Button className="cursor-pointer" variant="default" onClick={handleSubmit} disabled={loading}>
+                            {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} บันทึก
+                        </Button>
                     </div>
                 </div>
             </DrawerContent>

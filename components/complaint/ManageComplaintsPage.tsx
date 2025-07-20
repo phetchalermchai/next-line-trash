@@ -63,6 +63,7 @@ export default function ManageComplaintsPage() {
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [loadingFetch, setLoadingFetch] = React.useState(false);
     const [loadingExport, setLoadingExport] = React.useState(false);
+    const [loading, setLoading] = React.useState(false);
     const [pageIndex, setPageIndex] = React.useState(0);
     const [pageSize, setPageSize] = React.useState(10);
     const [totalCount, setTotalCount] = React.useState(0);
@@ -143,6 +144,8 @@ export default function ManageComplaintsPage() {
         const diffTime = now.getTime() - createdAt.getTime();
         const diffDays = diffTime / (1000 * 60 * 60 * 24);
 
+        if (loading) return;
+
         if (complaint.status === "DONE") {
             return toast.warning("ไม่สามารถแจ้งเตือนได้ เนื่องจากเรื่องดำเนินการเสร็จสิ้นแล้ว");
         }
@@ -155,6 +158,8 @@ export default function ManageComplaintsPage() {
             return toast.warning("แจ้งเตือนได้เพียงครั้งเดียวต่อวัน");
         }
 
+        setLoading(true);
+
         try {
             await Promise.all([
                 axios.post(`/api/complaints/${complaint.id}/line/notify-group`),
@@ -165,6 +170,8 @@ export default function ManageComplaintsPage() {
         } catch (error) {
             console.error("[Notify Group] Error:", error);
             toast.error("เกิดข้อผิดพลาดในการแจ้งเตือนกลุ่ม LINE & Telegram");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -420,7 +427,9 @@ export default function ManageComplaintsPage() {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                                 <AlertDialogCancel className="cursor-pointer">ยกเลิก</AlertDialogCancel>
-                                <AlertDialogAction className="cursor-pointer" onClick={() => handleNotifyGroup(row.original)}>ยืนยัน</AlertDialogAction>
+                                <AlertDialogAction className="cursor-pointer" onClick={() => handleNotifyGroup(row.original)} disabled={loading}>
+                                    {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} ยืนยัน
+                                </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>

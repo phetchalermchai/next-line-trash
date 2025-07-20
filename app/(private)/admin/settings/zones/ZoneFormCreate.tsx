@@ -9,6 +9,7 @@ import { MapContainer, TileLayer, FeatureGroup } from "react-leaflet"
 import L, { FeatureGroup as FeatureGroupType, Polygon as PolygonType, Map as LeafletMap } from "leaflet"
 import dynamic from "next/dynamic"
 import { toast } from "sonner"
+import { Loader2 } from "lucide-react"
 
 const EditControl = dynamic(() => import("react-leaflet-draw").then(mod => mod.EditControl), {
   ssr: false,
@@ -38,6 +39,7 @@ export default function ZoneFormCreate({ onSubmit }: ZoneFormProps) {
   const [lineGroupId, setLineGroupId] = useState("")
   const [telegramGroupId, setTelegramGroupId] = useState("")
   const [polygonPoints, setPolygonPoints] = useState<number[][]>([])
+  const [loading, setLoading] = useState(false);
 
   const featureGroupRef = useRef<FeatureGroupType>(null)
   const mapRef = useRef<LeafletMap | null>(null)
@@ -68,6 +70,7 @@ export default function ZoneFormCreate({ onSubmit }: ZoneFormProps) {
   }
 
   const handleSubmit = () => {
+    if (loading) return;
     if (!name.trim()) {
       toast.error("กรุณากรอกชื่อพื้นที่โซน")
       return
@@ -76,13 +79,21 @@ export default function ZoneFormCreate({ onSubmit }: ZoneFormProps) {
       toast.error("กรุณาวาด Polygon ก่อนบันทึก")
       return
     }
-    const closedPolygon = closePolygonIfNeeded(polygonPoints)
-    onSubmit({
-      name,
-      lineGroupId,
-      telegramGroupId,
-      polygon: closedPolygon,
-    })
+    setLoading(true);
+    try {
+      const closedPolygon = closePolygonIfNeeded(polygonPoints)
+      onSubmit({
+        name,
+        lineGroupId,
+        telegramGroupId,
+        polygon: closedPolygon,
+      })
+    } catch (error) {
+      console.error("[Create Submit] Error:", error);
+      toast.error("เกิดข้อผิดพลาดในการบันทึกผล");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -111,7 +122,9 @@ export default function ZoneFormCreate({ onSubmit }: ZoneFormProps) {
         </MapContainer>
       </div>
       <div className="flex justify-end">
-        <Button className="cursor-pointer" onClick={handleSubmit} disabled={polygonPoints.length === 0}>บันทึก</Button>
+        <Button className="cursor-pointer" onClick={handleSubmit} disabled={polygonPoints.length === 0 || loading}>
+          {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} บันทึก
+        </Button>
       </div>
     </div>
   )

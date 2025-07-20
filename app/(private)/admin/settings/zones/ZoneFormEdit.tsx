@@ -9,6 +9,7 @@ import "leaflet-draw/dist/leaflet.draw.css"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import { Loader2 } from "lucide-react"
 
 interface ZoneFormEditProps {
     onSubmit: (data: {
@@ -26,13 +27,13 @@ interface ZoneFormEditProps {
 }
 
 function closePolygonIfNeeded(points: number[][]): number[][] {
-  if (points.length < 3) return points
-  const first = points[0]
-  const last = points[points.length - 1]
-  if (first[0] !== last[0] || first[1] !== last[1]) {
-    return [...points, first]
-  }
-  return points
+    if (points.length < 3) return points
+    const first = points[0]
+    const last = points[points.length - 1]
+    if (first[0] !== last[0] || first[1] !== last[1]) {
+        return [...points, first]
+    }
+    return points
 }
 
 export default function ZoneFormEdit({ onSubmit, initialData }: ZoneFormEditProps) {
@@ -40,6 +41,7 @@ export default function ZoneFormEdit({ onSubmit, initialData }: ZoneFormEditProp
     const [lineGroupId, setLineGroupId] = useState(initialData?.lineGroupId || "")
     const [telegramGroupId, setTelegramGroupId] = useState(initialData?.telegramGroupId || "")
     const [polygonPoints, setPolygonPoints] = useState<number[][]>(initialData?.polygon || [])
+    const [loading, setLoading] = useState(false);
 
     const mapRef = useRef<L.Map | null>(null)
     const featureGroupRef = useRef<L.FeatureGroup | null>(null)
@@ -56,6 +58,7 @@ export default function ZoneFormEdit({ onSubmit, initialData }: ZoneFormEditProp
     }, [polygonPoints]);
 
     const handleSubmit = () => {
+        if (loading) return;
         if (!name.trim()) {
             toast.error("กรุณากรอกชื่อพื้นที่โซน")
             return
@@ -76,14 +79,21 @@ export default function ZoneFormEdit({ onSubmit, initialData }: ZoneFormEditProp
             return
         }
 
-        const closedPolygon = closePolygonIfNeeded(latestPolygon)
-
-        onSubmit({
-            name,
-            lineGroupId,
-            telegramGroupId,
-            polygon: closedPolygon,
-        })
+        setLoading(true);
+        try {
+            const closedPolygon = closePolygonIfNeeded(latestPolygon)
+            onSubmit({
+                name,
+                lineGroupId,
+                telegramGroupId,
+                polygon: closedPolygon,
+            })
+        } catch (error) {
+            console.error("[Edit Submit] Error:", error);
+            toast.error("เกิดข้อผิดพลาดในการบันทึกผล");
+        } finally {
+            setLoading(false);
+        }
     }
 
     const _onCreated = (e: { layer: PolygonType }) => {
@@ -130,7 +140,7 @@ export default function ZoneFormEdit({ onSubmit, initialData }: ZoneFormEditProp
                     >
                         {/* แสดง polygon เดิม */}
                         {polygonPoints.length > 2 && (
-                            <Polygon positions={polygonPoints as LatLngExpression[]} pathOptions={{ color: "blue" }}/>
+                            <Polygon positions={polygonPoints as LatLngExpression[]} pathOptions={{ color: "blue" }} />
                         )}
                         <EditControl
                             position="topright"
@@ -154,8 +164,8 @@ export default function ZoneFormEdit({ onSubmit, initialData }: ZoneFormEditProp
                 </MapContainer>
             </div>
             <div className="flex justify-end">
-                <Button className="cursor-pointer" onClick={handleSubmit} disabled={polygonPoints.length === 0}>
-                    บันทึก
+                <Button className="cursor-pointer" onClick={handleSubmit} disabled={polygonPoints.length === 0 || loading}>
+                    {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} บันทึก
                 </Button>
             </div>
         </div>

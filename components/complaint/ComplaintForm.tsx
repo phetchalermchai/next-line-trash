@@ -239,7 +239,7 @@ export default function ComplaintCreatePage() {
 
       <div className="flex justify-end gap-2">
         <Button onClick={handleSave} disabled={loading} className="px-6 cursor-pointer">
-          {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : "บันทึก"}
+          {loading ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" /> บันทึก</>) : "บันทึก"}
         </Button>
       </div>
 

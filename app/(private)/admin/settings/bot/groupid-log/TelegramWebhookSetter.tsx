@@ -131,7 +131,7 @@ export default function TelegramWebhookSetter() {
                 onClick={setTelegramWebhook}
                 disabled={loading}
                 variant="secondary"
-                className="gap-2 shadow hover:bg-yellow-100 dark:hover:bg-yellow-900 transition"
+                className="gap-2 shadow hover:bg-yellow-100 dark:hover:bg-yellow-900 cursor-pointer transition"
                 size="lg"
             >
                 <Settings className="w-5 h-5" />

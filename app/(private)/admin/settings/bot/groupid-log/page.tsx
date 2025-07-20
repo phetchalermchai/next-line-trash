@@ -57,7 +57,7 @@ export default function GroupIdLogPage() {
                                 size="icon"
                                 onClick={fetchLogs}
                                 disabled={loading}
-                                className="border border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 hover:bg-gray-50 dark:hover:bg-zinc-800/70 transition"
+                                className="border border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 hover:bg-gray-50 dark:hover:bg-zinc-800/70 cursor-pointer transition"
                                 aria-label="Refresh"
                             >
                                 <RefreshCw className={loading ? "animate-spin" : ""} />

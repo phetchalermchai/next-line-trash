@@ -6,7 +6,7 @@ import { useReactTable, ColumnDef, flexRender, getCoreRowModel, getPaginationRow
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatThaiDatetime } from "@/utils/date"
-import { Eye, Pencil, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Eye, Pencil, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -16,6 +16,7 @@ import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader,
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useMediaQuery } from "@/lib/use-media-query"
 import { Card, CardContent } from "@/components/ui/card"
+import { toast } from "sonner"
 
 const ZoneFormCreate = dynamic(() => import("./ZoneFormCreate"), { ssr: false })
 const ZoneFormEdit = dynamic(() => import("./ZoneFormEdit"), { ssr: false })
@@ -45,6 +46,7 @@ interface ZoneTableProps {
 
 export default function ZoneTable({ zones, onEdit, onDelete, onDeleteMany, onView, open, setOpen, editMode, setEditMode, initialData, setInitialData, handleCreate, handleUpdate }: ZoneTableProps) {
     const [globalFilter, setGlobalFilter] = useState("")
+    const [loading, setLoading] = useState(false);
     const [dateRange, setDateRange] = useState<any>()
     const isMobile = useMediaQuery("(max-width: 768px)")
 
@@ -138,7 +140,23 @@ export default function ZoneTable({ zones, onEdit, onDelete, onDeleteMany, onVie
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel className="cursor-pointer">ยกเลิก</AlertDialogCancel>
-                                            <AlertDialogAction className="cursor-pointer" onClick={() => onDelete(row.original.id)}>ยืนยันลบ</AlertDialogAction>
+                                            <AlertDialogAction
+                                                className="cursor-pointer"
+                                                onClick={() => {
+                                                    if (loading) return;
+                                                    setLoading(true);
+                                                    try {
+                                                        onDelete(row.original.id)
+                                                    } catch (error) {
+                                                        console.error("[Delete Submit] Error:", error);
+                                                        toast.error("เกิดข้อผิดพลาดในการบันทึกผล");
+                                                    } finally {
+                                                        setLoading(false);
+                                                    }
+                                                }}
+                                                disabled={loading}>
+                                                {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} ยืนยันลบ
+                                            </AlertDialogAction>
                                         </AlertDialogFooter>
                                     </AlertDialogContent>
                                 </AlertDialog>
@@ -190,7 +208,24 @@ export default function ZoneTable({ zones, onEdit, onDelete, onDeleteMany, onVie
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel className="cursor-pointer">ยกเลิก</AlertDialogCancel>
-                            <AlertDialogAction className="cursor-pointer" onClick={() => onDeleteMany(selectedIds)}>ลบทั้งหมด</AlertDialogAction>
+                            <AlertDialogAction
+                                className="cursor-pointer"
+                                onClick={() => {
+                                    if (loading) return;
+                                    setLoading(true);
+                                    try {
+                                        onDeleteMany(selectedIds)
+                                    } catch (error) {
+                                        console.error("[Delete Submit] Error:", error);
+                                        toast.error("เกิดข้อผิดพลาดในการบันทึกผล");
+                                    } finally {
+                                        setLoading(false);
+                                    }
+                                }}
+                                disabled={loading}
+                            >
+                                {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} ลบทั้งหมด
+                            </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
@@ -275,8 +310,25 @@ export default function ZoneTable({ zones, onEdit, onDelete, onDeleteMany, onVie
                                                     <AlertDialogDescription>คุณแน่ใจหรือไม่ว่าต้องการลบ <b>{row.original.name}</b> โซนนี้จะถูกลบถาวร!</AlertDialogDescription>
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
-                                                    <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => onDelete(row.original.id)}>ยืนยันลบ</AlertDialogAction>
+                                                    <AlertDialogCancel className="cursor-pointer">ยกเลิก</AlertDialogCancel>
+                                                    <AlertDialogAction
+                                                        className="cursor-pointer"
+                                                        onClick={() => {
+                                                            if (loading) return;
+                                                            setLoading(true);
+                                                            try {
+                                                                onDelete(row.original.id)
+                                                            } catch (error) {
+                                                                console.error("[Delete Submit] Error:", error);
+                                                                toast.error("เกิดข้อผิดพลาดในการบันทึกผล");
+                                                            } finally {
+                                                                setLoading(false);
+                                                            }
+                                                        }}
+                                                        disabled={loading}
+                                                    >
+                                                        {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} ยืนยันลบ
+                                                    </AlertDialogAction>
                                                 </AlertDialogFooter>
                                             </AlertDialogContent>
                                         </AlertDialog>
