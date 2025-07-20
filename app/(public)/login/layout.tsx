@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import SkeletonLoginPage from "./SkeletonLoginPage";
 
 export default function LoginLayout({
     children,
@@ -6,7 +7,7 @@ export default function LoginLayout({
     children: React.ReactNode
 }) {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<SkeletonLoginPage />}>
             <main>{children}</main>
         </Suspense>
     )

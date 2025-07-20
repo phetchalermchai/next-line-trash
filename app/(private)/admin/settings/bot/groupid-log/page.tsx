@@ -105,7 +105,7 @@ export default function GroupIdLogPage() {
                                         key={i}
                                         className={`flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 border border-gray-200 dark:border-zinc-800 p-3 rounded-xl bg-muted/40 dark:bg-zinc-800/60 shadow-sm`}
                                     >
-                                        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+                                        <div className="flex items-center gap-2 flex-wrap">
                                             {/* Badge + GroupId */}
                                             <div className="flex justify-between items-center w-full">
                                                 <Badge
@@ -122,7 +122,7 @@ export default function GroupIdLogPage() {
                                                 </span>
                                             </div>
                                             <div className="flex justify-between items-center">
-                                                <span className="font-mono text-xs bg-white dark:bg-zinc-950/60 rounded px-2 py-1 break-all min-w-0 max-w-[60vw] sm:max-w-[240px]">
+                                                <span className="font-mono text-xs bg-white dark:bg-zinc-950/60 rounded px-2 py-1 break-all">
                                                     {log.groupId}
                                                 </span>
                                                 <Button

@@ -14,9 +14,9 @@ import DropzoneUploader from "@/components/DropzoneUploader";
 import ImageCropperModal from "@/components/ImageCropperModal";
 import ImageGalleryModal from "@/components/ImageGalleryModal";
 import axios from "axios";
+import { TermsPrivacyModal } from "@/app/(public)/login/TermsPrivacyModal";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
-const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });
 
 export default function ComplaintCreatePage() {
   const router = useRouter();
@@ -40,6 +40,7 @@ export default function ComplaintCreatePage() {
   const [previewIndex, setPreviewIndex] = useState<number>(0);
   const [showGallery, setShowGallery] = useState(false);
   const [lineProfile, setLineProfile] = useState<{ userId: string; displayName: string } | null>(null);
+  const [agree, setAgree] = useState(false);
 
   useEffect(() => {
     import("@line/liff").then((liff) => {
@@ -92,6 +93,11 @@ export default function ComplaintCreatePage() {
 
     if (!formData.location) {
       toast.error("กรุณาเลือกพิกัดหรือระบุตำแหน่ง");
+      return;
+    }
+
+    if (!agree) {
+      toast.error("โปรดยอมรับเงื่อนไขการใช้งานและนโยบายความเป็นส่วนตัวก่อน");
       return;
     }
 
@@ -204,31 +210,24 @@ export default function ComplaintCreatePage() {
       <div className="space-y-2">
         <Label htmlFor="location">ระบุตำแหน่งจาก GPS</Label>
         <div className="flex flex-col sm:flex-row gap-2">
-          <Input id="location" name="location" value={formData.location || ""} onChange={handleChange} className="flex-1" />
-          <Button
-            type="button"
-            className="cursor-pointer"
-            onClick={() => {
-              if (!navigator.geolocation) return;
-              navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                  const { latitude, longitude } = pos.coords;
-                  setFormData((p) => ({ ...p, location: `${latitude},${longitude}` }));
-                },
-                (err) => {
-                  toast.error("ไม่สามารถดึงตำแหน่งปัจจุบันได้");
-                  console.error("GPS error:", err);
-                }
-              );
-            }}
-          >
-            ตำแหน่งปัจจุบัน
-          </Button>
-          {formData.location && (
-            <MapPicker location={parseLocation(formData.location) || undefined} onChange={(loc) => setFormData((p) => ({ ...p, location: locationToString(loc) }))} />
-          )}
+          <MapPicker location={parseLocation(formData.location) || undefined} onChange={(loc) => setFormData((p) => ({ ...p, location: locationToString(loc) }))} />
         </div>
-        {formData.location && <MiniMapPreview location={formData.location} />}
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-start gap-2 pt-4 border-t">
+        <label className="flex items-center text-sm gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={agree}
+            onChange={e => setAgree(e.target.checked)}
+            className="w-4 h-4 accent-primary"
+            required
+          />
+          <span>
+            ข้าพเจ้าได้อ่านและยอมรับ{" "}
+            <TermsPrivacyModal type="terms" /> และ <TermsPrivacyModal type="privacy" />
+          </span>
+        </label>
       </div>
 
       {uploadProgress.total !== undefined && (

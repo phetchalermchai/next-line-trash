@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Settings, CheckCircle, AlertTriangle, Link2 } from "lucide-react";
+import { Settings, AlertTriangle, Link2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TelegramWebhookSetter() {
@@ -39,7 +39,6 @@ export default function TelegramWebhookSetter() {
             if (data.ok) {
                 toast.success(
                     <span>
-                        <CheckCircle className="inline w-4 h-4 mr-1" />
                         ตั้งค่า Webhook สำเร็จ
                     </span>
                 );
