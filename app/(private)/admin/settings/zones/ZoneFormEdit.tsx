@@ -164,7 +164,7 @@ export default function ZoneFormEdit({ onSubmit, initialData }: ZoneFormEditProp
                 </MapContainer>
             </div>
             <div className="flex justify-end">
-                <Button className="cursor-pointer" onClick={handleSubmit} disabled={polygonPoints.length === 0 || loading}>
+                <Button className="cursor-pointer" onClick={handleSubmit} disabled={loading}>
                     {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} บันทึก
                 </Button>
             </div>

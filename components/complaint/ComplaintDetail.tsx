@@ -12,6 +12,7 @@ import { useSession } from "next-auth/react";
 import axios from "axios";
 import { Button } from "../ui/button";
 import Link from "next/link";
+import ComplaintDetailSkeleton from "@/app/(public)/complaints/[id]/Skeleton";
 
 const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });
 
@@ -45,7 +46,7 @@ export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
         );
     }
 
-    if (!complaint) return <Skeleton className="h-64 w-full" />;
+    if (!complaint) return <ComplaintDetailSkeleton/>;
 
     return (
         <div className="max-w-4xl mx-auto p-4 space-y-6">
