@@ -8,28 +8,36 @@ datasource db {
 }
 
 model Complaint {
-  id           String          @id @default(uuid())
-  source       ComplaintSource @default(LINE)
-  receivedBy   String?
-  reporterName String?
-  lineUserId   String?
-  phone        String?
-  description  String
-  imageBefore  String?
-  imageAfter   String?
-  location     String?
-  zoneId       String?
-  zoneName     String? 
-  status       ComplaintStatus @default(PENDING)
-  message      String?
-  notifiedAt   DateTime?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  id            String          @id @default(uuid())
+  source        ComplaintSource @default(LINE)
+  receivedBy    String?
+  reporterName  String?
+  lineUserId    String?
+  phone         String?
+  description   String
+  imageBefore   String?
+  imageAfter    String?
+  location      String?
+  zoneId        String?
+  zoneName      String?
+  status        ComplaintStatus @default(PENDING)
+  message       String?
+  verifiedAt    DateTime? // วันเวลายืนยัน
+  verifiedBy    String? // ใครกดยืนยัน (userId)
+  autoVerified  Boolean? // ถูกปิดงานอัตโนมัติหรือไม่
+  reopenLogs   ComplaintReopenLog[] // ขอแก้ไข
+  notifiedAt    DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 }
 
 enum ComplaintStatus {
   PENDING
   DONE
+  VERIFIED
+  REJECTED
+  CANCELLED // กรณีผู้ร้องเรียนของยกเลิก
+  REOPENED // กรณีผู้ร้องขอให้แก้ไขงาน
 }
 
 enum ComplaintSource {
@@ -38,6 +46,15 @@ enum ComplaintSource {
   PHONE
   COUNTER
   OTHER
+}
+
+model ComplaintReopenLog {
+  id           String   @id @default(uuid())
+  complaintId  String
+  reason       String
+  createdAt    DateTime @default(now())
+  createdBy    String    // ผู้ร้อง/ผู้ขอแก้ไข
+  complaint    Complaint @relation(fields: [complaintId], references: [id])
 }
 
 model User {
@@ -117,11 +134,11 @@ enum UserStatus {
 }
 
 model Setting {
-  id            String @id @default(uuid())
-  key           String @unique
-  value         String 
-  createdAt     DateTime @default(now()) 
-  updatedAt     DateTime @updatedAt 
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Zone {
@@ -130,6 +147,6 @@ model Zone {
   lineGroupId     String?
   telegramGroupId String?
   polygon         Json
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt 
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
