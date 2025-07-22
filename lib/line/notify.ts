@@ -265,11 +265,19 @@ function buildGroupFlex(c: Complaint, type: string = "ใหม่") {
   const statusColor: Record<ComplaintStatus, string> = {
     PENDING: "#efb100",
     DONE: "#3bb273",
+    VERIFIED: "#2196f3",
+    REJECTED: "#ef4444",
+    CANCELLED: "#6b7280",
+    REOPENED: "#a21caf"
   };
 
   const statusLabel: Record<ComplaintStatus, string> = {
     PENDING: "รอดำเนินการ",
     DONE: "เสร็จสิ้น",
+    VERIFIED: "ยืนยันผลแล้ว",
+    REJECTED: "ไม่อนุมัติ",
+    CANCELLED: "ยกเลิก",
+    REOPENED: "ขอแก้ไข"
   };
 
   const sourceColor: Record<ComplaintSource, string> = {
@@ -547,11 +555,19 @@ function buildUserFlex(c: Complaint) {
   const statusLabel: Record<ComplaintStatus, string> = {
     PENDING: "รอดำเนินการ",
     DONE: "เสร็จสิ้น",
+    VERIFIED: "ยืนยันผลแล้ว",
+    REJECTED: "ไม่อนุมัติ",
+    CANCELLED: "ยกเลิก",
+    REOPENED: "ขอแก้ไข"
   };
 
   const statusColor: Record<ComplaintStatus, string> = {
     PENDING: "#efb100",
     DONE: "#3bb273",
+    VERIFIED: "#2196f3",
+    REJECTED: "#ef4444",
+    CANCELLED: "#6b7280",
+    REOPENED: "#a21caf",
   };
 
   const thaiDate = new Date(c.createdAt).toLocaleString("th-TH", {

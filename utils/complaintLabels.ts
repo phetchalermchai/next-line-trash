@@ -17,4 +17,20 @@ export const statusMap: Record<string, { label: string; color: string }> = {
     label: "เสร็จสิ้น",
     color: "bg-green-100 text-green-800",
   },
+  VERIFIED: {
+    label: "ยืนยันผลแล้ว",
+    color: "bg-blue-100 text-blue-800",
+  },
+  REJECTED: {
+    label: "ไม่อนุมัติ",
+    color: "bg-red-100 text-red-800",
+  },
+  CANCELLED: {
+    label: "ยกเลิก",
+    color: "bg-gray-100 text-gray-800",
+  },
+  REOPENED: {
+    label: "ขอแก้ไข",
+    color: "bg-purple-100 text-purple-800",
+  },
 };

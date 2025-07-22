@@ -22,6 +22,10 @@ function buildTelegramMessage(complaint: Complaint, zoneName?: string, type: str
     const statusLabel = {
         PENDING: "รอดำเนินการ",
         DONE: "เสร็จสิ้น",
+        VERIFIED: "ยืนยันผลแล้ว",
+        REJECTED: "ไม่อนุมัติ",
+        CANCELLED: "ยกเลิก",
+        REOPENED: "ขอแก้ไข"
     };
 
     const sourceLabel = {
