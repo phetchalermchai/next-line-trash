@@ -60,6 +60,34 @@ export default function ZoneTable({ zones, onEdit, onDelete, onDeleteMany, onVie
         })
     }, [zones, dateRange])
 
+    const haddleDelete = async (id: string) => {
+        if (loading) return;
+        setLoading(true);
+        try {
+            await Promise.resolve(
+                onDelete(id)
+            );
+        } catch (error) {
+            console.error("[Delete Submit] Error:", error);
+            toast.error("เกิดข้อผิดพลาดในการบันทึกผล");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const haddleDeleteMany = async (ids: string[]) => {
+        if (loading) return;
+        setLoading(true);
+        try {
+            onDeleteMany(ids)
+        } catch (error) {
+            console.error("[Delete Submit] Error:", error);
+            toast.error("เกิดข้อผิดพลาดในการบันทึกผล");
+        } finally {
+            setLoading(false);
+        }
+    }
+
     const columns = useMemo<ColumnDef<Zone>[]>(
         () => [
             {
@@ -142,18 +170,7 @@ export default function ZoneTable({ zones, onEdit, onDelete, onDeleteMany, onVie
                                             <AlertDialogCancel className="cursor-pointer">ยกเลิก</AlertDialogCancel>
                                             <AlertDialogAction
                                                 className="cursor-pointer"
-                                                onClick={() => {
-                                                    if (loading) return;
-                                                    setLoading(true);
-                                                    try {
-                                                        onDelete(row.original.id)
-                                                    } catch (error) {
-                                                        console.error("[Delete Submit] Error:", error);
-                                                        toast.error("เกิดข้อผิดพลาดในการบันทึกผล");
-                                                    } finally {
-                                                        setLoading(false);
-                                                    }
-                                                }}
+                                                onClick={() => haddleDelete(row.original.id)}
                                                 disabled={loading}>
                                                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} ยืนยันลบ
                                             </AlertDialogAction>
@@ -210,18 +227,7 @@ export default function ZoneTable({ zones, onEdit, onDelete, onDeleteMany, onVie
                             <AlertDialogCancel className="cursor-pointer">ยกเลิก</AlertDialogCancel>
                             <AlertDialogAction
                                 className="cursor-pointer"
-                                onClick={() => {
-                                    if (loading) return;
-                                    setLoading(true);
-                                    try {
-                                        onDeleteMany(selectedIds)
-                                    } catch (error) {
-                                        console.error("[Delete Submit] Error:", error);
-                                        toast.error("เกิดข้อผิดพลาดในการบันทึกผล");
-                                    } finally {
-                                        setLoading(false);
-                                    }
-                                }}
+                                onClick={() => haddleDeleteMany(selectedIds)}
                                 disabled={loading}
                             >
                                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} ลบทั้งหมด
@@ -313,18 +319,7 @@ export default function ZoneTable({ zones, onEdit, onDelete, onDeleteMany, onVie
                                                     <AlertDialogCancel className="cursor-pointer">ยกเลิก</AlertDialogCancel>
                                                     <AlertDialogAction
                                                         className="cursor-pointer"
-                                                        onClick={() => {
-                                                            if (loading) return;
-                                                            setLoading(true);
-                                                            try {
-                                                                onDelete(row.original.id)
-                                                            } catch (error) {
-                                                                console.error("[Delete Submit] Error:", error);
-                                                                toast.error("เกิดข้อผิดพลาดในการบันทึกผล");
-                                                            } finally {
-                                                                setLoading(false);
-                                                            }
-                                                        }}
+                                                        onClick={() => haddleDelete(row.original.id)}
                                                         disabled={loading}
                                                     >
                                                         {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} ยืนยันลบ

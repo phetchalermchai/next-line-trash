@@ -69,7 +69,7 @@ export default function ZoneFormCreate({ onSubmit }: ZoneFormProps) {
     setPolygonPoints([])
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (loading) return;
     if (!name.trim()) {
       toast.error("กรุณากรอกชื่อพื้นที่โซน")
@@ -82,16 +82,17 @@ export default function ZoneFormCreate({ onSubmit }: ZoneFormProps) {
     setLoading(true);
     try {
       const closedPolygon = closePolygonIfNeeded(polygonPoints)
-      onSubmit({
-        name,
-        lineGroupId,
-        telegramGroupId,
-        polygon: closedPolygon,
-      })
+      await Promise.resolve(
+        onSubmit({
+          name,
+          lineGroupId,
+          telegramGroupId,
+          polygon: closedPolygon,
+        })
+      );
     } catch (error) {
       console.error("[Create Submit] Error:", error);
       toast.error("เกิดข้อผิดพลาดในการบันทึกผล");
-    } finally {
       setLoading(false);
     }
   }

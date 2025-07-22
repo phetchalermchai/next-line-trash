@@ -8,27 +8,27 @@ datasource db {
 }
 
 model Complaint {
-  id            String          @id @default(uuid())
-  source        ComplaintSource @default(LINE)
-  receivedBy    String?
-  reporterName  String?
-  lineUserId    String?
-  phone         String?
-  description   String
-  imageBefore   String?
-  imageAfter    String?
-  location      String?
-  zoneId        String?
-  zoneName      String?
-  status        ComplaintStatus @default(PENDING)
-  message       String?
-  verifiedAt    DateTime? // วันเวลายืนยัน
-  verifiedBy    String? // ใครกดยืนยัน (userId)
-  autoVerified  Boolean? // ถูกปิดงานอัตโนมัติหรือไม่
+  id           String               @id @default(uuid())
+  source       ComplaintSource      @default(LINE)
+  receivedBy   String?
+  reporterName String?
+  lineUserId   String?
+  phone        String?
+  description  String
+  imageBefore  String?
+  imageAfter   String?
+  location     String?
+  zoneId       String?
+  zoneName     String?
+  status       ComplaintStatus      @default(PENDING)
+  message      String?
+  verifiedAt   DateTime? // วันเวลายืนยัน
+  verifiedBy   String? // ใครกดยืนยัน (userId)
+  autoVerified Boolean? // ถูกปิดงานอัตโนมัติหรือไม่
   reopenLogs   ComplaintReopenLog[] // ขอแก้ไข
-  notifiedAt    DateTime?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  notifiedAt   DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
 }
 
 enum ComplaintStatus {
@@ -49,11 +49,11 @@ enum ComplaintSource {
 }
 
 model ComplaintReopenLog {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   complaintId  String
   reason       String
-  createdAt    DateTime @default(now())
-  createdBy    String    // ผู้ร้อง/ผู้ขอแก้ไข
+  createdAt    DateTime  @default(now())
+  reporterName String // ผู้ร้อง/ผู้ขอแก้ไข
   complaint    Complaint @relation(fields: [complaintId], references: [id])
 }
 
