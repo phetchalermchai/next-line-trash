@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import { Skeleton } from '../ui/skeleton';
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-type StatusType = 'PENDING' | 'DONE';
+type StatusType = 'PENDING' | 'DONE' | 'VERIFIED' | 'REJECTED' | 'CANCELLED' | 'REOPENED';
 
 interface StatusPie {
     status: StatusType;
@@ -70,6 +70,10 @@ export default function StatusPieChart() {
         labels: data.map((d) => {
             if (d.status === "PENDING") return "รอดำเนินการ";
             if (d.status === "DONE") return "ดำเนินการแล้ว";
+            if (d.status === "VERIFIED") return "ยืนยันผลแล้ว";
+            if (d.status === "REJECTED") return "ไม่อนุมัติ";
+            if (d.status === "CANCELLED") return "ยกเลิก";
+            if (d.status === "REOPENED") return "ขอแก้ไข";
             return d.status;
         }),
         legend: {
@@ -81,7 +85,7 @@ export default function StatusPieChart() {
         tooltip: {
             theme: resolvedTheme === "dark" ? "dark" : "light"
         },
-        colors: ["#facc15", "#4ade80"],
+        colors: ["#facc15", "#4ade80", "#2196f3", "#ef4444", "#6b7280", "#a21caf"],
         dataLabels: {
             enabled: true,
             style: {

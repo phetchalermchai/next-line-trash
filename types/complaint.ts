@@ -9,7 +9,7 @@ export type Complaint = {
   imageBefore?: string;
   imageAfter?: string;
   location: string;
-  status: "PENDING" | "DONE";
+  status: 'PENDING' | 'DONE' | 'VERIFIED' | 'REJECTED' | 'CANCELLED' | 'REOPENED';
   message?: string;
   notifiedAt?: string | null;
   createdAt: string;

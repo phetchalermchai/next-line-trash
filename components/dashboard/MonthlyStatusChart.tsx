@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import { Skeleton } from '../ui/skeleton';
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-type StatusType = 'PENDING' | 'DONE';
+type StatusType = 'PENDING' | 'DONE' | 'VERIFIED' | 'REJECTED' | 'CANCELLED' | 'REOPENED';
 
 interface MonthlyStatus {
     month: number;
@@ -51,7 +51,7 @@ const MonthlyStatusChart = () => {
     else if (quarter === 'Q3') monthLabels = ["ก.ค.", "ส.ค.", "ก.ย."];
     else if (quarter === 'Q4') monthLabels = ["ต.ค.", "พ.ย.", "ธ.ค."];
 
-    const grouped = { DONE: Array(12).fill(0), PENDING: Array(12).fill(0) };
+    const grouped = { DONE: Array(12).fill(0), PENDING: Array(12).fill(0), VERIFIED: Array(12).fill(0), REJECTED: Array(12).fill(0), CANCELLED: Array(12).fill(0), REOPENED: Array(12).fill(0)};
 
     data.forEach(({ month, status, count }) => {
         grouped[status][month - 1] = count;
@@ -125,7 +125,7 @@ const MonthlyStatusChart = () => {
             }
         },
         fill: { opacity: 1 },
-        colors: ["#facc15", "#22c55e"],
+        colors: ["#facc15", "#22c55e", , "#2196f3", "#ef4444", "#6b7280", "#a21caf"],
         dataLabels: { enabled: true },
         tooltip: {
             theme: resolvedTheme === "dark" ? "dark" : "light",
@@ -136,7 +136,11 @@ const MonthlyStatusChart = () => {
 
     const series = [
         { name: "รอดำเนินการ", data: grouped.PENDING.slice(startIndex, endIndex) },
-        { name: "ดำเนินการแล้ว", data: grouped.DONE.slice(startIndex, endIndex) }
+        { name: "ดำเนินการแล้ว", data: grouped.DONE.slice(startIndex, endIndex) },
+        { name: "ยืนยันผลแล้ว", data: grouped.VERIFIED.slice(startIndex, endIndex) },
+        { name: "ไม่อนุมัติ", data: grouped.REJECTED.slice(startIndex, endIndex) },
+        { name: "ยกเลิก", data: grouped.CANCELLED.slice(startIndex, endIndex) },
+        { name: "ขอแก้ไข", data: grouped.REOPENED.slice(startIndex, endIndex) },
     ];
 
     return (
