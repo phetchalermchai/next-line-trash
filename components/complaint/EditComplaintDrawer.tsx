@@ -169,13 +169,17 @@ export default function EditComplaintDrawer({ complaint, open, onClose, onSave }
 
                     <div className="flex flex-col gap-2" >
                         <Label>สถานะ</Label>
-                        <Select value={formData.status} onValueChange={(v) => setFormData((prev) => ({ ...prev, status: v as "PENDING" | "DONE" }))}>
+                        <Select value={formData.status} onValueChange={(v) => setFormData((prev) => ({ ...prev, status: v as 'PENDING' | 'DONE' | 'VERIFIED' | 'REJECTED' | 'CANCELLED' | 'REOPENED' }))}>
                             <SelectTrigger>
                                 <SelectValue placeholder="เลือกสถานะ" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="PENDING">รอดำเนินการ</SelectItem>
                                 <SelectItem value="DONE">เสร็จสิ้น</SelectItem>
+                                <SelectItem value="VERIFIED">ยืนยันผลแล้ว</SelectItem>
+                                <SelectItem value="REJECTED">ไม่อนุมัติ</SelectItem>
+                                <SelectItem value="CANCELLED">ยกเลิก</SelectItem>
+                                <SelectItem value="REOPENED">ขอแก้ไข</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

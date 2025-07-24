@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Complaint } from "@/types/complaint";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ComplaintInfo } from "@/components/complaint/ComplaintInfo";
 import dynamic from "next/dynamic";
 import { ComplaintImages } from "./ComplaintImages";
@@ -13,6 +12,8 @@ import axios from "axios";
 import { Button } from "../ui/button";
 import Link from "next/link";
 import ComplaintDetailSkeleton from "@/app/(public)/complaints/[id]/Skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../ui/dialog";
+import { toast } from "sonner";
 
 const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });
 
@@ -20,6 +21,31 @@ export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
     const { data: session } = useSession();
     const [complaint, setComplaint] = useState<Complaint | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [lineProfile, setLineProfile] = useState<{ userId: string; displayName: string } | null>(null);
+    const [showCancelDialog, setShowCancelDialog] = useState(false);
+    const [cancelLoading, setCancelLoading] = useState(false);
+
+
+    useEffect(() => {
+        // ถ้ามี session และ role เป็น ADMIN/SUPERADMIN จะไม่โหลด LIFF
+        const role = session?.user?.role;
+        if (role === "ADMIN" || role === "SUPERADMIN") return;
+
+        // เงื่อนไข: โหลด LIFF เฉพาะ user ที่เปิดจาก LINE (WebView)
+        if (typeof window !== "undefined" && window.navigator.userAgent.toLowerCase().includes("line")) {
+            import("@line/liff").then((liff) => {
+                liff.default.init({ liffId: process.env.NEXT_PUBLIC_LIFF_ID! }).then(() => {
+                    if (!liff.default.isLoggedIn()) liff.default.login();
+                    liff.default.getProfile().then((profile) => {
+                        setLineProfile({
+                            userId: profile.userId,
+                            displayName: profile.displayName,
+                        });
+                    });
+                });
+            });
+        }
+    }, [session]);
 
     const fetchComplaint = async (id: string) => {
         try {
@@ -35,6 +61,32 @@ export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
         fetchComplaint(complaintId);
     }, [complaintId]);
 
+    const showCancelButton =
+        complaint &&
+        complaint.status === "PENDING" &&
+        complaint.source === "LINE" &&
+        lineProfile?.userId === complaint.lineUserId;
+
+    const handleCancelComplaint = async () => {
+        if (!complaint || !lineProfile) return;
+        setCancelLoading(true);
+        try {
+            await axios.patch(`/api/complaints/${complaint.id}/cancel`, {
+                userId: lineProfile.userId,
+            });
+            toast.success("ยกเลิกเรื่องร้องเรียนสำเร็จ");
+            setShowCancelDialog(false);
+            // reload ข้อมูล complaint
+            fetchComplaint(complaintId);
+            // หรือจะ redirect ไปหน้าอื่น
+            // router.push("/complaints/mine")
+        } catch (err) {
+            toast.error("เกิดข้อผิดพลาดในการยกเลิก");
+        } finally {
+            setCancelLoading(false);
+        }
+    };
+
     if (error) {
         return (
             <div className="max-w-4xl mx-auto p-4">
@@ -46,7 +98,7 @@ export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
         );
     }
 
-    if (!complaint) return <ComplaintDetailSkeleton/>;
+    if (!complaint) return <ComplaintDetailSkeleton />;
 
     return (
         <div className="max-w-4xl mx-auto p-4 space-y-6">
@@ -76,6 +128,34 @@ export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
                         <Button className="cursor-pointer" variant="default" >ย้อนกลับ</Button>
                     </Link>
                 </div>
+            )}
+
+            {showCancelButton && (
+                <>
+                    <Button
+                        variant="destructive"
+                        onClick={() => setShowCancelDialog(true)}
+                        className="mt-4"
+                        disabled={cancelLoading}
+                    >
+                        {cancelLoading ? "กำลังยกเลิก..." : "ขอยกเลิกเรื่องร้องเรียน"}
+                    </Button>
+                    <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+                        <DialogContent>
+                            <DialogTitle>ยืนยันการยกเลิก</DialogTitle>
+                            <DialogDescription>
+                                คุณต้องการยกเลิกเรื่องร้องเรียนนี้ใช่หรือไม่?<br />
+                                หลังจากยกเลิกจะไม่สามารถแก้ไขหรือดำเนินการต่อได้อีก
+                            </DialogDescription>
+                            <div className="flex justify-end gap-2 mt-4">
+                                <Button variant="outline" onClick={() => setShowCancelDialog(false)}>ยกเลิก</Button>
+                                <Button variant="destructive" onClick={handleCancelComplaint} disabled={cancelLoading}>
+                                    {cancelLoading ? "กำลังยกเลิก..." : "ยืนยันยกเลิก"}
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                </>
             )}
         </div>
     );

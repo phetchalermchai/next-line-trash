@@ -1,5 +1,5 @@
 import { Complaint } from "@/types/complaint";
-import { CheckCircle, Clock } from "lucide-react";
+import { Ban, CheckCircle, Clock, ShieldCheck, Undo2, XCircle } from "lucide-react";
 
 const statusMap = {
     PENDING: {
@@ -11,6 +11,26 @@ const statusMap = {
         label: "เสร็จสิ้น",
         icon: <CheckCircle className="w-4 h-4 text-green-500" />,
         color: "text-green-600 bg-green-50",
+    },
+    VERIFIED: {
+        label: "ยืนยันผลแล้ว",
+        icon: <ShieldCheck className="w-4 h-4 text-blue-500" />,
+        color: "text-blue-600 bg-blue-50",
+    },
+    REJECTED: {
+        label: "ไม่อนุมัติ/ปฏิเสธ",
+        icon: <XCircle className="w-4 h-4 text-red-500" />,
+        color: "text-red-600 bg-red-50",
+    },
+    CANCELLED: {
+        label: "ยกเลิก",
+        icon: <Ban className="w-4 h-4 text-gray-500" />,
+        color: "text-gray-600 bg-gray-100",
+    },
+    REOPENED: {
+        label: "ขอแก้ไข/เปิดใหม่",
+        icon: <Undo2 className="w-4 h-4 text-orange-500" />,
+        color: "text-orange-600 bg-orange-50",
     },
 };
 

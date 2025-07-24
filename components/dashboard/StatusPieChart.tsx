@@ -16,6 +16,29 @@ interface StatusPie {
     count: number;
 }
 
+const statusColorMap: Record<StatusType, string> = {
+    PENDING: "#facc15", // เหลือง
+    DONE: "#4ade80", // เขียว
+    VERIFIED: "#2196f3", // น้ำเงิน
+    REJECTED: "#ef4444", // แดง
+    CANCELLED: "#6b7280", // เทา
+    REOPENED: "#a21caf", // ม่วง
+};
+
+const statusLabelMap: Record<StatusType, string> = {
+    PENDING: "รอดำเนินการ",
+    DONE: "ดำเนินการแล้ว",
+    VERIFIED: "ยืนยันผลแล้ว",
+    REJECTED: "ไม่อนุมัติ",
+    CANCELLED: "ยกเลิก",
+    REOPENED: "ขอแก้ไข",
+};
+
+// ลำดับ status ที่ต้องการ
+const chartStatuses: StatusType[] = [
+    "PENDING", "DONE", "VERIFIED", "REJECTED", "CANCELLED", "REOPENED"
+];
+
 export default function StatusPieChart() {
     const [data, setData] = useState<StatusPie[]>([]);
     const [year, setYear] = useState<number>(new Date().getFullYear());
@@ -44,6 +67,12 @@ export default function StatusPieChart() {
         fetchData();
     }, [year, quarter, source]);
 
+    const series = chartStatuses.map(
+        status => data.find(d => d.status === status)?.count || 0
+    );
+    const labels = chartStatuses.map(status => statusLabelMap[status]);
+    const colors = chartStatuses.map(status => statusColorMap[status]);
+
     const options = {
         chart: {
             type: "donut" as const,
@@ -67,15 +96,7 @@ export default function StatusPieChart() {
             foreColor: resolvedTheme === "dark" ? "#e0e0e0" : "#333",
             background: resolvedTheme === 'dark' ? 'dark' : 'light'
         },
-        labels: data.map((d) => {
-            if (d.status === "PENDING") return "รอดำเนินการ";
-            if (d.status === "DONE") return "ดำเนินการแล้ว";
-            if (d.status === "VERIFIED") return "ยืนยันผลแล้ว";
-            if (d.status === "REJECTED") return "ไม่อนุมัติ";
-            if (d.status === "CANCELLED") return "ยกเลิก";
-            if (d.status === "REOPENED") return "ขอแก้ไข";
-            return d.status;
-        }),
+        labels,
         legend: {
             position: "bottom" as const,
             labels: {
@@ -85,7 +106,7 @@ export default function StatusPieChart() {
         tooltip: {
             theme: resolvedTheme === "dark" ? "dark" : "light"
         },
-        colors: ["#facc15", "#4ade80", "#2196f3", "#ef4444", "#6b7280", "#a21caf"],
+        colors,
         dataLabels: {
             enabled: true,
             style: {
@@ -94,8 +115,6 @@ export default function StatusPieChart() {
         },
         theme: { mode: (resolvedTheme === 'dark' ? 'dark' : 'light') as 'dark' | 'light' }
     };
-
-    const series = data.map((d) => typeof d.count === 'number' ? d.count : 0);
 
     return (
         <Card className="@container/card transition-colors w-full">

@@ -17,6 +17,28 @@ interface MonthlyStatus {
     count: number;
 }
 
+const statusColorMap: Record<StatusType, string> = {
+    PENDING: "#facc15", // เหลือง
+    DONE: "#4ade80", // เขียว
+    VERIFIED: "#2196f3", // น้ำเงิน
+    REJECTED: "#ef4444", // แดง
+    CANCELLED: "#6b7280", // เทา
+    REOPENED: "#a21caf", // ม่วง
+};
+
+const statusLabelMap: Record<StatusType, string> = {
+    PENDING: "รอดำเนินการ",
+    DONE: "ดำเนินการแล้ว",
+    VERIFIED: "ยืนยันผลแล้ว",
+    REJECTED: "ไม่อนุมัติ",
+    CANCELLED: "ยกเลิก",
+    REOPENED: "ขอแก้ไข",
+};
+
+const chartStatuses: StatusType[] = [
+    "PENDING", "DONE", "VERIFIED", "REJECTED", "CANCELLED", "REOPENED"
+];
+
 const MonthlyStatusChart = () => {
     const [data, setData] = useState<MonthlyStatus[]>([]);
     const [year, setYear] = useState<number>(new Date().getFullYear());
@@ -51,14 +73,28 @@ const MonthlyStatusChart = () => {
     else if (quarter === 'Q3') monthLabels = ["ก.ค.", "ส.ค.", "ก.ย."];
     else if (quarter === 'Q4') monthLabels = ["ต.ค.", "พ.ย.", "ธ.ค."];
 
-    const grouped = { DONE: Array(12).fill(0), PENDING: Array(12).fill(0), VERIFIED: Array(12).fill(0), REJECTED: Array(12).fill(0), CANCELLED: Array(12).fill(0), REOPENED: Array(12).fill(0)};
+    const grouped: Record<StatusType, number[]> = {
+        PENDING: Array(12).fill(0),
+        DONE: Array(12).fill(0),
+        VERIFIED: Array(12).fill(0),
+        REJECTED: Array(12).fill(0),
+        CANCELLED: Array(12).fill(0),
+        REOPENED: Array(12).fill(0),
+    };
 
     data.forEach(({ month, status, count }) => {
-        grouped[status][month - 1] = count;
+        if (grouped[status]) grouped[status][month - 1] = count;
     });
 
     const startIndex = quarter === 'ALL' ? 0 : (quarter === 'Q1' ? 0 : quarter === 'Q2' ? 3 : quarter === 'Q3' ? 6 : 9);
     const endIndex = quarter === 'ALL' ? 12 : startIndex + 3;
+
+    const series = chartStatuses.map(status => ({
+        name: statusLabelMap[status],
+        data: grouped[status].slice(startIndex, endIndex),
+        color: statusColorMap[status],
+    }));
+    const colors = chartStatuses.map(status => statusColorMap[status]);
 
     const options: ApexCharts.ApexOptions = {
         chart: {
@@ -125,7 +161,7 @@ const MonthlyStatusChart = () => {
             }
         },
         fill: { opacity: 1 },
-        colors: ["#facc15", "#22c55e", , "#2196f3", "#ef4444", "#6b7280", "#a21caf"],
+        colors,
         dataLabels: { enabled: true },
         tooltip: {
             theme: resolvedTheme === "dark" ? "dark" : "light",
@@ -134,14 +170,7 @@ const MonthlyStatusChart = () => {
         theme: { mode: (resolvedTheme === 'dark' ? 'dark' : 'light') as 'dark' | 'light' }
     };
 
-    const series = [
-        { name: "รอดำเนินการ", data: grouped.PENDING.slice(startIndex, endIndex) },
-        { name: "ดำเนินการแล้ว", data: grouped.DONE.slice(startIndex, endIndex) },
-        { name: "ยืนยันผลแล้ว", data: grouped.VERIFIED.slice(startIndex, endIndex) },
-        { name: "ไม่อนุมัติ", data: grouped.REJECTED.slice(startIndex, endIndex) },
-        { name: "ยกเลิก", data: grouped.CANCELLED.slice(startIndex, endIndex) },
-        { name: "ขอแก้ไข", data: grouped.REOPENED.slice(startIndex, endIndex) },
-    ];
+    const isAllZero = series.every(s => s.data.every(v => v === 0));
 
     return (
         <Card className="@container/card transition-colors">
@@ -181,7 +210,7 @@ const MonthlyStatusChart = () => {
                 {loading ? (
                     <Skeleton className="w-full h-[400px] rounded-xl" />
                 ) : (
-                    data.length === 0 ? (
+                    isAllZero ? (
                         <p className="text-center text-muted-foreground py-4">ไม่มีข้อมูล</p>
                     ) : (
                         <Chart
