@@ -25,7 +25,7 @@ const statusMap = {
     CANCELLED: {
         label: "ยกเลิก",
         icon: <Ban className="w-4 h-4 text-gray-500" />,
-        color: "text-gray-600 bg-gray-100",
+        color: "text-gray-600 bg-gray-300",
     },
     REOPENED: {
         label: "ขอแก้ไข/เปิดใหม่",

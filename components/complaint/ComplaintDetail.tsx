@@ -131,14 +131,14 @@ export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
             )}
 
             {showCancelButton && (
-                <>
+                <div className="flex justify-end gap-2">
                     <Button
                         variant="destructive"
                         onClick={() => setShowCancelDialog(true)}
                         className="mt-4"
                         disabled={cancelLoading}
                     >
-                        {cancelLoading ? "กำลังยกเลิก..." : "ขอยกเลิกเรื่องร้องเรียน"}
+                        {cancelLoading ? "กำลังยกเลิก..." : "ขอยกเลิก"}
                     </Button>
                     <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
                         <DialogContent>
@@ -155,7 +155,7 @@ export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
                             </div>
                         </DialogContent>
                     </Dialog>
-                </>
+                </div>
             )}
         </div>
     );
