@@ -66,7 +66,7 @@ ${resultMessage ? `\n<b>สรุปผล:</b> ${resultMessage}` : ""}
             inline_keyboard: [
                 [
                     { text: "🌐 ดูรายละเอียด", url: detailUrl },
-                    { text: "📝 แจ้งผลดำเนินงาน", url: reportUrl }
+                    complaint.status === "PENDING" || complaint.status === "REOPENED" && { text: "📝 แจ้งผลดำเนินงาน", url: reportUrl }
                 ]
             ]
         }
@@ -75,6 +75,11 @@ ${resultMessage ? `\n<b>สรุปผล:</b> ${resultMessage}` : ""}
 
 export async function notifyTelegramGroupForComplaint(complaint: Complaint) {
     try {
+        const groupHeaderMap: Record<string, string> = {
+            PENDING: "ใหม่",
+            CANCELLED: "ยกเลิก",
+            REJECTED: "ไม่อนุมัติ",
+        };
         // หาว่า zone ที่ complaint นี้อยู่คืออะไร
         let zone = null;
         if (complaint.zoneId) {
@@ -99,7 +104,7 @@ export async function notifyTelegramGroupForComplaint(complaint: Complaint) {
         let telegramToken = tokenSetting?.value ?? process.env.TELEGRAM_BOT_TOKEN;
         if (!telegramToken) return;
 
-        const message = buildTelegramMessage(complaint, zoneName, "ใหม่");
+        const message = buildTelegramMessage(complaint, zoneName, groupHeaderMap[complaint.status as string]);
         await axios.post(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
             chat_id: chatId,
             text: message.text,

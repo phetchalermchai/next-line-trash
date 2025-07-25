@@ -32,7 +32,13 @@ export async function notifyLineUserAndLineGroup(complaint: Complaint, groupId: 
   try {
     if (!complaint.lineUserId) throw new Error("Missing lineUserId");
 
-    const flexGroup = buildGroupFlex(complaint, "ใหม่");
+    const groupHeaderMap: Record<string, string> = {
+      PENDING: "ใหม่",
+      CANCELLED: "ยกเลิก",
+      REJECTED: "ไม่อนุมัติ",
+    };
+
+    const flexGroup = buildGroupFlex(complaint, groupHeaderMap[complaint.status as string]);
     const flexUser = buildUserFlex(complaint);
 
     await pushMessageToGroup(groupId, [flexGroup], token);
@@ -529,7 +535,7 @@ function buildGroupFlex(c: Complaint, type: string = "ใหม่") {
               uri: `${process.env.WEB_BASE_URL}/complaints/${c.id}`
             }
           },
-          {
+          c.status === "PENDING" && {
             type: "button",
             style: "secondary",
             height: "sm",
@@ -568,6 +574,11 @@ function buildUserFlex(c: Complaint) {
     REJECTED: "#ef4444",
     CANCELLED: "#6b7280",
     REOPENED: "#a21caf",
+  };
+
+  const userFooterMap: Record<string, string> = {
+    CANCELLED: "ระบบได้ยกเลิกเรื่องร้องเรียนของคุณแล้ว",
+    REJECTED: "ระบบไม่อนุมัติรับเรื่องร้องเรียนของคุณแล้ว",
   };
 
   const thaiDate = new Date(c.createdAt).toLocaleString("th-TH", {
@@ -750,7 +761,7 @@ function buildUserFlex(c: Complaint) {
           },
           {
             type: "text",
-            text: "ระบบได้รับเรื่องร้องเรียนของคุณแล้ว",
+            text: userFooterMap[c.status as ComplaintStatus] || "ระบบได้รับเรื่องร้องเรียนของคุณแล้ว",
             wrap: true,
             weight: "bold",
             align: "center",

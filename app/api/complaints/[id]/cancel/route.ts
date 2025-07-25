@@ -65,7 +65,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const latLng = extractLatLng(complaint.location as string);
 
     if (!latLng) {
-        return NextResponse.json({ error: "location ต้องเป็น lat,lng ที่ถูกต้อง" }, { status: 400 });
+        return NextResponse.json({ message: "location ต้องเป็น lat,lng ที่ถูกต้อง" }, { status: 400 });
     }
 
     if (latLng) {
@@ -102,7 +102,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         const tokenSetting = await getSettingByKey("LINE_ACCESS_TOKEN");
         const token = tokenSetting?.value ?? null;
         if (!token) {
-            return NextResponse.json({ error: "ไม่พบ LINE_ACCESS_TOKEN ใน DB" }, { status: 400 });
+            console.error("[แจ้งเตือน] ไม่พบ LINE_ACCESS_TOKEN ใน DB");
         }
         if (lineGroupId && token) {
             await notifyLineUserAndLineGroup(complaintUpdate, lineGroupId, token);
