@@ -762,7 +762,7 @@ function buildUserFlex(c: Complaint) {
           },
           {
             type: "text",
-            text: userFooterMap[c.status as string],
+            text: userFooterMap[c.status as string] || "ระบบได้รับเรื่องร้องเรียนของคุณแล้ว",
             wrap: true,
             weight: "bold",
             align: "center",

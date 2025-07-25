@@ -108,8 +108,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
             await notifyLineUserAndLineGroup(complaintUpdate, lineGroupId, token);
         }
         await notifyTelegramGroupForComplaint(complaintUpdate);
-    } catch (error) {
-        console.error("[แจ้งเตือน] ERROR:", error);
+    } catch (error:any) {
+        console.error("[แจ้งเตือน] ERROR:",  error, error?.response?.data);
     }
 
     return NextResponse.json({ message: "ยกเลิกสำเร็จ", complaint: complaintUpdate });
