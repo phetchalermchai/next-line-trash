@@ -3,30 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { getSettingByKey } from "@/lib/settings/service";
 import { Complaint, ComplaintSource, ComplaintStatus } from "@prisma/client";
 
-// ไม่ใช้แล้ว
-export async function notifyUserAndGroup(id: string) {
-  try {
-    const complaint = await prisma.complaint.findUnique({ where: { id } });
-    if (!complaint) throw new Error("Complaint not found");
-    if (!complaint.lineUserId) throw new Error("Missing lineUserId");
-
-    const groupSetting = await getSettingByKey("LINE_GROUP_ID");
-    const tokenSetting = await getSettingByKey("LINE_ACCESS_TOKEN");
-
-    if (!groupSetting || !tokenSetting) throw new Error("LINE_GROUP_ID หรือ LINE_ACCESS_TOKEN ไม่พบใน DB");
-    console.log(groupSetting);
-    console.log(tokenSetting);
-
-    const flexGroup = buildGroupFlex(complaint, "ใหม่");
-    const flexUser = buildUserFlex(complaint);
-
-    await pushMessageToGroup(groupSetting.value, [flexGroup], tokenSetting.value);
-    await pushMessageToUser(complaint.lineUserId, [flexUser], tokenSetting.value);;
-  } catch (error) {
-    console.error("[notifyUserAndGroup] Error:", error);
-    throw error;
-  }
-}
 
 export async function notifyLineUserAndLineGroup(complaint: Complaint, groupId: string, token: string) {
   try {
@@ -43,27 +19,14 @@ export async function notifyLineUserAndLineGroup(complaint: Complaint, groupId: 
 
     await pushMessageToGroup(groupId, [flexGroup], token);
     await pushMessageToUser(complaint.lineUserId, [flexUser], token);
-  } catch (error) {
-    console.error("[notifyUserAndGroup] Error:", error);
-    throw error;
-  }
-}
-
-// ไม่ใช้แล้ว
-export async function notifyGroupOnly(id: string) {
-  try {
-    const complaint = await prisma.complaint.findUnique({ where: { id } });
-    if (!complaint) throw new Error("Complaint not found");
-
-    const groupSetting = await getSettingByKey("LINE_GROUP_ID");
-    const tokenSetting = await getSettingByKey("LINE_ACCESS_TOKEN");
-
-    if (!groupSetting || !tokenSetting) throw new Error("LINE_GROUP_ID หรือ LINE_ACCESS_TOKEN ไม่พบใน DB");
-
-    const flexGroup = buildGroupFlex(complaint, "ใหม่");
-    await pushMessageToGroup(groupSetting.value, [flexGroup], tokenSetting.value);
-  } catch (error) {
-    console.error("[notifyGroupOnly] Error:", error);
+  } catch (error: any) {
+    console.error("[notifyUserAndGroup] Error:", {
+      message: error.message,
+      code: error.code,
+      status: error.response?.status,
+      response: error.response?.data,
+      config: error.config,
+    });
     throw error;
   }
 }
@@ -74,24 +37,6 @@ export async function notifyLineGroup(lineGroupId: string, complaint: any, lineT
     await pushMessageToGroup(lineGroupId, [flexGroup], lineToken);
   } catch (error) {
     console.error("[notifyLineGroup] Error:", error);
-    throw error;
-  }
-}
-
-// ไม่ใช้แล้ว
-export async function notifyReportResultToGroup(id: string, message: string) {
-  try {
-    const complaint = await prisma.complaint.findUnique({ where: { id } });
-    if (!complaint) throw new Error("Complaint not found");
-
-    const groupSetting = await getSettingByKey("LINE_GROUP_ID");
-    const tokenSetting = await getSettingByKey("LINE_ACCESS_TOKEN");
-    if (!groupSetting || !tokenSetting) throw new Error("LINE_GROUP_ID หรือ LINE_ACCESS_TOKEN ไม่พบใน DB");
-
-    const flexGroup = buildGroupFlexReport(complaint, message);
-    await pushMessageToGroup(groupSetting.value, [flexGroup], tokenSetting.value);
-  } catch (error) {
-    console.error("[notifyReportResultToGroup] Error:", error);
     throw error;
   }
 }
@@ -112,24 +57,6 @@ export async function notifyReportResultToLineGroup(id: string, message: string,
   }
 }
 
-// ไม่ใช้แล้ว
-export async function notifyReportResultToUser(id: string, message: string) {
-  try {
-    const complaint = await prisma.complaint.findUnique({ where: { id } });
-    if (!complaint) throw new Error("Complaint not found");
-    if (!complaint.lineUserId) throw new Error("Missing lineUserId");
-
-    const tokenSetting = await getSettingByKey("LINE_ACCESS_TOKEN");
-    if (!tokenSetting) throw new Error("LINE_ACCESS_TOKEN ไม่พบใน DB");
-
-    const flexUser = buildUserFlexReport(complaint, message);
-    await pushMessageToUser(complaint.lineUserId, [flexUser], tokenSetting.value);
-  } catch (error) {
-    console.error("[notifyReportResultToUser] Error:", error);
-    throw error;
-  }
-}
-
 export async function notifyReportResultToLineUser(id: string, message: string, userId: string) {
   try {
     const complaint = await prisma.complaint.findUnique({ where: { id } });
@@ -142,49 +69,6 @@ export async function notifyReportResultToLineUser(id: string, message: string, 
     await pushMessageToUser(userId, [flexUser], tokenSetting.value);
   } catch (error) {
     console.error("[notifyReportResultToUser] Error:", error);
-    throw error;
-  }
-}
-
-// ไม่ใช้แล้ว
-export async function notifyManualGroupReminder(id: string) {
-  try {
-    const complaint = await prisma.complaint.findUnique({ where: { id } });
-    if (!complaint) throw new Error("Complaint not found");
-
-    const now = new Date();
-
-    if (complaint.notifiedAt) {
-      const diff = now.getTime() - new Date(complaint.notifiedAt).getTime();
-      const diffDays = diff / (1000 * 60 * 60 * 24);
-
-      if (diffDays < 1) {
-        throw new Error("แจ้งเตือนได้วันละครั้งเท่านั้น");
-      }
-    }
-
-    if (complaint.status === "DONE") {
-      throw new Error("ไม่สามารถแจ้งเตือนได้ เนื่องจากเรื่องนี้ดำเนินการเสร็จแล้ว");
-    }
-
-    const created = new Date(complaint.createdAt);
-    const diffCreatedDays = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
-
-    const groupSetting = await getSettingByKey("LINE_GROUP_ID");
-    const tokenSetting = await getSettingByKey("LINE_ACCESS_TOKEN");
-    if (!groupSetting || !tokenSetting) throw new Error("LINE_GROUP_ID หรือ LINE_ACCESS_TOKEN ไม่พบใน DB");
-
-    const flex = buildGroupFlex(complaint, `${diffCreatedDays} วัน`);
-    await pushMessageToGroup(groupSetting.value, [flex], tokenSetting.value);
-
-    await prisma.complaint.update({
-      where: { id },
-      data: { notifiedAt: now },
-    });
-
-    return { message: "แจ้งเตือนสำเร็จ" };
-  } catch (error) {
-    console.error("[notifyManualGroupReminder] Error:", error);
     throw error;
   }
 }
@@ -579,7 +463,7 @@ function buildUserFlex(c: Complaint) {
   const userFooterMap: Record<string, string> = {
     CANCELLED: "ระบบได้ยกเลิกเรื่องร้องเรียนของคุณแล้ว",
     REJECTED: "ระบบไม่อนุมัติรับเรื่องร้องเรียนของคุณแล้ว",
-    PENDING:"ระบบได้รับเรื่องร้องเรียนของคุณแล้ว"
+    PENDING: "ระบบได้รับเรื่องร้องเรียนของคุณแล้ว"
   };
 
   const thaiDate = new Date(c.createdAt).toLocaleString("th-TH", {
