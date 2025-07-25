@@ -429,7 +429,7 @@ function buildGroupFlex(c: Complaint, type: string = "ใหม่") {
               uri: `${process.env.WEB_BASE_URL}/admin/complaints/manage?reportId=${c.id}`
             }
           }
-        ],
+        ].filter(Boolean),
         flex: 0
       }
     }
