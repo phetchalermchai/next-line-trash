@@ -66,7 +66,9 @@ ${resultMessage ? `\n<b>สรุปผล:</b> ${resultMessage}` : ""}
             inline_keyboard: [
                 [
                     { text: "🌐 ดูรายละเอียด", url: detailUrl },
-                    complaint.status === "PENDING" || complaint.status === "REOPENED" && { text: "📝 แจ้งผลดำเนินงาน", url: reportUrl }
+                    ...(complaint.status === "PENDING" || complaint.status === "REOPENED"
+                        ? [{ text: "📝 แจ้งผลดำเนินงาน", url: reportUrl }]
+                        : [])
                 ]
             ]
         }
