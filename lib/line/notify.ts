@@ -38,7 +38,7 @@ export async function notifyLineUserAndLineGroup(complaint: Complaint, groupId: 
       REJECTED: "ไม่อนุมัติ",
     };
 
-    const flexGroup = buildGroupFlex(complaint, groupHeaderMap[complaint.status as string]);
+    const flexGroup = buildGroupFlex(complaint, groupHeaderMap[complaint.status as string] || "ใหม่");
     const flexUser = buildUserFlex(complaint);
 
     await pushMessageToGroup(groupId, [flexGroup], token);
@@ -579,6 +579,7 @@ function buildUserFlex(c: Complaint) {
   const userFooterMap: Record<string, string> = {
     CANCELLED: "ระบบได้ยกเลิกเรื่องร้องเรียนของคุณแล้ว",
     REJECTED: "ระบบไม่อนุมัติรับเรื่องร้องเรียนของคุณแล้ว",
+    PENDING:"ระบบได้รับเรื่องร้องเรียนของคุณแล้ว"
   };
 
   const thaiDate = new Date(c.createdAt).toLocaleString("th-TH", {
@@ -761,7 +762,7 @@ function buildUserFlex(c: Complaint) {
           },
           {
             type: "text",
-            text: userFooterMap[c.status as ComplaintStatus] || "ระบบได้รับเรื่องร้องเรียนของคุณแล้ว",
+            text: userFooterMap[c.status as string],
             wrap: true,
             weight: "bold",
             align: "center",
