@@ -13,6 +13,7 @@ export async function notifyLineUserAndLineGroup(complaint: ComplaintWithReopenL
       PENDING: "ใหม่",
       CANCELLED: "ยกเลิก",
       REJECTED: "ไม่อนุมัติ",
+      REOPENED: "ขอแก้ไข"
     };
 
     const lastReopenReason =
@@ -363,7 +364,7 @@ function buildGroupFlex(c: Complaint, type: string = "ใหม่", reason?: st
                 contents: [
                   {
                     type: "text",
-                    text: "เหตุผลขอแก้ไข",
+                    text: "เหตุผล",
                     color: "#aaaaaa",
                     size: "sm",
                     flex: 2
@@ -447,7 +448,7 @@ function buildGroupFlex(c: Complaint, type: string = "ใหม่", reason?: st
               uri: `${process.env.WEB_BASE_URL}/complaints/${c.id}`
             }
           },
-          c.status === "PENDING" && {
+          c.status === "PENDING" || c.status === "REOPENED" && {
             type: "button",
             style: "secondary",
             height: "sm",
@@ -674,7 +675,7 @@ function buildUserFlex(c: Complaint, reason?: string) {
                 contents: [
                   {
                     type: "text",
-                    text: "เหตุผลขอแก้ไข",
+                    text: "เหตุผล",
                     color: "#aaaaaa",
                     size: "sm",
                     flex: 2

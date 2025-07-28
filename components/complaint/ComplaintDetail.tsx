@@ -194,7 +194,7 @@ export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
                         className="mt-4"
                         disabled={reopenLoading}
                     >
-                        {reopenLoading ? "กำลังส่ง..." : "ร้องเรียนงานซ่อมไม่เรียบร้อย"}
+                        {reopenLoading ? "กำลังส่ง..." : "แจ้งขอแก้ไข"}
                     </Button>
                     <Dialog open={showReopenDialog} onOpenChange={setShowReopenDialog}>
                         <DialogContent>

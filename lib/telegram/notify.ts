@@ -61,7 +61,7 @@ ${complaint.receivedBy && complaint.source !== "LINE" ? `<b>ผู้รับ�
 <b>เบอร์โทร:</b> ${complaint.phone || "-"}
 <b>รายละเอียด:</b> ${complaint.description || "-"}
 ${resultMessage ? `\n<b>สรุปผล:</b> ${resultMessage}` : ""}
-${lastReopenReason ? `\n<b>เหตุผลขอแก้ไข:</b> ${lastReopenReason}` : ""}
+${lastReopenReason ? `\n<b>เหตุผล:</b> ${lastReopenReason}` : ""}
 
 <b>สถานะ:</b> ${statusLabel[complaint.status] || complaint.status}
 <b>แผนที่:</b> <a href="${mapUrl}">เปิด Google Maps</a>
