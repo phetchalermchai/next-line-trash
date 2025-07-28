@@ -78,6 +78,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         updatedAt: new Date(),
         imageAfter: cleanedUrls,
       },
+      include: { reopenLogs: true }
     });
 
     if (groupId) {

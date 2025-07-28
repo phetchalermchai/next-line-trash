@@ -31,6 +31,7 @@ export async function createComplaint(data: {
       imageBefore: data.imageBefore,
       status: ComplaintStatus.PENDING,
     },
+    include: { reopenLogs: true }
   });
 }
 

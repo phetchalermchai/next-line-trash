@@ -96,6 +96,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
             status: "CANCELLED",
             updatedAt: new Date(),
         },
+        include: { reopenLogs: true }
     });
 
     try {

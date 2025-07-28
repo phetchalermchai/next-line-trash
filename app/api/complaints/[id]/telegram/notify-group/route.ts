@@ -32,13 +32,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     // อัปเดต notifiedAt
-    await prisma.complaint.update({
+    const updated = await prisma.complaint.update({
       where: { id },
-      data: { notifiedAt: now },
+      data: {
+        notifiedAt: now
+      },
+      include: { reopenLogs: true }
     });
 
-     // ส่ง telegram
-    await notifyManualTelegramGroupReminder(complaint);
+    // ส่ง telegram
+    await notifyManualTelegramGroupReminder(updated);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
