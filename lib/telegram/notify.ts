@@ -61,9 +61,9 @@ ${complaint.receivedBy && complaint.source !== "LINE" ? `<b>ผู้รับ�
 <b>เบอร์โทร:</b> ${complaint.phone || "-"}
 <b>รายละเอียด:</b> ${complaint.description || "-"}
 ${resultMessage ? `\n<b>สรุปผล:</b> ${resultMessage}` : ""}
-${lastReopenReason ? `\n<b>เหตุผล:</b> ${lastReopenReason}` : ""}
 
 <b>สถานะ:</b> ${statusLabel[complaint.status] || complaint.status}
+${lastReopenReason ? `<b>เหตุผล:</b> ${lastReopenReason}` : ""}
 <b>แผนที่:</b> <a href="${mapUrl}">เปิด Google Maps</a>
   `.replace(/^ +/gm, '').trim();
 

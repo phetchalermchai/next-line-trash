@@ -28,7 +28,7 @@ const statusMap = {
         color: "text-gray-600 bg-gray-300",
     },
     REOPENED: {
-        label: "ขอแก้ไข/เปิดใหม่",
+        label: "ขอแก้ไข",
         icon: <Undo2 className="w-4 h-4 text-orange-500" />,
         color: "text-orange-600 bg-orange-50",
     },

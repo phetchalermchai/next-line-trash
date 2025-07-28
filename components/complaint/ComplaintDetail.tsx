@@ -189,7 +189,7 @@ export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
             {showReopenButton && (
                 <div className="flex justify-end gap-2">
                     <Button
-                        variant="secondary"
+                        variant="default"
                         onClick={() => setShowReopenDialog(true)}
                         className="mt-4"
                         disabled={reopenLoading}
