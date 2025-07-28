@@ -1,10 +1,11 @@
 import axios from "axios";
 import { prisma } from "@/lib/prisma";
 import { getSettingByKey } from "@/lib/settings/service";
-import { Complaint, ComplaintSource, ComplaintStatus } from "@prisma/client";
+import { Complaint, ComplaintSource, ComplaintStatus, ComplaintReopenLog } from "@prisma/client";
 
+type ComplaintWithReopenLogs = Complaint & { reopenLogs: ComplaintReopenLog[] };
 
-export async function notifyLineUserAndLineGroup(complaint: Complaint, groupId: string, token: string) {
+export async function notifyLineUserAndLineGroup(complaint: ComplaintWithReopenLogs, groupId: string, token: string) {
   try {
     if (!complaint.lineUserId) throw new Error("Missing lineUserId");
 
@@ -14,8 +15,13 @@ export async function notifyLineUserAndLineGroup(complaint: Complaint, groupId: 
       REJECTED: "ไม่อนุมัติ",
     };
 
-    const flexGroup = buildGroupFlex(complaint, groupHeaderMap[complaint.status as string] || "ใหม่");
-    const flexUser = buildUserFlex(complaint);
+    const lastReopenReason =
+      complaint.status === "REOPENED" && complaint.reopenLogs?.length
+        ? complaint.reopenLogs[complaint.reopenLogs.length - 1].reason
+        : "";
+
+    const flexGroup = buildGroupFlex(complaint, groupHeaderMap[complaint.status as string] || "ใหม่", lastReopenReason);
+    const flexUser = buildUserFlex(complaint, lastReopenReason);
 
     await pushMessageToGroup(groupId, [flexGroup], token);
     await pushMessageToUser(complaint.lineUserId, [flexUser], token);
@@ -146,7 +152,7 @@ async function pushMessageToUser(userId: string, messages: any[], token: string)
   );
 }
 
-function buildGroupFlex(c: Complaint, type: string = "ใหม่") {
+function buildGroupFlex(c: Complaint, type: string = "ใหม่", reason?: string) {
   const lineDisplayName = c.reporterName || c.lineUserId;
   const mapUrl = c.location
     ? `https://www.google.com/maps/search/?api=1&query=${c.location}`
@@ -350,6 +356,28 @@ function buildGroupFlex(c: Complaint, type: string = "ใหม่") {
                   }
                 ]
               },
+              c.status === "REOPENED" && reason && {
+                type: "box",
+                layout: "baseline",
+                spacing: "sm",
+                contents: [
+                  {
+                    type: "text",
+                    text: "เหตุผลขอแก้ไข",
+                    color: "#aaaaaa",
+                    size: "sm",
+                    flex: 2
+                  },
+                  {
+                    type: "text",
+                    text: reason,
+                    wrap: true,
+                    color: "#666666",
+                    size: "sm",
+                    flex: 5
+                  }
+                ]
+              },
               {
                 type: "box",
                 layout: "baseline",
@@ -436,7 +464,7 @@ function buildGroupFlex(c: Complaint, type: string = "ใหม่") {
   };
 }
 
-function buildUserFlex(c: Complaint) {
+function buildUserFlex(c: Complaint, reason?: string) {
   const lineDisplayName = c.reporterName || c.lineUserId;
   const mapUrl = c.location
     ? `https://www.google.com/maps/search/?api=1&query=${c.location}`
@@ -463,7 +491,8 @@ function buildUserFlex(c: Complaint) {
   const userFooterMap: Record<string, string> = {
     CANCELLED: "ระบบได้ยกเลิกเรื่องร้องเรียนของคุณแล้ว",
     REJECTED: "ระบบไม่อนุมัติรับเรื่องร้องเรียนของคุณแล้ว",
-    PENDING: "ระบบได้รับเรื่องร้องเรียนของคุณแล้ว"
+    PENDING: "ระบบได้รับเรื่องร้องเรียนของคุณแล้ว",
+    REOPENED: "ระบบได้รับเรื่องร้องเรียนขอแก้ไขของคุณแล้ว"
   };
 
   const thaiDate = new Date(c.createdAt).toLocaleString("th-TH", {
@@ -637,8 +666,30 @@ function buildUserFlex(c: Complaint) {
                     weight: "bold"
                   }
                 ]
+              },
+              {
+                type: "box",
+                layout: "baseline",
+                spacing: "sm",
+                contents: [
+                  {
+                    type: "text",
+                    text: "เหตุผลขอแก้ไข",
+                    color: "#aaaaaa",
+                    size: "sm",
+                    flex: 2
+                  },
+                  {
+                    type: "text",
+                    text: reason,
+                    wrap: true,
+                    color: "#666666",
+                    size: "sm",
+                    flex: 5
+                  }
+                ]
               }
-            ]
+            ].filter(Boolean)
           },
           {
             type: "separator",

@@ -1,10 +1,12 @@
 import axios from "axios";
 import { getSettingByKey } from "@/lib/settings/service";
 import { prisma } from "@/lib/prisma";
-import { Complaint } from "@prisma/client";
+import { Complaint, ComplaintReopenLog } from "@prisma/client";
+
+type ComplaintWithReopenLogs = Complaint & { reopenLogs: ComplaintReopenLog[] };
 
 // messageTemplate สามารถปรับแต่งได้
-function buildTelegramMessage(complaint: Complaint, zoneName?: string, type: string = "ใหม่", resultMessage?: string) {
+function buildTelegramMessage(complaint: ComplaintWithReopenLogs, zoneName?: string, type: string = "ใหม่", resultMessage?: string) {
     const date = type === "เสร็จสิ้น"
         ? complaint.updatedAt
         : complaint.createdAt;
@@ -42,6 +44,11 @@ function buildTelegramMessage(complaint: Complaint, zoneName?: string, type: str
     const detailUrl = `${process.env.WEB_BASE_URL}/complaints/${complaint.id}`;
     const reportUrl = `${process.env.WEB_BASE_URL}/admin/complaints/manage?reportId=${complaint.id}`;
 
+    const lastReopenReason =
+        complaint.status === "REOPENED" && complaint.reopenLogs?.length
+            ? complaint.reopenLogs[complaint.reopenLogs.length - 1].reason
+            : undefined;
+
     let txt = `
 <b>เรื่องร้องเรียน (${type})</b>
 <b>รหัสอ้างอิง:</b> #${complaint.id.slice(-6).toUpperCase()}
@@ -54,6 +61,7 @@ ${complaint.receivedBy && complaint.source !== "LINE" ? `<b>ผู้รับ�
 <b>เบอร์โทร:</b> ${complaint.phone || "-"}
 <b>รายละเอียด:</b> ${complaint.description || "-"}
 ${resultMessage ? `\n<b>สรุปผล:</b> ${resultMessage}` : ""}
+${lastReopenReason ? `\n<b>เหตุผลขอแก้ไข:</b> ${lastReopenReason}` : ""}
 
 <b>สถานะ:</b> ${statusLabel[complaint.status] || complaint.status}
 <b>แผนที่:</b> <a href="${mapUrl}">เปิด Google Maps</a>
@@ -75,12 +83,13 @@ ${resultMessage ? `\n<b>สรุปผล:</b> ${resultMessage}` : ""}
     }
 }
 
-export async function notifyTelegramGroupForComplaint(complaint: Complaint) {
+export async function notifyTelegramGroupForComplaint(complaint: ComplaintWithReopenLogs) {
     try {
         const groupHeaderMap: Record<string, string> = {
             PENDING: "ใหม่",
             CANCELLED: "ยกเลิก",
             REJECTED: "ไม่อนุมัติ",
+            REOPENED: "ขอแก้ไข"
         };
         // หาว่า zone ที่ complaint นี้อยู่คืออะไร
         let zone = null;
@@ -120,7 +129,7 @@ export async function notifyTelegramGroupForComplaint(complaint: Complaint) {
 }
 
 
-export async function notifyTelegramGroupReport(complaint: Complaint, resultMessage: string) {
+export async function notifyTelegramGroupReport(complaint: ComplaintWithReopenLogs, resultMessage: string) {
     let zone = null;
     if (complaint.zoneId) {
         zone = await prisma.zone.findUnique({ where: { id: complaint.zoneId } });
@@ -155,7 +164,7 @@ export async function notifyTelegramGroupReport(complaint: Complaint, resultMess
     }
 }
 
-export async function notifyManualTelegramGroupReminder(complaint: Complaint) {
+export async function notifyManualTelegramGroupReminder(complaint: ComplaintWithReopenLogs) {
     let zone = null;
     if (complaint.zoneId) {
         zone = await prisma.zone.findUnique({ where: { id: complaint.zoneId } });
