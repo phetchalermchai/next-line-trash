@@ -13,6 +13,7 @@ import { Button } from "../ui/button";
 import Link from "next/link";
 import ComplaintDetailSkeleton from "@/app/(public)/complaints/[id]/Skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../ui/dialog";
+import dayjs from "dayjs";
 import { toast } from "sonner";
 
 const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });
@@ -24,6 +25,9 @@ export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
     const [lineProfile, setLineProfile] = useState<{ userId: string; displayName: string } | null>(null);
     const [showCancelDialog, setShowCancelDialog] = useState(false);
     const [cancelLoading, setCancelLoading] = useState(false);
+    const [showReopenDialog, setShowReopenDialog] = useState(false);
+    const [reopenLoading, setReopenLoading] = useState(false);
+    const [reopenReason, setReopenReason] = useState("");
 
 
     useEffect(() => {
@@ -67,6 +71,13 @@ export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
         complaint.source === "LINE" &&
         lineProfile?.userId === complaint.lineUserId;
 
+    const showReopenButton =
+        complaint &&
+        complaint.status === "DONE" &&
+        complaint.source === "LINE" &&
+        lineProfile?.userId === complaint.lineUserId &&
+        dayjs().diff(dayjs(complaint.updatedAt || complaint.createdAt), "day") < 3;
+
     const handleCancelComplaint = async () => {
         if (!complaint || !lineProfile) return;
         setCancelLoading(true);
@@ -76,16 +87,33 @@ export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
             });
             toast.success("ยกเลิกเรื่องร้องเรียนสำเร็จ");
             setShowCancelDialog(false);
-            // reload ข้อมูล complaint
             fetchComplaint(complaintId);
-            // หรือจะ redirect ไปหน้าอื่น
-            // router.push("/complaints/mine")
         } catch (err) {
             toast.error("เกิดข้อผิดพลาดในการยกเลิก");
         } finally {
             setCancelLoading(false);
         }
     };
+
+    const handleReopenComplaint = async () => {
+        if (!complaint || !lineProfile) return;
+        setReopenLoading(true);
+        try {
+            await axios.patch(`/api/complaints/${complaint.id}/reopen`, {
+                userId: lineProfile.userId,
+                reason: reopenReason
+            });
+            toast.success("ส่งคำขอแก้ไขสำเร็จ");
+            setShowReopenDialog(false);
+            fetchComplaint(complaintId); // รีเฟรชข้อมูล
+        } catch (err) {
+            toast.error("เกิดข้อผิดพลาดในการส่งคำขอแก้ไข");
+        } finally {
+            setReopenLoading(false);
+            setReopenReason("");
+        }
+    };
+
 
     if (error) {
         return (
@@ -151,6 +179,47 @@ export const ComplaintDetail = ({ complaintId }: { complaintId: string }) => {
                                 <Button variant="outline" onClick={() => setShowCancelDialog(false)}>ยกเลิก</Button>
                                 <Button variant="destructive" onClick={handleCancelComplaint} disabled={cancelLoading}>
                                     {cancelLoading ? "กำลังยกเลิก..." : "ยืนยันยกเลิก"}
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                </div>
+            )}
+
+            {showReopenButton && (
+                <div className="flex justify-end gap-2">
+                    <Button
+                        variant="secondary"
+                        onClick={() => setShowReopenDialog(true)}
+                        className="mt-4"
+                        disabled={reopenLoading}
+                    >
+                        {reopenLoading ? "กำลังส่ง..." : "ร้องเรียนงานซ่อมไม่เรียบร้อย"}
+                    </Button>
+                    <Dialog open={showReopenDialog} onOpenChange={setShowReopenDialog}>
+                        <DialogContent>
+                            <DialogTitle>แจ้งขอแก้ไขงาน</DialogTitle>
+                            <DialogDescription>
+                                <div>
+                                    คุณต้องการแจ้งให้เจ้าหน้าที่กลับไปแก้ไขงานนี้ใช่หรือไม่? <br />
+                                    (ร้องขอได้ภายใน 3 วันหลังปิดงาน)
+                                </div>
+                                <textarea
+                                    placeholder="โปรดระบุเหตุผล (ถ้ามี)"
+                                    value={reopenReason}
+                                    onChange={(e) => setReopenReason(e.target.value)}
+                                    className="w-full mt-2 p-2 border rounded"
+                                    rows={3}
+                                />
+                            </DialogDescription>
+                            <div className="flex justify-end gap-2 mt-4">
+                                <Button variant="outline" onClick={() => setShowReopenDialog(false)}>ยกเลิก</Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={handleReopenComplaint}
+                                    disabled={reopenLoading}
+                                >
+                                    {reopenLoading ? "กำลังส่ง..." : "ยืนยันแจ้งแก้ไข"}
                                 </Button>
                             </div>
                         </DialogContent>
