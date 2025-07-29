@@ -61,9 +61,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       const tgToken = (await prisma.setting.findUnique({ where: { key: "TELEGRAM_BOT_TOKEN" } }))?.value ?? "";
 
       if (groupId && lineToken) {
-        await notifyLineUserAndLineGroup(updated, groupId, lineToken);
-      } else if (groupId && lineToken) {
-        await notifyLineGroup(groupId, updated, lineToken);
+        if (updated.lineUserId) {
+          await notifyLineUserAndLineGroup(updated, groupId, lineToken);
+        } else {
+          await notifyLineGroup(groupId, updated, lineToken);
+        }
       }
       if (tgGroupId && tgToken) {
         await notifyTelegramGroupForComplaint(updated);

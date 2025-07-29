@@ -7,8 +7,6 @@ type ComplaintWithReopenLogs = Complaint & { reopenLogs: ComplaintReopenLog[] };
 
 export async function notifyLineUserAndLineGroup(complaint: ComplaintWithReopenLogs, groupId: string, token: string) {
   try {
-    if (!complaint.lineUserId) throw new Error("Missing lineUserId");
-
     const groupHeaderMap: Record<string, string> = {
       PENDING: "ใหม่",
       CANCELLED: "ยกเลิก",
@@ -25,7 +23,9 @@ export async function notifyLineUserAndLineGroup(complaint: ComplaintWithReopenL
     const flexUser = buildUserFlex(complaint, lastReopenReason);
 
     await pushMessageToGroup(groupId, [flexGroup], token);
-    await pushMessageToUser(complaint.lineUserId, [flexUser], token);
+    if (complaint.lineUserId) {
+      await pushMessageToUser(complaint.lineUserId, [flexUser], token);
+    }
   } catch (error: any) {
     console.error("[notifyUserAndGroup] Error:", {
       message: error.message,
