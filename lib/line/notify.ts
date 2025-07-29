@@ -678,7 +678,7 @@ function buildUserFlex(c: Complaint, reason?: string) {
                   }
                 ]
               },
-              {
+              c.status === "REOPENED" && reason && {
                 type: "box",
                 layout: "baseline",
                 spacing: "sm",
