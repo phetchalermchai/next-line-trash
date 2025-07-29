@@ -52,7 +52,7 @@ export default function ManageComplaintsPage() {
     const [complaints, setComplaints] = React.useState<Complaint[]>([]);
     const [globalFilter, setGlobalFilter] = React.useState("");
     const [dateRange, setDateRange] = React.useState<any>();
-    const [status, setStatus] = React.useState<"ALL" | "PENDING" | "DONE">("ALL");
+    const [status, setStatus] = React.useState<"ALL" | "PENDING" | "DONE" | "VERIFIED" | "REJECTED" | "CANCELLED" | "REOPENED">("ALL");
     const [source, setSource] = React.useState<"ALL" | "LINE" | "FACEBOOK" | "PHONE" | "COUNTER" | "OTHER">("ALL");
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [viewComplaint, setViewComplaint] = React.useState<Complaint | null>(null);
@@ -519,6 +519,10 @@ export default function ManageComplaintsPage() {
                             <SelectItem value="ALL">ทุกสถานะ</SelectItem>
                             <SelectItem value="PENDING">รอดำเนินการ</SelectItem>
                             <SelectItem value="DONE">เสร็จสิ้น</SelectItem>
+                            <SelectItem value="VERIFIED">ยืนยันผลแล้ว</SelectItem>
+                            <SelectItem value="REJECTED">ไม่อนุมัติ</SelectItem>
+                            <SelectItem value="CANCELLED">ยกเลิก</SelectItem>
+                            <SelectItem value="REOPENED">ขอแก้ไข</SelectItem>
                         </SelectContent>
                     </Select>
                     <Select onValueChange={v => setSource(v as any)} value={source}>

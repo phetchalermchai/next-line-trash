@@ -176,7 +176,10 @@ export default function EditComplaintDrawer({ complaint, open, onClose, onSave }
                             <SelectContent>
                                 <SelectItem value="PENDING">รอดำเนินการ</SelectItem>
                                 <SelectItem value="DONE">เสร็จสิ้น</SelectItem>
+                                <SelectItem value="VERIFIED" disabled>ยืนยันผลแล้ว</SelectItem>
                                 <SelectItem value="REJECTED">ไม่อนุมัติ</SelectItem>
+                                <SelectItem value="CANCELLED" disabled>ยกเลิก</SelectItem>
+                                <SelectItem value="REOPENED" disabled>ขอแก้ไข</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
