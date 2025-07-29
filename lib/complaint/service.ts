@@ -36,7 +36,7 @@ export async function createComplaint(data: {
 }
 
 export async function findComplaintById(id: string) {
-  return prisma.complaint.findUnique({ where: { id } });
+  return prisma.complaint.findUnique({ where: { id }, include: { reopenLogs: true } });
 }
 
 export async function updateComplaint(id: string, data: any, files: { imageBeforeFiles?: File[]; imageAfterFiles?: File[] }) {
@@ -83,7 +83,7 @@ export async function updateComplaint(id: string, data: any, files: { imageBefor
     imageAfter: await handleImageUpdate("imageAfter", files.imageAfterFiles, found.imageAfter),
   };
 
-  return prisma.complaint.update({ where: { id }, data: updateData });
+  return prisma.complaint.update({ where: { id }, data: updateData, include: { reopenLogs: true } });
 }
 
 export async function deleteComplaint(id: string): Promise<boolean> {

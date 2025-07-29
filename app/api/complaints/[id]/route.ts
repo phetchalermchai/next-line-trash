@@ -3,8 +3,9 @@ import { apiKeyAuth } from "@/lib/middleware/api-key-auth";
 import { findComplaintById, updateComplaint, deleteComplaint } from "@/lib/complaint/service";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
-
-
+import { notifyLineGroup, notifyLineUserAndLineGroup } from "@/lib/line/notify";
+import { notifyTelegramGroupForComplaint } from "@/lib/telegram/notify";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -43,10 +44,32 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   try {
+    const oldComplaint = await findComplaintById(id);
     const updated = await updateComplaint(id, data, {
       imageBeforeFiles,
       imageAfterFiles,
     });
+
+    if (oldComplaint?.status !== "REJECTED" && updated.status === "REJECTED") {
+      const zone = updated.zoneId
+        ? await prisma.zone.findUnique({ where: { id: updated.zoneId } })
+        : null;
+      const groupId = zone?.lineGroupId ?? null;
+      const tgGroupId = zone?.telegramGroupId ?? null;
+
+      const lineToken = (await prisma.setting.findUnique({ where: { key: "LINE_ACCESS_TOKEN" } }))?.value ?? "";
+      const tgToken = (await prisma.setting.findUnique({ where: { key: "TELEGRAM_BOT_TOKEN" } }))?.value ?? "";
+
+      if (groupId && lineToken) {
+        await notifyLineUserAndLineGroup(updated, groupId, lineToken);
+      } else if (groupId && lineToken) {
+        await notifyLineGroup(groupId, updated, lineToken);
+      }
+      if (tgGroupId && tgToken) {
+        await notifyTelegramGroupForComplaint(updated);
+      }
+    }
+
     return NextResponse.json(updated);
   } catch (error: any) {
     console.error("[PATCH Complaint] Error:", error);

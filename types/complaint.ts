@@ -2,7 +2,7 @@ export type Complaint = {
   id: string;
   source: ComplaintSource;
   receivedBy?: string;
-  reporterName?:   String;
+  reporterName?: String;
   lineUserId?: string;
   phone?: string;
   description: string;
@@ -11,10 +11,22 @@ export type Complaint = {
   location: string;
   status: 'PENDING' | 'DONE' | 'VERIFIED' | 'REJECTED' | 'CANCELLED' | 'REOPENED';
   message?: string;
+  verifiedAt?: string;
+  verifiedBy?: string;
+  autoVerified?: boolean;
+  reopenLogs?: ComplaintReopenLog[];
   notifiedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 };
+
+type ComplaintReopenLog = {
+  id: string;
+  reporterName: string;
+  createdAt: string;
+  complaintId: string;
+  reason: string;
+}
 
 enum ComplaintSource {
   LINE = "LINE",
@@ -23,3 +35,4 @@ enum ComplaintSource {
   COUNTER = "COUNTER",
   OTHER = "OTHER",
 }
+

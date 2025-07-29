@@ -40,7 +40,17 @@ export async function notifyLineUserAndLineGroup(complaint: ComplaintWithReopenL
 
 export async function notifyLineGroup(lineGroupId: string, complaint: any, lineToken: string) {
   try {
-    const flexGroup = buildGroupFlex(complaint, "ใหม่");
+    const groupHeaderMap: Record<string, string> = {
+      PENDING: "ใหม่",
+      CANCELLED: "ยกเลิก",
+      REJECTED: "ไม่อนุมัติ",
+      REOPENED: "ขอแก้ไข"
+    };
+    const lastReopenReason =
+      complaint.status === "REOPENED" && complaint.reopenLogs?.length
+        ? complaint.reopenLogs[complaint.reopenLogs.length - 1].reason
+        : "";
+    const flexGroup = buildGroupFlex(complaint, groupHeaderMap[complaint.status as string] || "ใหม่", lastReopenReason);
     await pushMessageToGroup(lineGroupId, [flexGroup], lineToken);
   } catch (error) {
     console.error("[notifyLineGroup] Error:", error);

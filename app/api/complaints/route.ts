@@ -57,6 +57,7 @@ export async function GET(req: NextRequest) {
   const [items, total] = await prisma.$transaction([
     prisma.complaint.findMany({
       where,
+      include: { reopenLogs: true },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * limit,
       take: limit,

@@ -721,6 +721,31 @@ export default function ManageComplaintsPage() {
                             {viewComplaint.message && (
                                 <div><strong>ข้อความตอบกลับ:</strong> {viewComplaint.message}</div>
                             )}
+                            {viewComplaint.reopenLogs && viewComplaint.reopenLogs.length > 0 && (
+                                <div className="mt-3 bg-orange-50 border border-orange-200 rounded-md p-3 space-y-2">
+                                    <div className="font-bold text-orange-700 flex items-center gap-2">
+                                        ประวัติขอแก้ไข ({viewComplaint.reopenLogs.length} ครั้ง)
+                                    </div>
+                                    <ul className="space-y-1">
+                                        {viewComplaint.reopenLogs.map((log, idx) => (
+                                            <li key={log.id} className="border-l-2 border-orange-400 pl-2 text-sm">
+                                                <div>
+                                                    <span className="font-medium text-orange-800">ครั้งที่ {idx + 1}</span>
+                                                    <span className="text-xs text-gray-500 ml-2">
+                                                        ({formatThaiDatetime(log.createdAt)} น.)
+                                                    </span>
+                                                </div>
+                                                <div className="text-gray-500">
+                                                    <span className="text-gray-700">โดย:</span> {log.reporterName || "-"}
+                                                </div>
+                                                <div className="text-gray-500">
+                                                    <span className="text-gray-700">เหตุผล:</span> {log.reason}
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                             <ComplaintImages
                                 imageBefore={viewComplaint?.imageBefore?.split(",").map(u => u.trim()) || []}
                                 imageAfter={viewComplaint?.imageAfter?.split(",").map(u => u.trim()) || []}
