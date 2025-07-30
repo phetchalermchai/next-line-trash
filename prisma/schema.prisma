@@ -24,7 +24,7 @@ model Complaint {
   message      String?
   verifiedAt   DateTime? // วันเวลายืนยัน
   verifiedBy   String? // ใครกดยืนยัน (userId)
-  autoVerified Boolean? // ถูกปิดงานอัตโนมัติหรือไม่
+  autoVerified Boolean?             @default(false) // ถูกปิดงานอัตโนมัติหรือไม่
   reopenLogs   ComplaintReopenLog[] // ขอแก้ไข
   notifiedAt   DateTime?
   createdAt    DateTime             @default(now())
