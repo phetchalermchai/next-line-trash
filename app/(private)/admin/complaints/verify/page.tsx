@@ -1,10 +1,10 @@
 "use client";
 import ComplaintVerifyList from "@/components/complaint/verify/ComplaintVerifyPage"
 
-const page = () => {
+const Page = () => {
     return (
         <ComplaintVerifyList />
     )
 }
 
-export default page
+export default Page

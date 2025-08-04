@@ -17,12 +17,14 @@ import { toast } from "sonner";
 import { formatThaiDatetime } from "@/utils/date";
 import { colorMap, statusMap } from "@/utils/complaintLabels";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import MiniMapPreview from "@/components/MiniMapPreview";
 import { Label } from "@/components/ui/label";
 import { ComplaintImages } from "../ComplaintImages";
 import EditComplaintDrawer from "../EditComplaintDrawer";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMediaQuery } from "@/lib/use-media-query";
+import dynamic from "next/dynamic";
+
+const MiniMapPreview = dynamic(() => import("@/components/MiniMapPreview"), { ssr: false });
 
 const sourceLabel: Record<string, string> = {
     LINE: "LINE",
@@ -35,6 +37,7 @@ const sourceLabel: Record<string, string> = {
 export default function ComplaintVerifyList() {
     const [data, setData] = useState<Complaint[]>([]);
     const [reason, setReason] = useState("");
+    const [openReopenDialogId, setOpenReopenDialogId] = useState<string | null>(null);
     const [viewComplaint, setViewComplaint] = useState<Complaint | null>(null);
     const [deleteComplaint, setDeleteComplaint] = useState<Complaint | null>(null);
     const [editComplaint, setEditComplaint] = useState<Complaint | null>(null);
@@ -75,15 +78,17 @@ export default function ComplaintVerifyList() {
         }
     };
 
-    const handleReopen = async (id: string) => {
+    const handleReopen = async () => {
+        if (!openReopenDialogId) return;
         if (!reason.trim()) {
             toast.warning("กรุณาระบุเหตุผล");
             return;
         }
         try {
-            await axios.patch(`/api/complaints/${id}/reopen`, { reason });
+            await axios.patch(`/api/complaints/${openReopenDialogId}/reopen`, { reason });
             toast.success("เปลี่ยนสถานะเป็น 'ขอแก้ไข' เรียบร้อย");
             setReason("");
+            setOpenReopenDialogId(null);
             fetchComplaints();
         } catch (err: any) {
             toast.error(err.response?.data?.message || "เกิดข้อผิดพลาด");
@@ -145,7 +150,7 @@ export default function ComplaintVerifyList() {
             size: 30,
         },
         {
-            header: "ID",
+            header: "รหัสอ้างอิง",
             accessorKey: "id",
             cell: ({ row }) => <>#{row.original.id.slice(-6).toUpperCase()}</>
         },
@@ -203,12 +208,12 @@ export default function ComplaintVerifyList() {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon">
+                                    <Button variant="ghost" size="icon" className="cursor-pointer">
                                         <ShieldCheck className="w-5 h-5 text-blue-600 dark:text-blue-300" />
                                     </Button>
                                 </AlertDialogTrigger>
                             </TooltipTrigger>
-                            <TooltipContent>ยืนยันผล (VERIFIED)</TooltipContent>
+                            <TooltipContent>ยืนยันผล</TooltipContent>
                         </Tooltip>
                         <AlertDialogContent>
                             <AlertDialogHeader>
@@ -218,9 +223,10 @@ export default function ComplaintVerifyList() {
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                <AlertDialogCancel className="cursor-pointer">ยกเลิก</AlertDialogCancel>
                                 <AlertDialogAction
                                     onClick={() => handleVerify(row.original.id)}
+                                    className="cursor-pointer"
                                 >
                                     ยืนยัน
                                 </AlertDialogAction>
@@ -229,43 +235,22 @@ export default function ComplaintVerifyList() {
                     </AlertDialog>
 
                     {/* UNVERIFIED */}
-                    <AlertDialog>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                        <XCircle className="w-5 h-5 text-red-500" />
-                                    </Button>
-                                </AlertDialogTrigger>
-                            </TooltipTrigger>
-                            <TooltipContent>ไม่ VERIFIED</TooltipContent>
-                        </Tooltip>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>ยืนยันไม่ผ่านการตรวจสอบ</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    โปรดระบุเหตุผลที่ “ไม่ผ่าน” หรือ “ต้องแก้ไข”
-                                </AlertDialogDescription>
-                                <Textarea
-                                    className="mt-2"
-                                    rows={3}
-                                    value={reason}
-                                    onChange={e => setReason(e.target.value)}
-                                    placeholder="เหตุผล..."
-                                    autoFocus
-                                />
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                                <AlertDialogAction
-                                    onClick={() => handleReopen(row.original.id)}
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="cursor-pointer"
+                                    onClick={() => {
+                                        setOpenReopenDialogId(row.original.id);
+                                        setReason("");
+                                    }}
                                 >
-                                    ยืนยัน
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-
+                                    <XCircle className="w-5 h-5 text-red-500" />
+                                </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>ไม่ยืนยันผล</TooltipContent>
+                    </Tooltip>
                     {/* เมนู actions เพิ่มเติม */}
                     <ActionsDropdown
                         complaint={row.original}
@@ -433,7 +418,6 @@ export default function ComplaintVerifyList() {
                             }
                         });
 
-                        // imageBefore และ imageAfter จะมาจาก data.imageBeforeUrls.join(',') และ data.imageAfterUrls.join(',') ที่จัดการแล้วใน handleSubmit()
                         const logFormData = (formData: FormData) => {
                             for (const [key, value] of formData.entries()) {
                                 console.log(`🟢 formData: ${key}`, value);
@@ -471,6 +455,35 @@ export default function ComplaintVerifyList() {
                     </DialogContent>
                 </Dialog>
             )}
+            {
+                <AlertDialog open={!!openReopenDialogId} onOpenChange={(open) => !open && setOpenReopenDialogId(null)}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>ยืนยันไม่ผ่านการตรวจสอบ</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                โปรดระบุเหตุผลที่ “ไม่ผ่าน” หรือ “ต้องแก้ไข”
+                            </AlertDialogDescription>
+                            <Textarea
+                                className="mt-2"
+                                rows={3}
+                                value={reason}
+                                onChange={e => setReason(e.target.value)}
+                                placeholder="เหตุผล..."
+                                autoFocus
+                            />
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel className="cursor-pointer">ยกเลิก</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={() => handleReopen()}
+                                className="cursor-pointer"
+                            >
+                                ยืนยัน
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            }
         </div>
     );
 }
