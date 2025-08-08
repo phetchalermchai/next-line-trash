@@ -150,6 +150,10 @@ export default function ManageComplaintsPage() {
             return toast.warning("ไม่สามารถแจ้งเตือนได้ เนื่องจากเรื่องดำเนินการเสร็จสิ้นแล้ว");
         }
 
+        if (complaint.status === "VERIFIED") {
+            return toast.warning("ไม่สามารถแจ้งเตือนได้ เนื่องจากเรื่องนี้ถูกยืนยันผลแล้ว");
+        }
+
         if (diffDays < 1) {
             return toast.warning("สามารถแจ้งเตือนได้หลังครบ 1 วัน");
         }
@@ -175,8 +179,12 @@ export default function ManageComplaintsPage() {
         }
     };
 
+    function isClosedStatus(status: string) {
+        return status === "DONE" || status === "VERIFIED";
+    }
+
     function canNotify(complaint: Complaint): boolean {
-        if (complaint.status === "DONE") return false;
+        if (isClosedStatus(complaint.status)) return false;
 
         const notifiedAt = complaint.notifiedAt ? new Date(complaint.notifiedAt) : null;
         if (!notifiedAt) return true;
@@ -388,55 +396,70 @@ export default function ManageComplaintsPage() {
             header: "การจัดการ",
             cell: ({ row }) => (
                 <div className="flex gap-2">
-                    <AlertDialog>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <AlertDialogTrigger asChild>
-                                    <span
-                                        className={
-                                            row.original.status === "DONE" || !canNotify(row.original)
-                                                ? "cursor-not-allowed"
-                                                : "cursor-pointer"
-                                        }
-                                    >
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="cursor-pointer"
-                                            disabled={row.original.status === "DONE" || !canNotify(row.original)}
-                                        >
-                                            <Bell className="w-4 h-4 text-blue-600 dark:text-blue-300" />
-                                        </Button>
-                                    </span>
-                                </AlertDialogTrigger>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                {row.original.status === "DONE"
-                                    ? "เรื่องนี้เสร็จสิ้นแล้ว"
-                                    : !canNotify(row.original)
-                                        ? "สามารถแจ้งเตือนได้อีกครั้งในวันถัดไป"
-                                        : "แจ้งเตือนไปยังกลุ่มไลน์"}
-                            </TooltipContent>
-                        </Tooltip>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>ยืนยันการแจ้งเตือน</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    คุณต้องการแจ้งเตือนไปยังกลุ่มไลน์เจ้าหน้าที่ใช่หรือไม่?
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel className="cursor-pointer">ยกเลิก</AlertDialogCancel>
-                                <AlertDialogAction className="cursor-pointer" onClick={() => handleNotifyGroup(row.original)} disabled={loading}>
-                                    {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} ยืนยัน
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
+                    {
+                        isClosedStatus(row.original.status) || !canNotify(row.original)
+                            ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <span>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="cursor-not-allowed"
+                                                disabled
+                                            >
+                                                <Bell className="w-4 h-4 text-blue-600 dark:text-blue-300" />
+                                            </Button>
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {isClosedStatus(row.original.status)
+                                            ? "เรื่องนี้เสร็จสิ้น/ยืนยันผลแล้ว"
+                                            : "สามารถแจ้งเตือนได้อีกครั้งในวันถัดไป"}
+                                    </TooltipContent>
+                                </Tooltip>
+                            )
+                            : (
+                                <AlertDialog>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <AlertDialogTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="cursor-pointer"
+                                                >
+                                                    <Bell className="w-4 h-4 text-blue-600 dark:text-blue-300" />
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent>แจ้งเตือนไปยังกลุ่มไลน์</TooltipContent>
+                                    </Tooltip>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>ยืนยันการแจ้งเตือน</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                คุณต้องการแจ้งเตือนไปยังกลุ่มไลน์เจ้าหน้าที่ใช่หรือไม่?
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel className="cursor-pointer">ยกเลิก</AlertDialogCancel>
+                                            <AlertDialogAction
+                                                className="cursor-pointer"
+                                                onClick={() => handleNotifyGroup(row.original)}
+                                                disabled={loading}
+                                            >
+                                                {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} ยืนยัน
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            )
+                    }
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <span className={row.original.status === "DONE" ? "cursor-not-allowed" : "cursor-pointer"}>
-                                {row.original.status === "DONE" ? (
+                            <span className={row.original.status === "DONE" || row.original.status === "VERIFIED" ? "cursor-not-allowed" : "cursor-pointer"}>
+                                {row.original.status === "DONE" || row.original.status === "VERIFIED" ? (
                                     <Button
                                         className="cursor-not-allowed"
                                         variant="ghost"
@@ -458,7 +481,7 @@ export default function ManageComplaintsPage() {
                             </span>
                         </TooltipTrigger>
                         <TooltipContent>
-                            {row.original.status === "DONE"
+                            {row.original.status === "DONE" || row.original.status === "VERIFIED"
                                 ? "รายงานผลเสร็จสิ้นแล้ว"
                                 : "รายงานผล"}
                         </TooltipContent>

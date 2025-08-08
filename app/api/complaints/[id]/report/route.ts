@@ -46,6 +46,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: "รายการนี้ถูกรายงานผลไปแล้ว" }, { status: 400 });
     }
 
+    if (found.status === "VERIFIED") {
+      return NextResponse.json({ error: "รายการนี้ถูกตรวจสอบแล้ว" }, { status: 400 });
+    }
+
     let groupId: string | null = null;
     if (found.zoneId) {
       const zone = await prisma.zone.findUnique({ where: { id: found.zoneId } });

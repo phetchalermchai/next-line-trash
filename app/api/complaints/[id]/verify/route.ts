@@ -33,14 +33,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       },
     });
 
-    // TODO: แจ้งเตือน/Log ฯลฯ
 
     return NextResponse.json(updated);
 
   } catch (error: any) {
-    console.error("[VERIFY PATCH ERROR]", error);
-
-    // Prisma error หรือ error อื่นๆ
+    console.log("[VERIFY PATCH ERROR]", error);
     if (error.code === "P2023" || error.code === "P2025") {
       return NextResponse.json(
         { message: "ไม่พบข้อมูลที่ต้องการแก้ไข" },
